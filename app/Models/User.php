@@ -9,6 +9,8 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 
+use Illuminate\Database\Eloquent\Relations\HasOne;
+
 class User extends Authenticatable
 {
     use HasFactory, Notifiable;
@@ -41,6 +43,11 @@ class User extends Authenticatable
     public function roles(): BelongsToMany
     {
         return $this->belongsToMany(Role::class, 'role_user');
+    }
+
+    public function pklStatus(): HasOne
+    {
+        return $this->hasOne(PklStatus::class, 'student_id');
     }
 
     public function permissions()

@@ -81,6 +81,32 @@ class GatewaySeeder extends Seeder
         );
         $adminUser->roles()->sync([$rolesMap['admin']->id]);
 
+        // Default Guru User
+        $guruUser = User::firstOrCreate(
+            ['email' => 'guru@gateway.sekolah.id'],
+            [
+                'name' => 'Bpk. Ahmad Fauzi, M.Kom',
+                'username' => 'guru',
+                'password' => Hash::make('password'),
+                'user_type' => 'teacher',
+                'status' => 'active',
+            ]
+        );
+        $guruUser->roles()->sync([$rolesMap['teacher']->id]);
+
+        // Default DUDI User
+        $dudiUser = User::firstOrCreate(
+            ['email' => 'dudi@gateway.sekolah.id'],
+            [
+                'name' => 'PT Telkom Indonesia (Mitra DUDI)',
+                'username' => 'dudi',
+                'password' => Hash::make('password'),
+                'user_type' => 'dudi',
+                'status' => 'active',
+            ]
+        );
+        $dudiUser->roles()->sync([$rolesMap['dudi']->id]);
+
         // 4. Auto Sync Real Students from SIJUNA API
         try {
             \App\Jobs\SyncSijunaStudentsJob::dispatchSync();
