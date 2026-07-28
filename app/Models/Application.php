@@ -31,6 +31,10 @@ class Application extends Model
         'client_secret',
     ];
 
+    protected $casts = [
+        'last_health_check_at' => 'datetime',
+    ];
+
     public function roles(): BelongsToMany
     {
         return $this->belongsToMany(Role::class, 'application_role');

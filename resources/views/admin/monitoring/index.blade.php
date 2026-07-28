@@ -64,7 +64,7 @@
 
                     <div class="text-[11px] text-slate-400 flex justify-between pt-2 border-t border-slate-800">
                         <span>Pengecekan Terakhir:</span>
-                        <span class="text-slate-200">{{ $app->last_health_check_at?->diffForHumans() ?? 'Belum pernah' }}</span>
+                        <span class="text-slate-200">{{ $app->last_health_check_at ? \Illuminate\Support\Carbon::parse($app->last_health_check_at)->diffForHumans() : 'Belum pernah' }}</span>
                     </div>
                 </div>
             @endforeach

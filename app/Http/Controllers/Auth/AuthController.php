@@ -30,12 +30,14 @@ class AuthController extends Controller
         $credentials = $request->validate([
             'identity' => ['required', 'string'],
             'password' => ['nullable', 'string'],
+            'account_type' => ['nullable', 'string', 'in:siswa,guru,dudi'],
         ], [
             'identity.required' => 'Masukkan Email, Username, atau Identifier Siswa/NISN.',
         ]);
 
         $identity = trim($credentials['identity']);
         $password = $request->input('password');
+        $accountType = $request->input('account_type', 'siswa');
 
         // 1. Try finding user in Gateway database by email, username, or external_id (SIJUNA)
         $user = User::where('email', $identity)
@@ -43,89 +45,127 @@ class AuthController extends Controller
             ->orWhere('external_id', $identity)
             ->first();
 
-        // 2. Handle Siswa login via SIJUNA identifier / external_id matching
-        if ($user && $user->isStudent()) {
-            Auth::login($user, $request->boolean('remember'));
-            $request->session()->regenerate();
+        if ($user) {
+            // Strict Role Validation vs Selected Login Tab (Siswa, Guru, DUDI)
+            if (!$user->isAdmin()) {
+                $roleMismatch = false;
+                if ($accountType === 'siswa' && !$user->isStudent()) {
+                    $roleMismatch = true;
+                } elseif ($accountType === 'guru' && !$user->isTeacher()) {
+                    $roleMismatch = true;
+                } elseif ($accountType === 'dudi' && !$user->isDudi()) {
+                    $roleMismatch = true;
+                }
 
-            AuditLogger::log('login_success_student', [
-                'external_id' => $user->external_id,
-                'user_id' => $user->id,
-            ], $user->id);
+                if ($roleMismatch) {
+                    $userRoleName = $user->getUserTypeName();
+                    $tabMap = [
+                        'teacher' => 'Guru',
+                        'dudi' => 'Mitra DUDI',
+                        'student' => 'Siswa',
+                    ];
+                    $targetTab = $tabMap[$user->user_type] ?? $userRoleName;
 
-            // Redirect back to pending OAuth SSO request if user was redirected from external app
-            if (session()->has('oauth_return_to')) {
-                $returnTo = session()->pull('oauth_return_to');
-                return redirect()->to($returnTo);
+                    AuditLogger::log('login_failed_role_mismatch', [
+                        'identity' => $identity,
+                        'selected_tab' => $accountType,
+                        'actual_role' => $user->user_type,
+                    ]);
+
+                    return back()->withErrors([
+                        'identity' => "Akun Anda terdaftar sebagai {$userRoleName}. Silakan pilih tab login {$targetTab} untuk masuk.",
+                    ])->onlyInput('identity', 'account_type');
+                }
             }
 
-            return redirect()->intended(route('dashboard'))->with('success', 'Selamat datang kembali, ' . $user->name);
-        }
-
-        // 3. Handle Internal Users (Guru, DUDI, Admin) password verification
-        if ($user && $password && Hash::check($password, $user->password)) {
-            if ($user->status !== 'active') {
-                AuditLogger::log('login_failed_suspended', ['identity' => $identity]);
-                return back()->withErrors(['identity' => 'Akun Anda sedang dinonaktifkan atau ditangguhkan.']);
-            }
-
-            Auth::login($user, $request->boolean('remember'));
-            $request->session()->regenerate();
-
-            AuditLogger::log('login_success', [
-                'user_id' => $user->id,
-                'user_type' => $user->user_type,
-            ], $user->id);
-
-            // Redirect back to pending OAuth SSO request if user was redirected from external app
-            if (session()->has('oauth_return_to')) {
-                $returnTo = session()->pull('oauth_return_to');
-                return redirect()->to($returnTo);
-            }
-
-            return redirect()->intended(route('dashboard'))->with('success', 'Berhasil login sebagai ' . $user->name);
-        }
-
-        // 4. Try SIJUNA API lookup if student user does not exist locally yet
-        try {
-            $sijunaService = app(SijunaApiService::class);
-            $studentData = $sijunaService->getStudentByExternalId($identity);
-            if ($studentData) {
-                // Provision student locally
-                $studentUser = User::create([
-                    'external_id' => $studentData['external_id'] ?? $studentData['id'] ?? $identity,
-                    'name' => $studentData['name'] ?? 'Siswa SIJUNA',
-                    'email' => $studentData['email'] ?? ($identity . '@siswa.sekolah.id'),
-                    'user_type' => 'student',
-                    'phone' => $studentData['phone'] ?? null,
-                    'status' => 'active',
-                    'password' => Hash::make(Str::random(32)),
-                ]);
-
-                Auth::login($studentUser, $request->boolean('remember'));
+            // 2. Handle Siswa login via SIJUNA identifier / external_id matching
+            if ($user->isStudent()) {
+                Auth::login($user, $request->boolean('remember'));
                 $request->session()->regenerate();
 
-                AuditLogger::log('login_success_student_provisioned', [
-                    'external_id' => $studentUser->external_id,
-                    'user_id' => $studentUser->id,
-                ], $studentUser->id);
+                AuditLogger::log('login_success_student', [
+                    'external_id' => $user->external_id,
+                    'user_id' => $user->id,
+                ], $user->id);
 
                 if (session()->has('oauth_return_to')) {
                     $returnTo = session()->pull('oauth_return_to');
                     return redirect()->to($returnTo);
                 }
 
-                return redirect()->intended(route('dashboard'))->with('success', 'Selamat datang, ' . $studentUser->name);
+                return redirect()->intended(route('dashboard'))->with('success', 'Selamat datang kembali, ' . $user->name);
             }
-        } catch (Exception $e) {
-            // Silently continue to login failed error below
+
+            // 3. Handle Internal Users (Guru, DUDI, Admin) password verification
+            if ($password && Hash::check($password, $user->password)) {
+                if ($user->status !== 'active') {
+                    AuditLogger::log('login_failed_suspended', ['identity' => $identity]);
+                    return back()->withErrors(['identity' => 'Akun Anda sedang dinonaktifkan atau ditangguhkan.'])->onlyInput('identity', 'account_type');
+                }
+
+                Auth::login($user, $request->boolean('remember'));
+                $request->session()->regenerate();
+
+                AuditLogger::log('login_success', [
+                    'user_id' => $user->id,
+                    'user_type' => $user->user_type,
+                ], $user->id);
+
+                if (session()->has('oauth_return_to')) {
+                    $returnTo = session()->pull('oauth_return_to');
+                    return redirect()->to($returnTo);
+                }
+
+                return redirect()->intended(route('dashboard'))->with('success', 'Berhasil login sebagai ' . $user->name);
+            }
+
+            return back()->withErrors([
+                'password' => 'Kata sandi yang Anda masukkan salah.',
+            ])->onlyInput('identity', 'account_type');
+        }
+
+        // 4. Try SIJUNA API lookup if student user does not exist locally yet (Only for Siswa tab)
+        if ($accountType === 'siswa') {
+            try {
+                $sijunaService = app(SijunaApiService::class);
+                $studentData = $sijunaService->getStudentByExternalId($identity);
+                if ($studentData) {
+                    // Provision student locally
+                    $studentUser = User::create([
+                        'external_id' => $studentData['external_id'] ?? $studentData['id'] ?? $identity,
+                        'name' => $studentData['name'] ?? 'Siswa SIJUNA',
+                        'email' => $studentData['email'] ?? ($identity . '@siswa.sekolah.id'),
+                        'user_type' => 'student',
+                        'phone' => $studentData['phone'] ?? null,
+                        'status' => 'active',
+                        'password' => Hash::make(Str::random(32)),
+                    ]);
+
+                    Auth::login($studentUser, $request->boolean('remember'));
+                    $request->session()->regenerate();
+
+                    AuditLogger::log('login_success_student_provisioned', [
+                        'external_id' => $studentUser->external_id,
+                        'user_id' => $studentUser->id,
+                    ], $studentUser->id);
+
+                    if (session()->has('oauth_return_to')) {
+                        $returnTo = session()->pull('oauth_return_to');
+                        return redirect()->to($returnTo);
+                    }
+
+                    return redirect()->intended(route('dashboard'))->with('success', 'Selamat datang, ' . $studentUser->name);
+                }
+            } catch (Exception $e) {
+                // Silently continue to login failed error below
+            }
         }
 
         AuditLogger::log('login_failed', ['identity' => $identity]);
 
         return back()->withErrors([
             'identity' => 'Kredensial atau Identifier yang dimasukkan tidak ditemukan/tidak valid.',
-        ])->onlyInput('identity');
+        ])->onlyInput('identity', 'account_type');
     }
 
     public function logout(Request $request): RedirectResponse

@@ -8,7 +8,6 @@ use App\Http\Controllers\Admin\AdminRoleController;
 use App\Http\Controllers\Admin\AdminSijunaController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Auth\AuthController;
-use App\Http\Controllers\Demo\ExternalAppDemoController;
 use App\Http\Controllers\OAuthController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -95,10 +94,4 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
 |--------------------------------------------------------------------------
 */
 
-Route::get('/demo/health', [ExternalAppDemoController::class, 'healthCheck'])->name('demo.health');
-Route::prefix('demo/{appSlug?}')->group(function () {
-    Route::get('/', [ExternalAppDemoController::class, 'index'])->name('demo.index');
-    Route::get('/sso-login', [ExternalAppDemoController::class, 'loginRedirect'])->name('demo.login');
-    Route::get('/callback', [ExternalAppDemoController::class, 'callback'])->name('demo.callback');
-    Route::get('/logout', [ExternalAppDemoController::class, 'logout'])->name('demo.logout');
-});
+

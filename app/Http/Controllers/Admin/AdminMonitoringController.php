@@ -17,7 +17,7 @@ class AdminMonitoringController extends Controller
         try {
             DB::connection()->getPdo();
             $dbStatus = 'Online';
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $dbStatus = 'Error: ' . $e->getMessage();
         }
 
@@ -25,8 +25,8 @@ class AdminMonitoringController extends Controller
         try {
             $redisPing = Redis::ping();
             $redisStatus = $redisPing ? 'Connected' : 'Unavailable';
-        } catch (\Exception $e) {
-            $redisStatus = 'Offline / Cache DB Driver in use';
+        } catch (\Throwable $e) {
+            $redisStatus = 'Offline / Driver missing';
         }
 
         // 3. Applications Status Matrix

@@ -94,6 +94,23 @@ class User extends Authenticatable
         return $this->user_type === 'admin' || $this->hasRole('admin');
     }
 
+    public function getUserTypeName(): string
+    {
+        if ($this->isAdmin()) {
+            return 'Administrator';
+        }
+        if ($this->isTeacher()) {
+            return 'Guru';
+        }
+        if ($this->isDudi()) {
+            return 'Mitra DUDI';
+        }
+        if ($this->isStudent()) {
+            return 'Siswa';
+        }
+        return ucfirst($this->user_type ?? 'User');
+    }
+
     public function canAccessApplication(Application $app): bool
     {
         if ($this->isAdmin()) {
