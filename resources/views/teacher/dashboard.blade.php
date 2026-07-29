@@ -28,23 +28,11 @@
     </div>
 
     <!-- Teacher Stats Overview Grid -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <div class="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl space-y-2">
-            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Siswa Bimbingan PKL</span>
+            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Siswa Bimbingan</span>
             <div class="text-3xl font-black text-purple-400">{{ $stats['guided_students'] }}</div>
-            <p class="text-xs text-slate-400">Tersebar di 8 Mitra DUDI</p>
-        </div>
-
-        <div class="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl space-y-2">
-            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Status PKL Aktif</span>
-            <div class="text-3xl font-black text-emerald-400">{{ $stats['active_pkl'] }}</div>
-            <p class="text-xs text-slate-400">2 Siswa dalam persiapan</p>
-        </div>
-
-        <div class="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl space-y-2">
-            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Evaluasi Perlu Ditinjau</span>
-            <div class="text-3xl font-black text-amber-400">{{ $stats['pending_reviews'] }}</div>
-            <p class="text-xs text-slate-400">Jurnal & nilai dari DUDI</p>
+            <p class="text-xs text-slate-400">Siswa aktif bimbingan</p>
         </div>
 
         <div class="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl space-y-2">
@@ -59,7 +47,7 @@
         <div class="flex items-center justify-between">
             <div>
                 <h3 class="text-base font-bold text-white">Daftar Siswa Bimbingan Terkini</h3>
-                <p class="text-xs text-slate-400 mt-0.5">Monitoring tempat magang dan progress bimbingan</p>
+                <p class="text-xs text-slate-400 mt-0.5">Monitoring progress siswa bimbingan</p>
             </div>
             <a href="{{ route('teacher.students') }}" class="text-xs font-bold text-purple-400 hover:underline">
                 Lihat Semua Siswa &rarr;
@@ -73,7 +61,6 @@
                         <th class="px-4 py-3">Nama Siswa</th>
                         <th class="px-4 py-3">NISN / Identifier</th>
                         <th class="px-4 py-3">Email</th>
-                        <th class="px-4 py-3">Status PKL</th>
                         <th class="px-4 py-3">Aksi</th>
                     </tr>
                 </thead>
@@ -83,11 +70,6 @@
                             <td class="px-4 py-3 font-semibold text-white">{{ $s->name }}</td>
                             <td class="px-4 py-3 font-mono text-purple-300">{{ $s->external_id ?? $s->username ?? '-' }}</td>
                             <td class="px-4 py-3 font-mono text-slate-400">{{ $s->email }}</td>
-                            <td class="px-4 py-3">
-                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                                    Aktif PKL
-                                </span>
-                            </td>
                             <td class="px-4 py-3">
                                 <a href="{{ route('teacher.evaluations') }}" class="text-purple-400 hover:underline font-bold text-[11px]">Beri Penilaian</a>
                             </td>

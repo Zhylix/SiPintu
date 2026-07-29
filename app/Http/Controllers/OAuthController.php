@@ -7,9 +7,7 @@ use App\Models\OAuthAccessToken;
 use App\Models\OAuthAuthCode;
 use App\Models\OAuthRefreshToken;
 use App\Services\AuditLogger;
-use Exception;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -30,8 +28,9 @@ class OAuthController extends Controller
 
         // 1. Validate Client Application
         $application = Application::where('client_id', $clientId)->first();
-        if (!$application || $application->status !== 'active') {
+        if (! $application || $application->status !== 'active') {
             AuditLogger::log('sso_authorize_invalid_client', ['client_id' => $clientId]);
+
             return response()->view('oauth.error', [
                 'title' => 'Client Aplikasi Tidak Valid',
                 'message' => 'Aplikasi eksternal dengan client_id tersebut tidak ditemukan atau sedang dinonaktifkan.',
@@ -39,11 +38,12 @@ class OAuthController extends Controller
         }
 
         // 2. Validate Redirect URI
-        if ($redirectUri && !str_starts_with($redirectUri, rtrim($application->redirect_uri, '/'))) {
+        if ($redirectUri && ! str_starts_with($redirectUri, rtrim($application->redirect_uri, '/'))) {
             AuditLogger::log('sso_authorize_invalid_redirect', [
                 'client_id' => $clientId,
                 'requested_uri' => $redirectUri,
             ]);
+
             return response()->view('oauth.error', [
                 'title' => 'Redirect URI Tidak Valid',
                 'message' => 'Redirect URI yang dikirimkan tidak sesuai dengan konfigurasi terdaftar di Gateway.',
@@ -54,21 +54,22 @@ class OAuthController extends Controller
         $targetRedirectUri = $redirectUri ?: explode(',', $application->redirect_uri)[0];
 
         // 3. Ensure User SSO Session is Authenticated
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             // Save full authorization request context in session so after login user returns seamlessly
             session()->put('oauth_return_to', $request->fullUrl());
+
             return redirect()->route('login')->with('info', 'Silakan login di SiPintu untuk melanjutkan.');
         }
 
         $user = Auth::user();
 
         // 4. Check Application Access Role Permission
-        if (!$user->canAccessApplication($application)) {
+        if (! $user->canAccessApplication($application)) {
             AuditLogger::log('sso_access_denied', [
                 'application_id' => $application->id,
                 'app_name' => $application->name,
                 'user_id' => $user->id,
-                'role' => $user->user_type,
+                'role' => $user->role,
             ], $user->id);
 
             return response()->view('oauth.denied', [
@@ -98,7 +99,7 @@ class OAuthController extends Controller
 
         // Build redirect URL
         $delimiter = str_contains($targetRedirectUri, '?') ? '&' : '?';
-        $redirectUrl = $targetRedirectUri . $delimiter . http_build_query([
+        $redirectUrl = $targetRedirectUri.$delimiter.http_build_query([
             'code' => $code,
             'state' => $state,
         ]);
@@ -116,20 +117,21 @@ class OAuthController extends Controller
         $clientSecret = $request->input('client_secret');
 
         // Allow Basic Auth header for Client credentials
-        if (!$clientId && $request->header('PHP_AUTH_USER')) {
+        if (! $clientId && $request->header('PHP_AUTH_USER')) {
             $clientId = $request->header('PHP_AUTH_USER');
             $clientSecret = $request->header('PHP_AUTH_PW');
         }
 
         $application = Application::where('client_id', $clientId)->first();
-        if (!$application) {
+        if (! $application) {
             return response()->json(['error' => 'invalid_client', 'error_description' => 'Client ID not found.'], 401);
         }
 
         // Verify Client Secret
         $secretValid = Hash::check($clientSecret, $application->client_secret) || $clientSecret === $application->client_secret;
-        if (!$secretValid) {
+        if (! $secretValid) {
             AuditLogger::log('token_exchange_invalid_secret', ['client_id' => $clientId]);
+
             return response()->json(['error' => 'invalid_client', 'error_description' => 'Client secret verification failed.'], 401);
         }
 
@@ -142,8 +144,9 @@ class OAuthController extends Controller
                 ->where('expires_at', '>', now())
                 ->first();
 
-            if (!$authCode) {
+            if (! $authCode) {
                 AuditLogger::log('token_exchange_invalid_code', ['client_id' => $clientId]);
+
                 return response()->json(['error' => 'invalid_grant', 'error_description' => 'Authorization code is invalid, expired, or revoked.'], 400);
             }
 
@@ -199,7 +202,7 @@ class OAuthController extends Controller
                 ->where('expires_at', '>', now())
                 ->first();
 
-            if (!$refreshToken || !$refreshToken->accessToken) {
+            if (! $refreshToken || ! $refreshToken->accessToken) {
                 return response()->json(['error' => 'invalid_grant', 'error_description' => 'Refresh token is invalid or expired.'], 400);
             }
 
@@ -254,11 +257,11 @@ class OAuthController extends Controller
 
         return response()->json([
             'issuer' => $baseUrl,
-            'authorization_endpoint' => $baseUrl . '/oauth/authorize',
-            'token_endpoint' => $baseUrl . '/oauth/token',
-            'userinfo_endpoint' => $baseUrl . '/api/v1/user',
-            'end_session_endpoint' => $baseUrl . '/oauth/logout',
-            'jwks_uri' => $baseUrl . '/oauth/jwks.json',
+            'authorization_endpoint' => $baseUrl.'/oauth/authorize',
+            'token_endpoint' => $baseUrl.'/oauth/token',
+            'userinfo_endpoint' => $baseUrl.'/api/v1/user',
+            'end_session_endpoint' => $baseUrl.'/oauth/logout',
+            'jwks_uri' => $baseUrl.'/oauth/jwks.json',
             'response_types_supported' => ['code'],
             'subject_types_supported' => ['public'],
             'id_token_signing_alg_values_supported' => ['HS256'],
@@ -279,8 +282,8 @@ class OAuthController extends Controller
                     'alg' => 'HS256',
                     'use' => 'sig',
                     'kid' => 'gateway-key-1',
-                ]
-            ]
+                ],
+            ],
         ]);
     }
 
@@ -290,8 +293,8 @@ class OAuthController extends Controller
     protected function generateIdToken($user, $application): string
     {
         $header = base64_encode(json_encode(['alg' => 'HS256', 'typ' => 'JWT']));
-        
-        $primaryRole = $user->roles->first()?->slug ?? $user->user_type;
+
+        $primaryRole = $user->roles->first()?->slug ?? $user->role;
 
         $payload = base64_encode(json_encode([
             'iss' => config('app.url', 'http://localhost:8000'),

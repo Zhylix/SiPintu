@@ -4,7 +4,6 @@ namespace App\Services;
 
 use Exception;
 use Illuminate\Http\Client\ConnectionException;
-use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -12,9 +11,13 @@ use Illuminate\Support\Facades\Log;
 class SijunaApiService
 {
     protected string $baseUrl;
+
     protected string $apiToken;
+
     protected int $timeout;
+
     protected int $retryTimes;
+
     protected int $retrySleep;
 
     public function __construct()
@@ -29,12 +32,11 @@ class SijunaApiService
     /**
      * Fetch students data from SIJUNA API with full error handling and retry mechanism
      *
-     * @return array
      * @throws Exception
      */
     public function getStudents(): array
     {
-        $endpoint = rtrim($this->baseUrl, '/') . '/students';
+        $endpoint = rtrim($this->baseUrl, '/').'/students';
         $allStudents = [];
         $page = 1;
         $lastPage = 1;
@@ -45,16 +47,16 @@ class SijunaApiService
                     'X-API-Token' => $this->apiToken,
                     'Accept' => 'application/json',
                 ])
-                ->timeout($this->timeout)
-                ->retry($this->retryTimes, $this->retrySleep, function (Exception $exception) {
-                    return $exception instanceof ConnectionException;
-                })
-                ->get($endpoint, ['page' => $page]);
+                    ->timeout($this->timeout)
+                    ->retry($this->retryTimes, $this->retrySleep, function (Exception $exception) {
+                        return $exception instanceof ConnectionException;
+                    })
+                    ->get($endpoint, ['page' => $page]);
 
                 if ($response->successful()) {
                     $json = $response->json();
                     $paginationData = $json['data'] ?? [];
-                    
+
                     $pageItems = $paginationData['data'] ?? [];
                     $allStudents = array_merge($allStudents, $pageItems);
 
@@ -69,10 +71,12 @@ class SijunaApiService
 
             return $allStudents;
         } catch (ConnectionException $e) {
-            Log::warning("SIJUNA API Connection Failed: " . $e->getMessage());
+            Log::warning('SIJUNA API Connection Failed: '.$e->getMessage());
+
             return $allStudents ?: $this->getFallbackMockStudents();
         } catch (Exception $e) {
-            Log::warning("SIJUNA API Service Exception: " . $e->getMessage());
+            Log::warning('SIJUNA API Service Exception: '.$e->getMessage());
+
             return $allStudents ?: $this->getFallbackMockStudents();
         }
     }
@@ -82,15 +86,25 @@ class SijunaApiService
      */
     public function getStudentByExternalId(string $externalId): ?array
     {
-        $cacheKey = "user:{$externalId}";
+        $searchKey = trim((string) $externalId);
+        $cacheKey = "user:{$searchKey}";
 
-        return Cache::remember($cacheKey, 3600, function () use ($externalId) {
+        return Cache::remember($cacheKey, 3600, function () use ($searchKey) {
             $students = $this->getStudents();
             foreach ($students as $student) {
-                if ((string) ($student['external_id'] ?? $student['id'] ?? '') === (string) $externalId) {
+                $nis = isset($student['nis']) ? (string) $student['nis'] : null;
+                $extId = isset($student['external_id']) ? (string) $student['external_id'] : null;
+                $id = isset($student['id']) ? (string) $student['id'] : null;
+
+                if (
+                    ($nis && $searchKey === $nis) ||
+                    ($extId && $searchKey === $extId) ||
+                    ($id && $searchKey === $id)
+                ) {
                     return $student;
                 }
             }
+
             return null;
         });
     }

@@ -20,81 +20,50 @@
                 </div>
             </div>
             <div class="flex items-center space-x-3 shrink-0">
-                <a href="{{ route('dudi.evaluations') }}" class="px-4 py-2.5 bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-amber-600/30">
-                    Beri Penilaian Magang &rarr;
+                <a href="{{ route('dudi.apps') }}" class="px-4 py-2.5 bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-amber-600/30">
+                    Aplikasi Terintegrasi &rarr;
                 </a>
             </div>
         </div>
     </div>
 
-    <!-- DUDI Quick Stats Grid -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        <div class="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl space-y-2">
-            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Peserta Magang Aktif</span>
-            <div class="text-3xl font-black text-amber-400">{{ $stats['active_interns'] }} Siswa</div>
-            <p class="text-xs text-slate-400">Periode Juli - Desember 2026</p>
-        </div>
-
-        <div class="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl space-y-2">
-            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Tingkat Kehadiran Magang</span>
-            <div class="text-3xl font-black text-emerald-400">{{ $stats['attendance_rate'] }}</div>
-            <p class="text-xs text-slate-400">Presensi Industri Realtime</p>
-        </div>
-
-        <div class="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl space-y-2">
-            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Perlu Penilaian Evaluasi</span>
-            <div class="text-3xl font-black text-rose-400">{{ $stats['pending_evaluations'] }} Siswa</div>
-            <p class="text-xs text-slate-400">Diperbarui minggu ini</p>
-        </div>
-
-        <div class="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl space-y-2">
-            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Alumni PKL Industri</span>
-            <div class="text-3xl font-black text-indigo-400">{{ $stats['completed_interns'] }} Siswa</div>
-            <p class="text-xs text-slate-400">Tahun Ajaran Lalu</p>
-        </div>
-    </div>
-
-    <!-- Interns List Section -->
+    <!-- DUDI SSO Applications Section -->
     <div class="bg-slate-900 rounded-2xl border border-slate-800 p-6 space-y-4">
         <div class="flex items-center justify-between">
             <div>
-                <h3 class="text-base font-bold text-white">Peserta Magang / PKL di Perusahaan Anda</h3>
-                <p class="text-xs text-slate-400 mt-0.5">Daftar siswa SMK yang sedang melaksanakan kegiatan magang industri</p>
+                <h3 class="text-base font-bold text-white">Aplikasi Terintegrasi DUDI</h3>
+                <p class="text-xs text-slate-400 mt-0.5">Aplikasi eksternal mitra yang terhubung dengan Gateway Identity</p>
             </div>
-            <a href="{{ route('dudi.interns') }}" class="text-xs font-bold text-amber-400 hover:underline">
-                Lihat Semua Peserta &rarr;
+            <a href="{{ route('dudi.apps') }}" class="text-xs font-bold text-amber-400 hover:underline">
+                Semua Aplikasi &rarr;
             </a>
         </div>
 
-        <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs">
-                <thead class="bg-slate-950 text-slate-400 uppercase font-bold text-[10px] border-b border-slate-800">
-                    <tr>
-                        <th class="px-4 py-3">Nama Siswa</th>
-                        <th class="px-4 py-3">NISN / External ID</th>
-                        <th class="px-4 py-3">Divisi Magang</th>
-                        <th class="px-4 py-3">Status Kehadiran</th>
-                        <th class="px-4 py-3">Penilaian</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-800/60 text-slate-300">
-                    @foreach($interns as $intern)
-                        <tr class="hover:bg-slate-800/40">
-                            <td class="px-4 py-3 font-semibold text-white">{{ $intern->name }}</td>
-                            <td class="px-4 py-3 font-mono text-amber-300">{{ $intern->external_id ?? '-' }}</td>
-                            <td class="px-4 py-3 font-sans text-slate-300">Software & Engineering</td>
-                            <td class="px-4 py-3">
-                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                                    Hadir Hari Ini
-                                </span>
-                            </td>
-                            <td class="px-4 py-3">
-                                <a href="{{ route('dudi.evaluations') }}" class="text-amber-400 hover:underline font-bold text-[11px]">Input Evaluasi</a>
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+            @forelse($applications as $app)
+                <div class="p-5 rounded-xl bg-slate-950/80 border border-slate-800 hover:border-amber-500/40 transition-all space-y-3 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm font-bold text-white">{{ $app->name }}</span>
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                SSO Ready
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-400 line-clamp-2">{{ $app->description }}</p>
+                    </div>
+
+                    <div class="pt-3 border-t border-slate-800/80 flex items-center justify-between">
+                        <span class="text-[11px] text-slate-400">Diizinkan untuk DUDI</span>
+                        <a href="{{ route('oauth.authorize', ['client_id' => $app->client_id, 'redirect_uri' => $app->redirect_uri, 'response_type' => 'code', 'scope' => 'openid profile email']) }}" class="px-3 py-1.5 bg-amber-600/20 hover:bg-amber-600 text-amber-300 hover:text-white border border-amber-500/30 text-xs font-bold rounded-lg transition-all">
+                            Buka SSO &rarr;
+                        </a>
+                    </div>
+                </div>
+            @empty
+                <div class="col-span-3 p-6 text-center text-xs text-slate-400 bg-slate-950/40 rounded-xl border border-slate-800">
+                    Belum ada aplikasi yang dihubungkan untuk role DUDI.
+                </div>
+            @endforelse
         </div>
     </div>
 </div>

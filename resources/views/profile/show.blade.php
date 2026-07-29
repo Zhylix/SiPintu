@@ -12,7 +12,7 @@
                 <h2 class="text-xl font-bold text-white">{{ $user->name }}</h2>
                 <div class="flex items-center space-x-3 mt-1">
                     <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
-                        Role: {{ $user->user_type }}
+                        Role: {{ $user->getUserTypeName() }} ({{ $user->role }})
                     </span>
                     @if($user->external_id)
                         <span class="text-xs text-slate-400">External ID: <code class="text-indigo-300 font-mono">{{ $user->external_id }}</code></span>

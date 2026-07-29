@@ -49,18 +49,20 @@
         <div>
             <label for="identity" class="block text-xs font-semibold text-slate-300 mb-1.5">
                 <span x-show="accountType === 'siswa'">Identifier Siswa / NISN / Email SIJUNA</span>
-                <span x-show="accountType === 'guru'">Email atau Username Guru</span>
-                <span x-show="accountType === 'dudi'">Email atau Username Mitra DUDI</span>
+                <span x-show="accountType === 'guru'">Email atau Username Guru / Admin</span>
+                <span x-show="accountType === 'dudi'">Email atau Username Mitra DUDI / Admin</span>
             </label>
             <input type="text" id="identity" name="identity" required autofocus x-model="identity"
-                :placeholder="accountType === 'siswa' ? 'Contoh: SIJ-STUDENT-001 atau NISN' : (accountType === 'guru' ? 'Contoh: guru@sekolah.id' : 'Contoh: admin@majujaya.co.id')"
+                :placeholder="accountType === 'siswa' ? 'Contoh: SIJ-STUDENT-001 atau NISN' : (accountType === 'guru' ? 'Contoh: guru@sekolah.id atau admin' : 'Contoh: admin@majujaya.co.id')"
                 class="w-full px-4 py-3 rounded-xl bg-slate-950/80 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all text-sm">
         </div>
 
-        <!-- Password Input (hidden for student SIJUNA login) -->
-        <div x-show="accountType !== 'siswa'">
+        <!-- Password Input -->
+        <div>
             <div class="flex items-center justify-between mb-1.5">
-                <label for="password" class="block text-xs font-semibold text-slate-300">Kata Sandi</label>
+                <label for="password" class="block text-xs font-semibold text-slate-300">
+                    Kata Sandi <span x-show="accountType === 'siswa'" class="text-slate-500 font-normal text-[11px]">(Diperlukan untuk Guru / DUDI / Admin)</span>
+                </label>
                 <a href="{{ route('password.request') }}" class="text-xs text-indigo-400 hover:underline">Lupa Password?</a>
             </div>
             <input type="password" id="password" name="password" x-model="password"

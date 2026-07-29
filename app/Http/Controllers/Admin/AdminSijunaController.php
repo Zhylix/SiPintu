@@ -18,13 +18,13 @@ class AdminSijunaController extends Controller
     {
         $config = [
             'url' => config('services.sijuna.url'),
-            'token_masked' => str_repeat('*', max(0, strlen(config('services.sijuna.token', '')) - 4)) . substr(config('services.sijuna.token', ''), -4),
+            'token_masked' => str_repeat('*', max(0, strlen(config('services.sijuna.token', '')) - 4)).substr(config('services.sijuna.token', ''), -4),
             'timeout' => config('services.sijuna.timeout'),
             'retry_times' => config('services.sijuna.retry_times'),
         ];
 
         $syncLogs = SyncLog::latest()->paginate(15);
-        $syncedStudentsCount = User::where('user_type', 'student')->count();
+        $syncedStudentsCount = User::where('role', 'student')->count();
         $latestSync = SyncLog::latest()->first();
 
         return view('admin.sijuna.index', compact('config', 'syncLogs', 'syncedStudentsCount', 'latestSync'));
@@ -35,12 +35,12 @@ class AdminSijunaController extends Controller
         try {
             // Run sync synchronously for instant admin feedback
             SyncSijunaStudentsJob::dispatchSync();
-            
+
             AuditLogger::log('admin_manual_sijuna_sync_triggered');
 
             return back()->with('success', 'Sinkronisasi data siswa SIJUNA berhasil dijalankan.');
         } catch (Exception $e) {
-            return back()->with('error', 'Gagal menjalankan sinkronisasi: ' . $e->getMessage());
+            return back()->with('error', 'Gagal menjalankan sinkronisasi: '.$e->getMessage());
         }
     }
 }

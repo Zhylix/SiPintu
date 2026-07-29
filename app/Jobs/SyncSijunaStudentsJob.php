@@ -14,6 +14,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 
@@ -39,8 +40,7 @@ class SyncSijunaStudentsJob implements ShouldQueue
             $processedCount = 0;
 
             $studentRole = Role::firstOrCreate(
-                ['slug' => 'student'],
-                ['name' => 'Siswa', 'description' => 'Akun Siswa dari SIJUNA']
+                ['name' => 'student', 'guard_name' => 'web']
             );
 
             $userRows = [];
@@ -50,12 +50,12 @@ class SyncSijunaStudentsJob implements ShouldQueue
             foreach ($studentsData as $student) {
                 $nis = isset($student['nis']) ? (string) $student['nis'] : null;
                 $externalId = (string) ($nis ?? $student['external_id'] ?? $student['id'] ?? '');
-                if (!$externalId) {
+                if (! $externalId) {
                     continue;
                 }
 
                 $name = $student['nama'] ?? $student['name'] ?? 'Siswa SIJUNA';
-                $email = $student['user']['email'] ?? $student['email'] ?? ($externalId . '@siswa.sekolah.id');
+                $email = $student['user']['email'] ?? $student['email'] ?? ($externalId.'@siswa.sekolah.id');
                 $phone = $student['hp'] ?? $student['phone'] ?? null;
                 $username = $nis ?? ($student['user']['name'] ?? $externalId);
 
@@ -64,7 +64,7 @@ class SyncSijunaStudentsJob implements ShouldQueue
                     'name' => $name,
                     'email' => $email,
                     'username' => $username,
-                    'user_type' => 'student',
+                    'role' => 'student',
                     'phone' => $phone,
                     'status' => 'active',
                     'password' => $defaultPasswordHash,
@@ -77,7 +77,6 @@ class SyncSijunaStudentsJob implements ShouldQueue
                     'name' => $name,
                     'email' => $email,
                     'role' => 'student',
-                    'user_type' => 'student',
                     'phone' => $phone,
                     'synced_at' => $now,
                 ], 86400);
@@ -90,19 +89,20 @@ class SyncSijunaStudentsJob implements ShouldQueue
                 User::upsert(
                     $chunk,
                     ['external_id'],
-                    ['name', 'email', 'username', 'phone', 'status', 'user_type', 'updated_at']
+                    ['name', 'email', 'username', 'phone', 'status', 'role', 'updated_at']
                 );
             }
 
-            // Attach student role to all synced users in bulk
-            $studentUserIds = User::where('user_type', 'student')->pluck('id')->toArray();
-            $pivotData = array_map(fn($userId) => [
-                'user_id' => $userId,
+            // Attach student role to all synced users in bulk using Spatie model_has_roles
+            $studentUserIds = User::where('role', 'student')->pluck('id')->toArray();
+            $pivotData = array_map(fn ($userId) => [
                 'role_id' => $studentRole->id,
+                'model_type' => User::class,
+                'model_id' => $userId,
             ], $studentUserIds);
 
             foreach (array_chunk($pivotData, 500) as $chunk) {
-                \Illuminate\Support\Facades\DB::table('role_user')->insertOrIgnore($chunk);
+                \Illuminate\Support\Facades\DB::table('model_has_roles')->insertOrIgnore($chunk);
             }
 
             $syncLog->update([
@@ -129,7 +129,7 @@ class SyncSijunaStudentsJob implements ShouldQueue
                 'sync_log_id' => $syncLog->id,
             ]);
 
-            Log::error("SIJUNA Student Sync failed: " . $e->getMessage());
+            Log::error('SIJUNA Student Sync failed: '.$e->getMessage());
             throw $e;
         }
     }

@@ -14,6 +14,7 @@ class OAuthAccessToken extends Model
     protected $table = 'oauth_access_tokens';
 
     public $incrementing = false;
+
     protected $keyType = 'string';
 
     protected $fillable = [

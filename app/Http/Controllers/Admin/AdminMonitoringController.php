@@ -18,7 +18,7 @@ class AdminMonitoringController extends Controller
             DB::connection()->getPdo();
             $dbStatus = 'Online';
         } catch (\Throwable $e) {
-            $dbStatus = 'Error: ' . $e->getMessage();
+            $dbStatus = 'Error: '.$e->getMessage();
         }
 
         // 2. Redis Cache Status
@@ -43,6 +43,7 @@ class AdminMonitoringController extends Controller
     public function runHealthChecks()
     {
         CheckApplicationHealthJob::dispatchSync();
+
         return back()->with('success', 'Health check seluruh aplikasi berhasil diperbarui.');
     }
 }

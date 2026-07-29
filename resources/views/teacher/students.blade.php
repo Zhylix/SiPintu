@@ -6,7 +6,7 @@
         <div class="flex items-center justify-between">
             <div>
                 <h3 class="text-base font-bold text-white">Monitoring & Bimbingan Siswa</h3>
-                <p class="text-xs text-slate-400 mt-0.5">Daftar siswa yang berada di bawah bimbingan PKL Guru</p>
+                <p class="text-xs text-slate-400 mt-0.5">Daftar siswa yang berada di bawah bimbingan Guru</p>
             </div>
         </div>
 

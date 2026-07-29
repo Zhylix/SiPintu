@@ -37,7 +37,6 @@
                 G
             </div>
             <h1 class="text-2xl font-extrabold text-white tracking-tight">SiPintu</h1>
-            <p class="text-xs text-indigo-400 font-semibold tracking-wider uppercase mt-1">Single Sign-On (SSO) Provider</p>
         </div>
 
         @yield('content')

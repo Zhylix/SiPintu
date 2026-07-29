@@ -20,40 +20,10 @@
                 </div>
             </div>
             <div class="flex items-center space-x-3 shrink-0">
-                <a href="{{ route('student.pkl') }}" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-indigo-600/30">
-                    Lihat Jurnal PKL &rarr;
+                <a href="{{ route('student.apps') }}" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-indigo-600/30">
+                    Aplikasi Terintegrasi &rarr;
                 </a>
             </div>
-        </div>
-    </div>
-
-    <!-- Student Quick Overview Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        <div class="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl space-y-2">
-            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Status PKL</span>
-            <div class="text-lg font-bold text-emerald-400 flex items-center">
-                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 mr-2 animate-ping"></span>
-                {{ $pklInfo['status'] }}
-            </div>
-            <p class="text-xs text-slate-400 truncate">{{ $pklInfo['company_name'] }}</p>
-        </div>
-
-        <div class="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl space-y-2">
-            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Guru Pembimbing</span>
-            <div class="text-base font-bold text-white truncate">{{ $pklInfo['mentor_name'] }}</div>
-            <p class="text-xs text-slate-400">Pembimbing Lapangan: {{ $pklInfo['dudi_supervisor'] }}</p>
-        </div>
-
-        <div class="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl space-y-2">
-            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Presensi Magang</span>
-            <div class="text-2xl font-black text-indigo-400">{{ $pklInfo['attendance_count'] }} Hari</div>
-            <p class="text-xs text-slate-400">Logbook terisi: {{ $pklInfo['logbook_count'] }} Catatan</p>
-        </div>
-
-        <div class="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl space-y-2">
-            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Nilai Evaluasi Sementara</span>
-            <div class="text-2xl font-black text-amber-400">{{ $pklInfo['evaluation_score'] }} / 100</div>
-            <p class="text-xs text-slate-400">Predikat: Sangat Baik (A)</p>
         </div>
     </div>
 
@@ -61,7 +31,7 @@
     <div class="bg-slate-900 rounded-2xl border border-slate-800 p-6 space-y-4">
         <div class="flex items-center justify-between">
             <div>
-                <h3 class="text-base font-bold text-white">Aplikasi Terintegrasi Single Sign-On (SSO) Siswa</h3>
+                <h3 class="text-base font-bold text-white">Aplikasi Terintegrasi </h3>
                 <p class="text-xs text-slate-400 mt-0.5">Klik aplikasi untuk langsung login otomatis menggunakan sesi Gateway Anda</p>
             </div>
             <a href="{{ route('student.apps') }}" class="text-xs font-bold text-indigo-400 hover:underline">

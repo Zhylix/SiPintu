@@ -16,7 +16,7 @@ class ApiIdentityController extends Controller
     {
         $user = $request->attributes->get('oauth_user');
 
-        $primaryRole = $user->roles->first()?->slug ?? $user->user_type;
+        $primaryRole = $user->roles->first()?->slug ?? $user->role;
 
         $response = [
             'id' => (string) $user->id,
@@ -53,7 +53,8 @@ class ApiIdentityController extends Controller
             'username' => $user->username,
             'email' => $user->email,
             'phone' => $user->phone,
-            'user_type' => $user->user_type,
+            'role' => $user->role,
+            'user_type' => $user->role,
             'status' => $user->status,
             'roles' => $user->roles->pluck('slug'),
             'sijuna_data' => $sijunaData,
@@ -106,10 +107,10 @@ class ApiIdentityController extends Controller
     {
         $student = $sijunaService->getStudentByExternalId($externalId);
 
-        if (!$student) {
+        if (! $student) {
             return response()->json([
                 'error' => 'not_found',
-                'message' => "Data siswa dengan ID {$externalId} tidak ditemukan di database SIJUNA."
+                'message' => "Data siswa dengan ID {$externalId} tidak ditemukan di database SIJUNA.",
             ], 404);
         }
 
@@ -119,4 +120,3 @@ class ApiIdentityController extends Controller
         ]);
     }
 }
-

@@ -78,17 +78,17 @@ class ExternalAppDemoController extends Controller
             $tokenResponse = Http::post(route('oauth.token'), [
                 'grant_type' => 'authorization_code',
                 'client_id' => $app->client_id,
-                'client_secret' => 'secret_' . $appSlug . '_12345', // Loaded from app client config
+                'client_secret' => 'secret_'.$appSlug.'_12345', // Loaded from app client config
                 'code' => $code,
                 'redirect_uri' => $callbackUrl,
             ]);
 
-            if (!$tokenResponse->successful()) {
+            if (! $tokenResponse->successful()) {
                 return view('demo.external_app', [
                     'appSlug' => $appSlug,
                     'app' => $app,
                     'localSession' => $localSession,
-                    'error' => "Token Exchange Failed: " . $tokenResponse->body(),
+                    'error' => 'Token Exchange Failed: '.$tokenResponse->body(),
                 ]);
             }
 
@@ -99,12 +99,12 @@ class ExternalAppDemoController extends Controller
             $userResponse = Http::withToken($accessToken)
                 ->get(route('api.v1.user.profile'));
 
-            if (!$userResponse->successful()) {
+            if (! $userResponse->successful()) {
                 return view('demo.external_app', [
                     'appSlug' => $appSlug,
                     'app' => $app,
                     'localSession' => $localSession,
-                    'error' => "User Profile Fetch Failed: " . $userResponse->body(),
+                    'error' => 'User Profile Fetch Failed: '.$userResponse->body(),
                 ]);
             }
 
@@ -125,18 +125,17 @@ class ExternalAppDemoController extends Controller
             ];
             session()->put("demo_session_{$appSlug}", $newSession);
 
-            $primaryRole = is_array($userData['roles'] ?? null) ? implode(', ', $userData['roles']) : ($userData['user_type'] ?? 'user');
+            $primaryRole = is_array($userData['roles'] ?? null) ? implode(', ', $userData['roles']) : ($userData['role'] ?? $userData['user_type'] ?? 'user');
 
             return redirect()->route('demo.index', ['appSlug' => $appSlug])
                 ->with('success', "Single Sign-On Berhasil! Terhubung sebagai {$userData['name']} ({$primaryRole}) - Data SIJUNA terhubung via Gateway Proxy.");
-
 
         } catch (Exception $e) {
             return view('demo.external_app', [
                 'appSlug' => $appSlug,
                 'app' => $app,
                 'localSession' => $localSession,
-                'error' => "Gateway SSO Error: " . $e->getMessage(),
+                'error' => 'Gateway SSO Error: '.$e->getMessage(),
             ]);
         }
     }
@@ -147,6 +146,7 @@ class ExternalAppDemoController extends Controller
     public function logout(Request $request, string $appSlug = 'pkl'): RedirectResponse
     {
         session()->forget("demo_session_{$appSlug}");
+
         return redirect()->route('demo.index', ['appSlug' => $appSlug])
             ->with('info', "Session lokal Aplikasi {$appSlug} telah ditutup.");
     }
@@ -169,9 +169,9 @@ class ExternalAppDemoController extends Controller
             ->orWhere('slug', $appSlug)
             ->first();
 
-        if (!$app) {
+        if (! $app) {
             $app = Application::first() ?? new Application([
-                'name' => "Aplikasi " . strtoupper($appSlug) . " Eksternal",
+                'name' => 'Aplikasi '.strtoupper($appSlug).' Eksternal',
                 'client_id' => "app_{$appSlug}_client",
                 'base_url' => url("/demo/{$appSlug}"),
                 'status' => 'active',

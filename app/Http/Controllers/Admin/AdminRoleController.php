@@ -27,7 +27,8 @@ class AdminRoleController extends Controller
         ]);
 
         $permissionIds = $validated['permissions'] ?? [];
-        $role->permissions()->sync($permissionIds);
+        $permissions = Permission::whereIn('id', $permissionIds)->get();
+        $role->syncPermissions($permissions);
 
         AuditLogger::log('admin_update_role_permissions', [
             'role_id' => $role->id,

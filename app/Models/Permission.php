@@ -2,22 +2,18 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Spatie\Permission\Models\Permission as SpatiePermission;
 
-class Permission extends Model
+class Permission extends SpatiePermission
 {
-    use HasFactory;
-
     protected $fillable = [
         'name',
-        'slug',
-        'description',
+        'guard_name',
     ];
 
-    public function roles(): BelongsToMany
+    public function getSlugAttribute(): string
     {
-        return $this->belongsToMany(Role::class, 'permission_role');
+        return $this->name;
     }
 }
+

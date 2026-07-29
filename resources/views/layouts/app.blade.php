@@ -77,9 +77,9 @@
                         Roles & Permission
                     </a>
 
-                    <a href="{{ route('admin.pkl.index') }}" class="flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-all {{ request()->routeIs('admin.pkl.*') ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/60' }}">
-                        <svg class="w-5 h-5 mr-3 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        Status PKL (Real-Time)
+                    <a href="{{ route('admin.announcements.index') }}" class="flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-all {{ request()->routeIs('admin.announcements.*') ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/60' }}">
+                        <svg class="w-5 h-5 mr-3 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path></svg>
+                        Pengumuman Sistem
                     </a>
 
                     <div class="pt-4 px-3 pb-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Integrasi & Keamanan</div>
@@ -108,12 +108,12 @@
 
                     <a href="{{ route('teacher.students') }}" class="flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-all {{ request()->routeIs('teacher.students') ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/60' }}">
                         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                        Siswa Bimbingan PKL
+                        Siswa Bimbingan
                     </a>
 
                     <a href="{{ route('teacher.evaluations') }}" class="flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-all {{ request()->routeIs('teacher.evaluations') ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/60' }}">
                         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
-                        Penilaian & Jurnal PKL
+                        Penilaian & Evaluasi
                     </a>
 
                     <div class="pt-4 px-3 pb-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Layanan SSO</div>
@@ -128,11 +128,6 @@
                     <a href="{{ route('dudi.dashboard') }}" class="flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-all {{ request()->routeIs('dudi.dashboard') ? 'bg-amber-600 text-white shadow-md shadow-amber-600/30' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/60' }}">
                         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
                         Dashboard DUDI
-                    </a>
-
-                    <a href="{{ route('dudi.interns') }}" class="flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-all {{ request()->routeIs('dudi.interns') ? 'bg-amber-600 text-white shadow-md shadow-amber-600/30' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/60' }}">
-                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                        Peserta Magang
                     </a>
 
                     <a href="{{ route('dudi.evaluations') }}" class="flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-all {{ request()->routeIs('dudi.evaluations') ? 'bg-amber-600 text-white shadow-md shadow-amber-600/30' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/60' }}">
@@ -154,11 +149,6 @@
                         Dashboard Siswa
                     </a>
 
-                    <a href="{{ route('student.pkl') }}" class="flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-all {{ request()->routeIs('student.pkl') ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/60' }}">
-                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
-                        Logbook & Status PKL
-                    </a>
-
                     <div class="pt-4 px-3 pb-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Layanan SSO</div>
 
                     <a href="{{ route('student.apps') }}" class="flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-all {{ request()->routeIs('student.apps') ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/60' }}">
@@ -176,7 +166,7 @@
                     </div>
                     <div class="truncate">
                         <div class="text-sm font-semibold text-white truncate">{{ auth()->user()->name }}</div>
-                        <div class="text-xs text-slate-400 capitalize truncate">{{ auth()->user()->user_type }}</div>
+                        <div class="text-xs text-slate-400 capitalize truncate">{{ auth()->user()->getUserTypeName() }}</div>
                     </div>
                 </div>
                 <form action="{{ route('logout') }}" method="POST">
@@ -236,6 +226,34 @@
                         </div>
                     </div>
                 @endif
+
+                @auth
+                    @php
+                        $userAnnouncements = \App\Models\Announcement::active()
+                            ->forRole(auth()->user()->role)
+                            ->latest()
+                            ->take(3)
+                            ->get();
+                    @endphp
+
+                    @foreach($userAnnouncements as $ann)
+                        <div class="p-4 mb-4 rounded-xl border flex items-start justify-between shadow-lg {{ $ann->type === 'danger' ? 'bg-rose-500/10 border-rose-500/30 text-rose-200' : ($ann->type === 'warning' ? 'bg-amber-500/10 border-amber-500/30 text-amber-200' : ($ann->type === 'success' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-200' : 'bg-indigo-500/10 border-indigo-500/30 text-indigo-200')) }}">
+                            <div class="flex items-start space-x-3">
+                                <div class="p-1 rounded-lg shrink-0 mt-0.5 {{ $ann->type === 'danger' ? 'bg-rose-500/20 text-rose-400' : ($ann->type === 'warning' ? 'bg-amber-500/20 text-amber-400' : ($ann->type === 'success' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-indigo-500/20 text-indigo-400')) }}">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path></svg>
+                                </div>
+                                <div>
+                                    <div class="font-bold text-sm text-white flex items-center gap-2">
+                                        <span>{{ $ann->title }}</span>
+                                        <span class="px-2 py-0.5 rounded text-[9px] font-extrabold uppercase bg-slate-900/60 border border-slate-700">PENGUMUMAN</span>
+                                    </div>
+                                    <div class="text-xs mt-1 opacity-90 leading-relaxed font-sans">{{ $ann->content }}</div>
+                                    <div class="text-[10px] mt-1.5 opacity-60">{{ $ann->published_at?->diffForHumans() }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                @endauth
             </div>
 
             <!-- Page Content -->

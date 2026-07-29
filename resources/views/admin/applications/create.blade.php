@@ -24,13 +24,13 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
                 <label class="block text-xs font-semibold text-slate-300 mb-1.5">Nama Aplikasi Eksternal</label>
-                <input type="text" name="name" value="{{ old('name') }}" required placeholder="Contoh: Aplikasi PKL Eksternal"
+                <input type="text" name="name" value="{{ old('name') }}" required placeholder="Contoh: Aplikasi Rapor Eksternal"
                     class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-sm focus:border-indigo-500 focus:outline-none">
             </div>
 
             <div>
                 <label class="block text-xs font-semibold text-slate-300 mb-1.5">Slug URL</label>
-                <input type="text" name="slug" value="{{ old('slug') }}" required placeholder="aplikasi-pkl"
+                <input type="text" name="slug" value="{{ old('slug') }}" required placeholder="aplikasi-rapor"
                     class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-sm focus:border-indigo-500 focus:outline-none">
             </div>
         </div>
@@ -75,7 +75,7 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-                <label class="block text-xs font-semibold text-slate-300 mb-1.5">Logout URI (Single Sign-Out Callback)</label>
+                <label class="block text-xs font-semibold text-slate-300 mb-1.5">Logout URI</label>
                 <input type="text" name="logout_uri" value="{{ old('logout_uri') }}" placeholder="https://pkl.sekolah.id/logout"
                     class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-sm focus:border-indigo-500 focus:outline-none">
             </div>

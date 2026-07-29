@@ -1,9 +1,9 @@
-@extends('layouts.app', ['headerTitle' => 'Jurnal & Penilaian PKL'])
+@extends('layouts.app', ['headerTitle' => 'Penilaian & Evaluasi'])
 
 @section('content')
 <div class="space-y-6">
     <div class="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-4">
-        <h3 class="text-base font-bold text-white">Penilaian Akhir & Verifikasi Jurnal PKL</h3>
+        <h3 class="text-base font-bold text-white">Penilaian Akhir & Evaluasi Siswa</h3>
 
         <div class="overflow-x-auto">
             <table class="w-full text-left text-xs">

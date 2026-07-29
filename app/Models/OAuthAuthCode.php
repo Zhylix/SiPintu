@@ -13,6 +13,7 @@ class OAuthAuthCode extends Model
     protected $table = 'oauth_auth_codes';
 
     public $incrementing = false;
+
     protected $keyType = 'string';
 
     protected $fillable = [

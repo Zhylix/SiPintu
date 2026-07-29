@@ -13,6 +13,7 @@ class OAuthRefreshToken extends Model
     protected $table = 'oauth_refresh_tokens';
 
     public $incrementing = false;
+
     protected $keyType = 'string';
 
     protected $fillable = [

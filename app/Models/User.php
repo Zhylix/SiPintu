@@ -2,18 +2,17 @@
 
 namespace App\Models;
 
-use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
-
-use Illuminate\Database\Eloquent\Relations\HasOne;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use HasFactory, HasRoles, Notifiable;
 
     protected $fillable = [
         'external_id',
@@ -21,7 +20,7 @@ class User extends Authenticatable
         'email',
         'username',
         'password',
-        'user_type',
+        'role',
         'phone',
         'avatar',
         'status',
@@ -40,65 +39,42 @@ class User extends Authenticatable
         ];
     }
 
-    public function roles(): BelongsToMany
+    public function getUserTypeAttribute(): ?string
     {
-        return $this->belongsToMany(Role::class, 'role_user');
-    }
-
-    public function pklStatus(): HasOne
-    {
-        return $this->hasOne(PklStatus::class, 'student_id');
-    }
-
-    public function permissions()
-    {
-        return $this->roles->flatMap(function ($role) {
-            return $role->permissions;
-        })->unique('id');
-    }
-
-    public function hasRole(string|array $roles): bool
-    {
-        if (is_string($roles)) {
-            $roles = [$roles];
-        }
-
-        return $this->roles()->whereIn('slug', $roles)->exists() || in_array($this->user_type, $roles);
+        return $this->role;
     }
 
     public function hasPermission(string $permissionSlug): bool
     {
-        if ($this->hasRole('admin')) {
+        if ($this->isAdmin()) {
             return true;
         }
 
-        foreach ($this->roles as $role) {
-            if ($role->permissions()->where('slug', $permissionSlug)->exists()) {
-                return true;
-            }
+        try {
+            return $this->hasPermissionTo($permissionSlug);
+        } catch (\Throwable $e) {
+            return false;
         }
-
-        return false;
     }
 
     public function isStudent(): bool
     {
-        return $this->user_type === 'student' || $this->hasRole('student');
+        return in_array($this->role, ['student', 'siswa']) || $this->hasRole(['student', 'siswa']);
     }
 
     public function isTeacher(): bool
     {
-        return $this->user_type === 'teacher' || $this->hasRole('teacher');
+        return in_array($this->role, ['teacher', 'guru']) || $this->hasRole(['teacher', 'guru']);
     }
 
     public function isDudi(): bool
     {
-        return $this->user_type === 'dudi' || $this->hasRole('dudi');
+        return in_array($this->role, ['dudi', 'mitra']) || $this->hasRole(['dudi', 'mitra']);
     }
 
     public function isAdmin(): bool
     {
-        return $this->user_type === 'admin' || $this->hasRole('admin');
+        return in_array($this->role, ['admin', 'administrator']) || $this->hasRole(['admin', 'administrator']);
     }
 
     public function getUserTypeName(): string
@@ -115,7 +91,8 @@ class User extends Authenticatable
         if ($this->isStudent()) {
             return 'Siswa';
         }
-        return ucfirst($this->user_type ?? 'User');
+
+        return ucfirst($this->role ?? 'User');
     }
 
     public function canAccessApplication(Application $app): bool
@@ -131,7 +108,7 @@ class User extends Authenticatable
 
         $userRoleIds = $this->roles()->pluck('roles.id')->toArray();
 
-        return !empty(array_intersect($allowedRoleIds, $userRoleIds));
+        return ! empty(array_intersect($allowedRoleIds, $userRoleIds));
     }
 
     public function initials(): string

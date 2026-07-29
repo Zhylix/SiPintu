@@ -1,17 +1,16 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminAnnouncementController;
 use App\Http\Controllers\Admin\AdminApplicationController;
 use App\Http\Controllers\Admin\AdminAuditLogController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminMonitoringController;
-use App\Http\Controllers\Admin\AdminPklController;
 use App\Http\Controllers\Admin\AdminRoleController;
 use App\Http\Controllers\Admin\AdminSijunaController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Dudi\DudiDashboardController;
 use App\Http\Controllers\OAuthController;
-use App\Http\Controllers\PklStatusController;
 use App\Http\Controllers\Student\StudentDashboardController;
 use App\Http\Controllers\Teacher\TeacherDashboardController;
 use Illuminate\Support\Facades\Auth;
@@ -26,12 +25,22 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     if (Auth::check()) {
         $user = Auth::user();
-        if ($user->isAdmin()) return redirect()->route('admin.dashboard');
-        if ($user->isTeacher()) return redirect()->route('teacher.dashboard');
-        if ($user->isDudi()) return redirect()->route('dudi.dashboard');
-        if ($user->isStudent()) return redirect()->route('student.dashboard');
+        if ($user->isAdmin()) {
+            return redirect()->route('admin.dashboard');
+        }
+        if ($user->isTeacher()) {
+            return redirect()->route('teacher.dashboard');
+        }
+        if ($user->isDudi()) {
+            return redirect()->route('dudi.dashboard');
+        }
+        if ($user->isStudent()) {
+            return redirect()->route('student.dashboard');
+        }
+
         return redirect()->route('profile');
     }
+
     return redirect()->route('login');
 })->name('home');
 
@@ -44,25 +53,28 @@ Route::middleware('guest')->group(function () {
 
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-    
+
     Route::get('/dashboard', function () {
         $user = Auth::user();
-        if ($user->isAdmin()) return redirect()->route('admin.dashboard');
-        if ($user->isTeacher()) return redirect()->route('teacher.dashboard');
-        if ($user->isDudi()) return redirect()->route('dudi.dashboard');
-        if ($user->isStudent()) return redirect()->route('student.dashboard');
+        if ($user->isAdmin()) {
+            return redirect()->route('admin.dashboard');
+        }
+        if ($user->isTeacher()) {
+            return redirect()->route('teacher.dashboard');
+        }
+        if ($user->isDudi()) {
+            return redirect()->route('dudi.dashboard');
+        }
+        if ($user->isStudent()) {
+            return redirect()->route('student.dashboard');
+        }
+
         return redirect()->route('profile');
     })->name('dashboard');
 
     Route::get('/profile', [AuthController::class, 'showProfile'])->name('profile');
     Route::put('/profile', [AuthController::class, 'updateProfile'])->name('profile.update');
     Route::put('/profile/password', [AuthController::class, 'updatePassword'])->name('profile.password');
-
-    // Real-Time PKL Status Endpoints
-    Route::get('/api/pkl-status/live', [PklStatusController::class, 'getLiveStatus'])->name('pkl-status.live');
-    Route::get('/api/pkl-status/stream', [PklStatusController::class, 'stream'])->name('pkl-status.stream');
-    Route::put('/api/pkl-status/{id}', [PklStatusController::class, 'update'])->name('pkl-status.update');
-    Route::post('/api/pkl-status/{id}', [PklStatusController::class, 'update']);
 });
 
 /*
@@ -84,7 +96,6 @@ Route::get('/oauth/jwks.json', [OAuthController::class, 'jwks'])->name('oauth.jw
 */
 Route::prefix('siswa')->name('student.')->middleware(['auth', 'role:student'])->group(function () {
     Route::get('/dashboard', [StudentDashboardController::class, 'index'])->name('dashboard');
-    Route::get('/pkl', [StudentDashboardController::class, 'pkl'])->name('pkl');
     Route::get('/apps', [StudentDashboardController::class, 'apps'])->name('apps');
 });
 
@@ -107,7 +118,6 @@ Route::prefix('guru')->name('teacher.')->middleware(['auth', 'role:teacher'])->g
 */
 Route::prefix('dudi')->name('dudi.')->middleware(['auth', 'role:dudi'])->group(function () {
     Route::get('/dashboard', [DudiDashboardController::class, 'index'])->name('dashboard');
-    Route::get('/peserta-magang', [DudiDashboardController::class, 'interns'])->name('interns');
     Route::get('/evaluasi', [DudiDashboardController::class, 'evaluations'])->name('evaluations');
     Route::get('/apps', [DudiDashboardController::class, 'apps'])->name('apps');
 });
@@ -132,9 +142,6 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::get('/roles', [AdminRoleController::class, 'index'])->name('roles.index');
     Route::put('/roles/{role}/permissions', [AdminRoleController::class, 'updatePermissions'])->name('roles.update-permissions');
 
-    // PKL Status Management (Admin & DUDI restricted)
-    Route::get('/pkl-status', [AdminPklController::class, 'index'])->name('pkl.index');
-
     // SIJUNA API Integration & Student Sync
     Route::get('/sijuna', [AdminSijunaController::class, 'index'])->name('sijuna.index');
     Route::post('/sijuna/sync', [AdminSijunaController::class, 'triggerSync'])->name('sijuna.sync');
@@ -145,4 +152,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     // System Monitoring
     Route::get('/monitoring', [AdminMonitoringController::class, 'index'])->name('monitoring.index');
     Route::post('/monitoring/health-checks', [AdminMonitoringController::class, 'runHealthChecks'])->name('monitoring.run-health-checks');
+
+    // Announcement Management
+    Route::resource('announcements', AdminAnnouncementController::class);
+    Route::patch('/announcements/{announcement}/toggle', [AdminAnnouncementController::class, 'toggleStatus'])->name('announcements.toggle');
 });

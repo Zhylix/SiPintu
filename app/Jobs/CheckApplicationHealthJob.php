@@ -31,7 +31,7 @@ class CheckApplicationHealthJob implements ShouldQueue
                 $status = $response->successful() ? 'online' : 'warning';
             } catch (Exception $e) {
                 $status = 'offline';
-                Log::warning("Health check failed for application {$app->name}: " . $e->getMessage());
+                Log::warning("Health check failed for application {$app->name}: ".$e->getMessage());
             }
 
             $app->update([

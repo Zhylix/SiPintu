@@ -1,4 +1,4 @@
-@extends('layouts.auth', ['title' => 'Akses Ditolak - Gateway SSO'])
+@extends('layouts.auth', ['title' => 'Akses Ditolak'])
 
 @section('content')
 <div class="bg-slate-900/90 backdrop-blur-xl border border-rose-500/30 rounded-3xl p-8 shadow-2xl text-center space-y-6">
@@ -18,7 +18,7 @@
         </div>
         <div class="flex justify-between">
             <span class="text-slate-400">Role Anda:</span>
-            <span class="font-bold text-indigo-400 uppercase">{{ $user->user_type }}</span>
+            <span class="font-bold text-indigo-400 uppercase">{{ $user->role }}</span>
         </div>
         <div class="flex justify-between">
             <span class="text-slate-400">Aplikasi Tujuan:</span>

@@ -13,10 +13,10 @@ class OAuthBearerMiddleware
     {
         $tokenString = $request->bearerToken();
 
-        if (!$tokenString) {
+        if (! $tokenString) {
             return response()->json([
                 'error' => 'unauthorized',
-                'message' => 'Missing Bearer Access Token in Authorization header.'
+                'message' => 'Missing Bearer Access Token in Authorization header.',
             ], 401);
         }
 
@@ -26,10 +26,10 @@ class OAuthBearerMiddleware
             ->where('expires_at', '>', now())
             ->first();
 
-        if (!$accessToken || !$accessToken->user) {
+        if (! $accessToken || ! $accessToken->user) {
             return response()->json([
                 'error' => 'invalid_token',
-                'message' => 'The provided access token is invalid, revoked, or expired.'
+                'message' => 'The provided access token is invalid, revoked, or expired.',
             ], 401);
         }
 

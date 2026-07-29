@@ -43,6 +43,7 @@ class Application extends Model
     public function isRoleAllowed(Role|string $role): bool
     {
         $roleSlug = is_string($role) ? $role : $role->slug;
+
         return $this->roles()->where('slug', $roleSlug)->exists();
     }
 }

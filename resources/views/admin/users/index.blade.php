@@ -24,10 +24,10 @@
                 <span class="text-xs text-slate-400 font-medium">Filter Role:</span>
                 <select name="type" onchange="this.form.submit()" class="px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none">
                     <option value="">Semua Role (All Users)</option>
-                    <option value="student" {{ request('type') === 'student' ? 'selected' : '' }}>Siswa (SIJUNA)</option>
-                    <option value="teacher" {{ request('type') === 'teacher' ? 'selected' : '' }}>Guru</option>
-                    <option value="dudi" {{ request('type') === 'dudi' ? 'selected' : '' }}>DUDI / Industri</option>
-                    <option value="admin" {{ request('type') === 'admin' ? 'selected' : '' }}>Admin Gateway</option>
+                    <option value="student" {{ request('type', request('role')) === 'student' ? 'selected' : '' }}>Siswa (SIJUNA)</option>
+                    <option value="teacher" {{ request('type', request('role')) === 'teacher' ? 'selected' : '' }}>Guru</option>
+                    <option value="dudi" {{ request('type', request('role')) === 'dudi' ? 'selected' : '' }}>DUDI / Industri</option>
+                    <option value="admin" {{ request('type', request('role')) === 'admin' ? 'selected' : '' }}>Admin Gateway</option>
                 </select>
             </div>
 
@@ -72,11 +72,11 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider
-                                    {{ $user->user_type === 'admin' ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20' : '' }}
-                                    {{ $user->user_type === 'teacher' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' : '' }}
-                                    {{ $user->user_type === 'dudi' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : '' }}
-                                    {{ $user->user_type === 'student' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : '' }}">
-                                    {{ $user->user_type }}
+                                    {{ $user->role === 'admin' ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20' : '' }}
+                                    {{ $user->role === 'teacher' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' : '' }}
+                                    {{ $user->role === 'dudi' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : '' }}
+                                    {{ $user->role === 'student' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : '' }}">
+                                    {{ $user->role }}
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap font-mono text-slate-300">

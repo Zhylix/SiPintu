@@ -12,12 +12,11 @@ class RoleMiddleware
     /**
      * Handle an incoming request.
      *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
-     * @param  string  ...$roles
+     * @param  Closure(Request): (Response)  $next
      */
     public function handle(Request $request, Closure $next, string ...$roles): Response
     {
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return redirect()->route('login')->with('error', 'Silakan masuk terlebih dahulu untuk mengakses halaman ini.');
         }
 
@@ -59,7 +58,7 @@ class RoleMiddleware
             'student' => 'Siswa',
         ];
 
-        $requiredRoleNames = array_map(fn($r) => $roleNamesMap[$r] ?? ucfirst($r), $normalizedRoles);
+        $requiredRoleNames = array_map(fn ($r) => $roleNamesMap[$r] ?? ucfirst($r), $normalizedRoles);
         $roleListStr = implode(' atau ', $requiredRoleNames);
 
         abort(403, "Akses Ditolak: Halaman ini khusus untuk pengguna dengan role {$roleListStr}. Akun Anda saat ini terdaftar sebagai {$user->getUserTypeName()}.");

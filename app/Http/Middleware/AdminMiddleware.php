@@ -11,12 +11,12 @@ class AdminMiddleware
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return redirect()->route('login')->with('error', 'Silakan login terlebih dahulu.');
         }
 
         $user = Auth::user();
-        if (!$user->isAdmin() && !$user->hasPermission('access-admin')) {
+        if (! $user->isAdmin() && ! $user->hasPermission('access-admin')) {
             abort(403, 'Akses Ditolak: Anda tidak memiliki hak akses ke Admin Panel Gateway.');
         }
 

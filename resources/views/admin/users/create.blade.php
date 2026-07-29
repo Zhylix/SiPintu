@@ -22,11 +22,11 @@
         @csrf
 
         <div>
-            <label class="block text-xs font-semibold text-slate-300 mb-1.5">Jenis Akun (Role Primary)</label>
-            <select name="user_type" required class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-sm focus:border-indigo-500 focus:outline-none">
-                <option value="teacher" {{ old('user_type') === 'teacher' ? 'selected' : '' }}>Guru / Pendidik (Role: teacher)</option>
-                <option value="dudi" {{ old('user_type') === 'dudi' ? 'selected' : '' }}>DUDI / Mitra Industri (Role: dudi)</option>
-                <option value="admin" {{ old('user_type') === 'admin' ? 'selected' : '' }}>Administrator Gateway (Role: admin)</option>
+            <label class="block text-xs font-semibold text-slate-300 mb-1.5">Peran / Role Utama</label>
+            <select name="role" required class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-sm focus:border-indigo-500 focus:outline-none">
+                <option value="teacher" {{ old('role', old('user_type')) === 'teacher' ? 'selected' : '' }}>Guru / Pendidik (Role: teacher)</option>
+                <option value="dudi" {{ old('role', old('user_type')) === 'dudi' ? 'selected' : '' }}>DUDI / Mitra Industri (Role: dudi)</option>
+                <option value="admin" {{ old('role', old('user_type')) === 'admin' ? 'selected' : '' }}>Administrator Gateway (Role: admin)</option>
             </select>
         </div>
 

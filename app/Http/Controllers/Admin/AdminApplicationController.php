@@ -19,14 +19,15 @@ class AdminApplicationController extends Controller
     public function index()
     {
         $applications = Application::with('roles')->latest()->paginate(15);
+
         return view('admin.applications.index', compact('applications'));
     }
 
     public function create()
     {
         $roles = Role::all();
-        $generatedClientId = 'app_' . Str::lower(Str::random(12));
-        $generatedSecret = 'sec_' . Str::random(32);
+        $generatedClientId = 'app_'.Str::lower(Str::random(12));
+        $generatedSecret = 'sec_'.Str::random(32);
 
         return view('admin.applications.create', compact('roles', 'generatedClientId', 'generatedSecret'));
     }
@@ -89,6 +90,7 @@ class AdminApplicationController extends Controller
     public function edit(Application $application)
     {
         $roles = Role::all();
+
         return view('admin.applications.edit', compact('application', 'roles'));
     }
 
@@ -134,7 +136,7 @@ class AdminApplicationController extends Controller
 
     public function regenerateSecret(Application $application): RedirectResponse
     {
-        $newSecret = 'sec_' . Str::random(32);
+        $newSecret = 'sec_'.Str::random(32);
         $application->update([
             'client_secret' => Hash::make($newSecret),
         ]);
@@ -151,7 +153,7 @@ class AdminApplicationController extends Controller
 
     public function testHealth(Application $application): RedirectResponse
     {
-        if (!$application->health_check_url) {
+        if (! $application->health_check_url) {
             return back()->with('error', 'Aplikasi ini tidak memiliki Health Check URL.');
         }
 
@@ -167,7 +169,7 @@ class AdminApplicationController extends Controller
             'last_health_check_at' => now(),
         ]);
 
-        return back()->with('info', "Health check {$application->name}: Status " . strtoupper($status));
+        return back()->with('info', "Health check {$application->name}: Status ".strtoupper($status));
     }
 
     public function destroy(Application $application): RedirectResponse

@@ -2,28 +2,19 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Spatie\Permission\Models\Role as SpatieRole;
 
-class Role extends Model
+class Role extends SpatieRole
 {
-    use HasFactory;
-
     protected $fillable = [
         'name',
-        'slug',
-        'description',
+        'guard_name',
     ];
 
-    public function users(): BelongsToMany
+    public function getSlugAttribute(): string
     {
-        return $this->belongsToMany(User::class, 'role_user');
-    }
-
-    public function permissions(): BelongsToMany
-    {
-        return $this->belongsToMany(Permission::class, 'permission_role');
+        return $this->name;
     }
 
     public function applications(): BelongsToMany
@@ -31,3 +22,4 @@ class Role extends Model
         return $this->belongsToMany(Application::class, 'application_role');
     }
 }
+
