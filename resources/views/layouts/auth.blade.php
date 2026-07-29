@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $title ?? 'Central Identity Gateway & Single Sign-On (SSO)' }}</title>
+    <title>{{ $title ?? 'SiPintu' }}</title>
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -36,7 +36,7 @@
             <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-purple-500 shadow-xl shadow-indigo-500/30 text-white font-black text-2xl mb-4 transform hover:scale-105 transition-transform">
                 G
             </div>
-            <h1 class="text-2xl font-extrabold text-white tracking-tight">Central Identity Gateway</h1>
+            <h1 class="text-2xl font-extrabold text-white tracking-tight">SiPintu</h1>
             <p class="text-xs text-indigo-400 font-semibold tracking-wider uppercase mt-1">Single Sign-On (SSO) Provider</p>
         </div>
 

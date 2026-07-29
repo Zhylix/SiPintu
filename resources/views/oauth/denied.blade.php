@@ -27,7 +27,7 @@
     </div>
 
     <p class="text-xs text-slate-400 leading-relaxed">
-        Peran (Role) Anda saat ini tidak dikonfigurasikan untuk diizinkan mengakses aplikasi ini di Central Identity Gateway. Silakan hubungi Administrator Sekolah jika Anda membutuhkan akses.
+        Peran (Role) Anda saat ini tidak dikonfigurasikan untuk diizinkan mengakses aplikasi ini di SiPintu. Silakan hubungi Administrator Sekolah jika Anda membutuhkan akses.
     </p>
 
     <div class="pt-2">

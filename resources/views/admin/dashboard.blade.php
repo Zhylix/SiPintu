@@ -1,4 +1,4 @@
-@extends('layouts.app', ['headerTitle' => 'Dashboard Central Identity Gateway'])
+@extends('layouts.app', ['headerTitle' => 'Dashboard SiPintu'])
 
 @section('content')
 <div class="space-y-8">

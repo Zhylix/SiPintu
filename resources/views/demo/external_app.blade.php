@@ -154,7 +154,7 @@
                         <div>
                             <h3 class="text-sm font-bold text-white">User Belum Terautentikasi di {{ $app->name }}</h3>
                             <p class="text-xs text-slate-400 mt-1 max-w-md mx-auto">
-                                Saat membuka aplikasi eksternal ini secara langsung, sistem mendeteksi belum ada session lokal. Pengguna akan diarahkan secara transparan ke Central Identity Gateway.
+                                Saat membuka aplikasi eksternal ini secara langsung, sistem mendeteksi belum ada session lokal. Pengguna akan diarahkan secara transparan ke SiPintu.
                             </p>
                         </div>
 

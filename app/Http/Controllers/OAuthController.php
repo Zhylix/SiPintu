@@ -57,7 +57,7 @@ class OAuthController extends Controller
         if (!Auth::check()) {
             // Save full authorization request context in session so after login user returns seamlessly
             session()->put('oauth_return_to', $request->fullUrl());
-            return redirect()->route('login')->with('info', 'Silakan login di Central Identity Gateway untuk melanjutkan.');
+            return redirect()->route('login')->with('info', 'Silakan login di SiPintu untuk melanjutkan.');
         }
 
         $user = Auth::user();

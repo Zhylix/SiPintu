@@ -1,4 +1,4 @@
-@extends('layouts.auth', ['title' => 'Login - Gateway Central SSO'])
+@extends('layouts.auth', ['title' => 'Login'])
 
 @section('content')
 <div class="bg-slate-900/90 backdrop-blur-xl border border-slate-800 rounded-3xl p-8 shadow-2xl shadow-slate-950/80">
