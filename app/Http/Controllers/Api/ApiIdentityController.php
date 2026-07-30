@@ -87,13 +87,52 @@ class ApiIdentityController extends Controller
     }
 
     /**
-     * Gateway Proxy API: Retrieve students data from SIJUNA (with Redis caching)
+     * Gateway Proxy API: Retrieve students data from SIJUNA (with Redis caching and local DB fallback)
      */
     public function students(Request $request, SijunaApiService $sijunaService): JsonResponse
     {
+        $nis = $request->query('nis');
+
+        if ($nis) {
+            $student = $sijunaService->getStudentByExternalId($nis);
+
+            if (! $student) {
+                $localUser = \App\Models\User::where('username', $nis)
+                    ->orWhere('external_id', $nis)
+                    ->first();
+
+                if ($localUser) {
+                    $student = [
+                        'id' => (string) $localUser->id,
+                        'external_id' => $localUser->external_id,
+                        'nis' => $localUser->username ?: $localUser->external_id,
+                        'nama' => $localUser->name,
+                        'name' => $localUser->name,
+                        'email' => $localUser->email,
+                        'role' => $localUser->role,
+                        'status' => $localUser->status,
+                    ];
+                }
+            }
+
+            if (! $student) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => "Data siswa dengan NIS {$nis} tidak ditemukan.",
+                ], 404);
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'source' => 'Gateway Proxy (SIJUNA Service + Cache + DB Fallback)',
+                'data' => $student,
+            ]);
+        }
+
         $students = $sijunaService->getStudents();
 
         return response()->json([
+            'status' => 'success',
             'source' => 'Gateway Proxy (SIJUNA Service + Redis Cache)',
             'count' => count($students),
             'data' => $students,
@@ -101,21 +140,41 @@ class ApiIdentityController extends Controller
     }
 
     /**
-     * Gateway Proxy API: Retrieve specific student data from SIJUNA by External ID
+     * Gateway Proxy API: Retrieve specific student data from SIJUNA by External ID or NIS
      */
     public function studentDetail(Request $request, string $externalId, SijunaApiService $sijunaService): JsonResponse
     {
         $student = $sijunaService->getStudentByExternalId($externalId);
 
         if (! $student) {
+            $localUser = \App\Models\User::where('username', $externalId)
+                ->orWhere('external_id', $externalId)
+                ->first();
+
+            if ($localUser) {
+                $student = [
+                    'id' => (string) $localUser->id,
+                    'external_id' => $localUser->external_id,
+                    'nis' => $localUser->username ?: $localUser->external_id,
+                    'nama' => $localUser->name,
+                    'name' => $localUser->name,
+                    'email' => $localUser->email,
+                    'role' => $localUser->role,
+                    'status' => $localUser->status,
+                ];
+            }
+        }
+
+        if (! $student) {
             return response()->json([
-                'error' => 'not_found',
-                'message' => "Data siswa dengan ID {$externalId} tidak ditemukan di database SIJUNA.",
+                'status' => 'error',
+                'message' => "Data siswa dengan ID/NIS {$externalId} tidak ditemukan.",
             ], 404);
         }
 
         return response()->json([
-            'source' => 'Gateway Proxy (SIJUNA Service + Redis Cache)',
+            'status' => 'success',
+            'source' => 'Gateway Proxy (SIJUNA Service + Redis Cache + DB Fallback)',
             'data' => $student,
         ]);
     }
