@@ -292,11 +292,13 @@ class OAuthController extends Controller
      */
     protected function generateIdToken($user, $application): string
     {
-        $header = base64_encode(json_encode(['alg' => 'HS256', 'typ' => 'JWT']));
+        $base64UrlEncode = fn ($data) => str_replace(['+', '/', '='], ['-', '_', ''], base64_encode(is_string($data) ? $data : json_encode($data)));
+
+        $header = $base64UrlEncode(['alg' => 'HS256', 'typ' => 'JWT']);
 
         $primaryRole = $user->roles->first()?->slug ?? $user->role;
 
-        $payload = base64_encode(json_encode([
+        $payload = $base64UrlEncode([
             'iss' => config('app.url', 'http://localhost:8000'),
             'sub' => (string) $user->id,
             'aud' => $application->client_id,
@@ -306,7 +308,7 @@ class OAuthController extends Controller
             'email' => $user->email,
             'role' => $primaryRole,
             'external_id' => $user->external_id,
-        ]));
+        ]);
 
         $signatureKey = config('app.key', 'secret_gateway_key');
         $signature = hash_hmac('sha256', "{$header}.{$payload}", $signatureKey, true);

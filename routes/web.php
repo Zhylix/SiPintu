@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminApplicationCategoryController;
 use App\Http\Controllers\Admin\AdminAnnouncementController;
 use App\Http\Controllers\Admin\AdminApplicationController;
 use App\Http\Controllers\Admin\AdminAuditLogController;
@@ -13,6 +14,7 @@ use App\Http\Controllers\Dudi\DudiDashboardController;
 use App\Http\Controllers\OAuthController;
 use App\Http\Controllers\Student\StudentDashboardController;
 use App\Http\Controllers\Teacher\TeacherDashboardController;
+use App\Http\Controllers\UserApplicationFavoriteController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -46,7 +48,7 @@ Route::get('/', function () {
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/login', [AuthController::class, 'login'])->name('login.store');
     Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.request');
     Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->name('password.email');
 });
@@ -72,9 +74,12 @@ Route::middleware('auth')->group(function () {
         return redirect()->route('profile');
     })->name('dashboard');
 
-    Route::get('/profile', [AuthController::class, 'showProfile'])->name('profile');
+    Route::get('/profile', [AuthController::class, 'showProfile'])->name('profile')->name('profile.edit');
     Route::put('/profile', [AuthController::class, 'updateProfile'])->name('profile.update');
     Route::put('/profile/password', [AuthController::class, 'updatePassword'])->name('profile.password');
+
+    // Toggle favorite application for user
+    Route::post('/applications/{application}/favorite', [UserApplicationFavoriteController::class, 'toggleFavorite'])->name('applications.favorite.toggle');
 });
 
 /*
@@ -132,6 +137,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
 
     // User Management (Teachers, DUDI, Students, Admins)
     Route::resource('users', AdminUserController::class);
+
+    // Application Categories Management
+    Route::resource('categories', AdminApplicationCategoryController::class);
 
     // External Application Registry & OAuth Clients
     Route::resource('applications', AdminApplicationController::class);

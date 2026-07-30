@@ -28,43 +28,15 @@
     </div>
 
     <!-- DUDI SSO Applications Section -->
-    <div class="bg-slate-900 rounded-2xl border border-slate-800 p-6 space-y-4">
+    <div class="space-y-4">
         <div class="flex items-center justify-between">
             <div>
-                <h3 class="text-base font-bold text-white">Aplikasi Terintegrasi DUDI</h3>
-                <p class="text-xs text-slate-400 mt-0.5">Aplikasi eksternal mitra yang terhubung dengan Gateway Identity</p>
+                <h3 class="text-lg font-bold text-white">Aplikasi Terintegrasi DUDI</h3>
+                <p class="text-xs text-slate-400 mt-0.5">Filter aplikasi berdasarkan kategori atau tandai ⭐ favorit Anda</p>
             </div>
-            <a href="{{ route('dudi.apps') }}" class="text-xs font-bold text-amber-400 hover:underline">
-                Semua Aplikasi &rarr;
-            </a>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
-            @forelse($applications as $app)
-                <div class="p-5 rounded-xl bg-slate-950/80 border border-slate-800 hover:border-amber-500/40 transition-all space-y-3 flex flex-col justify-between">
-                    <div>
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="text-sm font-bold text-white">{{ $app->name }}</span>
-                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                                SSO Ready
-                            </span>
-                        </div>
-                        <p class="text-xs text-slate-400 line-clamp-2">{{ $app->description }}</p>
-                    </div>
-
-                    <div class="pt-3 border-t border-slate-800/80 flex items-center justify-between">
-                        <span class="text-[11px] text-slate-400">Diizinkan untuk DUDI</span>
-                        <a href="{{ route('oauth.authorize', ['client_id' => $app->client_id, 'redirect_uri' => $app->redirect_uri, 'response_type' => 'code', 'scope' => 'openid profile email']) }}" class="px-3 py-1.5 bg-amber-600/20 hover:bg-amber-600 text-amber-300 hover:text-white border border-amber-500/30 text-xs font-bold rounded-lg transition-all">
-                            Buka SSO &rarr;
-                        </a>
-                    </div>
-                </div>
-            @empty
-                <div class="col-span-3 p-6 text-center text-xs text-slate-400 bg-slate-950/40 rounded-xl border border-slate-800">
-                    Belum ada aplikasi yang dihubungkan untuk role DUDI.
-                </div>
-            @endforelse
-        </div>
+        @include('partials.app-catalog-grid')
     </div>
 </div>
 @endsection

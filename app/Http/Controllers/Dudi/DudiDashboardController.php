@@ -13,14 +13,21 @@ class DudiDashboardController extends Controller
     {
         $user = Auth::user();
 
-        // Applications accessible to DUDI
-        $applications = Application::where('status', 'active')
+        $applications = Application::with('category')
+            ->where('status', 'active')
             ->whereHas('roles', function ($query) {
                 $query->whereIn('name', ['dudi']);
             })
             ->get();
 
-        return view('dudi.dashboard', compact('user', 'applications'));
+        $categories = \App\Models\ApplicationCategory::where('is_active', true)
+            ->orderBy('display_order')
+            ->get();
+
+        $favoriteAppIds = $user->favoriteApplications()->pluck('applications.id')->toArray();
+        $favoriteApps = $applications->whereIn('id', $favoriteAppIds);
+
+        return view('dudi.dashboard', compact('user', 'applications', 'categories', 'favoriteAppIds', 'favoriteApps'));
     }
 
     public function evaluations()
@@ -38,12 +45,19 @@ class DudiDashboardController extends Controller
     public function apps()
     {
         $user = Auth::user();
-        $applications = Application::where('status', 'active')
+        $applications = Application::with('category')
+            ->where('status', 'active')
             ->whereHas('roles', function ($query) {
                 $query->whereIn('name', ['dudi']);
             })
             ->get();
 
-        return view('dudi.apps', compact('user', 'applications'));
+        $categories = \App\Models\ApplicationCategory::where('is_active', true)
+            ->orderBy('display_order')
+            ->get();
+
+        $favoriteAppIds = $user->favoriteApplications()->pluck('applications.id')->toArray();
+
+        return view('dudi.apps', compact('user', 'applications', 'categories', 'favoriteAppIds'));
     }
 }

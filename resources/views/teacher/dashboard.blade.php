@@ -78,6 +78,16 @@
                 </tbody>
             </table>
         </div>
+    <!-- Teacher SSO Applications Section -->
+    <div class="space-y-4">
+        <div class="flex items-center justify-between">
+            <div>
+                <h3 class="text-lg font-bold text-white">Aplikasi Terintegrasi (Portal Guru)</h3>
+                <p class="text-xs text-slate-400 mt-0.5">Filter aplikasi berdasarkan kategori atau tandai ⭐ favorit Anda</p>
+            </div>
+        </div>
+
+        @include('partials.app-catalog-grid')
     </div>
 </div>
 @endsection

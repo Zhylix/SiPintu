@@ -8,10 +8,17 @@
             <p class="text-xs text-slate-400 mt-1">Daftarkan aplikasi eksternal dan tentukan role yang boleh mengakses</p>
         </div>
 
-        <a href="{{ route('admin.applications.create') }}" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-indigo-600/30 flex items-center space-x-2">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-            <span>+ Daftarkan Aplikasi Baru</span>
-        </a>
+        <div class="flex items-center space-x-3">
+            <a href="{{ route('admin.categories.index') }}" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl transition-all border border-slate-700 flex items-center space-x-2">
+                <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                <span>Kelola Kategori</span>
+            </a>
+
+            <a href="{{ route('admin.applications.create') }}" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-indigo-600/30 flex items-center space-x-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                <span>+ Daftarkan Aplikasi Baru</span>
+            </a>
+        </div>
     </div>
 
     @if(session('new_client_secret'))
@@ -38,6 +45,7 @@
                 <thead class="bg-slate-950 text-slate-400 uppercase font-bold text-[10px] border-b border-slate-800">
                     <tr>
                         <th class="px-6 py-4">Nama Aplikasi</th>
+                        <th class="px-6 py-4">Kategori</th>
                         <th class="px-6 py-4">Client ID</th>
                         <th class="px-6 py-4">Base URL & Redirect URI</th>
                         <th class="px-6 py-4">Role Akses Diizinkan</th>
@@ -51,6 +59,17 @@
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="font-bold text-white text-sm">{{ $app->name }}</div>
                                 <div class="text-slate-400 text-xs truncate max-w-xs">{{ $app->description }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                @if($app->category)
+                                    <span class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                                        {{ $app->category->name }}
+                                    </span>
+                                @else
+                                    <span class="px-2.5 py-1 rounded-lg text-[10px] font-medium bg-slate-800 text-slate-400">
+                                        Umum
+                                    </span>
+                                @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap font-mono text-indigo-300">
                                 {{ $app->client_id }}

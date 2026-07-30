@@ -18,18 +18,20 @@ class AdminApplicationController extends Controller
 {
     public function index()
     {
-        $applications = Application::with('roles')->latest()->paginate(15);
+        $applications = Application::with(['roles', 'category'])->latest()->paginate(15);
+        $categories = \App\Models\ApplicationCategory::orderBy('display_order')->get();
 
-        return view('admin.applications.index', compact('applications'));
+        return view('admin.applications.index', compact('applications', 'categories'));
     }
 
     public function create()
     {
         $roles = Role::all();
+        $categories = \App\Models\ApplicationCategory::orderBy('display_order')->get();
         $generatedClientId = 'app_'.Str::lower(Str::random(12));
         $generatedSecret = 'sec_'.Str::random(32);
 
-        return view('admin.applications.create', compact('roles', 'generatedClientId', 'generatedSecret'));
+        return view('admin.applications.create', compact('roles', 'categories', 'generatedClientId', 'generatedSecret'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -37,6 +39,7 @@ class AdminApplicationController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'slug' => ['required', 'string', 'max:255', 'unique:applications,slug'],
+            'category_id' => ['nullable', 'exists:application_categories,id'],
             'description' => ['nullable', 'string'],
             'base_url' => ['required', 'url'],
             'icon' => ['nullable', 'string', 'max:50'],
@@ -60,6 +63,7 @@ class AdminApplicationController extends Controller
         $app = Application::create([
             'name' => $validated['name'],
             'slug' => Str::slug($validated['slug']),
+            'category_id' => $validated['category_id'] ?? null,
             'description' => $validated['description'] ?? null,
             'base_url' => rtrim($validated['base_url'], '/'),
             'icon' => $validated['icon'] ?? 'app-symbol',
@@ -90,8 +94,9 @@ class AdminApplicationController extends Controller
     public function edit(Application $application)
     {
         $roles = Role::all();
+        $categories = \App\Models\ApplicationCategory::orderBy('display_order')->get();
 
-        return view('admin.applications.edit', compact('application', 'roles'));
+        return view('admin.applications.edit', compact('application', 'roles', 'categories'));
     }
 
     public function update(Request $request, Application $application): RedirectResponse
@@ -99,6 +104,7 @@ class AdminApplicationController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'slug' => ['required', 'string', 'max:255', Rule::unique('applications')->ignore($application->id)],
+            'category_id' => ['nullable', 'exists:application_categories,id'],
             'description' => ['nullable', 'string'],
             'base_url' => ['required', 'url'],
             'icon' => ['nullable', 'string', 'max:50'],
@@ -114,6 +120,7 @@ class AdminApplicationController extends Controller
         $application->update([
             'name' => $validated['name'],
             'slug' => Str::slug($validated['slug']),
+            'category_id' => $validated['category_id'] ?? null,
             'description' => $validated['description'] ?? null,
             'base_url' => rtrim($validated['base_url'], '/'),
             'icon' => $validated['icon'] ?? 'app-symbol',

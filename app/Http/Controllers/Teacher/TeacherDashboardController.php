@@ -13,12 +13,19 @@ class TeacherDashboardController extends Controller
     {
         $user = Auth::user();
 
-        // Get applications accessible to teacher role
-        $applications = Application::where('status', 'active')
+        $applications = Application::with('category')
+            ->where('status', 'active')
             ->whereHas('roles', function ($query) {
                 $query->whereIn('name', ['teacher', 'guru']);
             })
             ->get();
+
+        $categories = \App\Models\ApplicationCategory::where('is_active', true)
+            ->orderBy('display_order')
+            ->get();
+
+        $favoriteAppIds = $user->favoriteApplications()->pluck('applications.id')->toArray();
+        $favoriteApps = $applications->whereIn('id', $favoriteAppIds);
 
         $stats = [
             'total_students' => User::where('role', 'student')->count(),
@@ -27,7 +34,7 @@ class TeacherDashboardController extends Controller
 
         $guidedStudents = User::where('role', 'student')->take(5)->get();
 
-        return view('teacher.dashboard', compact('user', 'applications', 'stats', 'guidedStudents'));
+        return view('teacher.dashboard', compact('user', 'applications', 'categories', 'favoriteAppIds', 'favoriteApps', 'stats', 'guidedStudents'));
     }
 
     public function students()
@@ -53,12 +60,19 @@ class TeacherDashboardController extends Controller
     public function apps()
     {
         $user = Auth::user();
-        $applications = Application::where('status', 'active')
+        $applications = Application::with('category')
+            ->where('status', 'active')
             ->whereHas('roles', function ($query) {
                 $query->whereIn('name', ['teacher', 'guru']);
             })
             ->get();
 
-        return view('teacher.apps', compact('user', 'applications'));
+        $categories = \App\Models\ApplicationCategory::where('is_active', true)
+            ->orderBy('display_order')
+            ->get();
+
+        $favoriteAppIds = $user->favoriteApplications()->pluck('applications.id')->toArray();
+
+        return view('teacher.apps', compact('user', 'applications', 'categories', 'favoriteAppIds'));
     }
 }

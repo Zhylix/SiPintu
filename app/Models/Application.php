@@ -13,6 +13,7 @@ class Application extends Model
     protected $fillable = [
         'name',
         'slug',
+        'category_id',
         'description',
         'base_url',
         'icon',
@@ -34,6 +35,16 @@ class Application extends Model
     protected $casts = [
         'last_health_check_at' => 'datetime',
     ];
+
+    public function category(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(ApplicationCategory::class, 'category_id');
+    }
+
+    public function favoritedByUsers(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'user_favorite_applications')->withTimestamps();
+    }
 
     public function roles(): BelongsToMany
     {

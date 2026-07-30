@@ -8,11 +8,12 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
+use Laravel\Fortify\TwoFactorAuthenticatable;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasFactory, HasRoles, Notifiable;
+    use HasFactory, HasRoles, Notifiable, TwoFactorAuthenticatable;
 
     protected $fillable = [
         'external_id',
@@ -109,6 +110,20 @@ class User extends Authenticatable
         $userRoleIds = $this->roles()->pluck('roles.id')->toArray();
 
         return ! empty(array_intersect($allowedRoleIds, $userRoleIds));
+    }
+
+    public function favoriteApplications(): BelongsToMany
+    {
+        return $this->belongsToMany(Application::class, 'user_favorite_applications')
+            ->withTimestamps()
+            ->withPivot('sort_order');
+    }
+
+    public function hasFavorited(Application|int $application): bool
+    {
+        $appId = $application instanceof Application ? $application->id : $application;
+
+        return $this->favoriteApplications()->where('application_id', $appId)->exists();
     }
 
     public function initials(): string
