@@ -1,7 +1,7 @@
 <?php
 
-use App\Http\Controllers\Admin\AdminApplicationCategoryController;
 use App\Http\Controllers\Admin\AdminAnnouncementController;
+use App\Http\Controllers\Admin\AdminApplicationCategoryController;
 use App\Http\Controllers\Admin\AdminApplicationController;
 use App\Http\Controllers\Admin\AdminAuditLogController;
 use App\Http\Controllers\Admin\AdminDashboardController;

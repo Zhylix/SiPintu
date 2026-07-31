@@ -23,7 +23,7 @@ class AdminAnnouncementController extends Controller
         }
 
         if ($request->filled('search')) {
-            $query->where('title', 'like', '%' . $request->search . '%');
+            $query->where('title', 'like', '%'.$request->search.'%');
         }
 
         $announcements = $query->paginate(10)->withQueryString();
@@ -58,7 +58,7 @@ class AdminAnnouncementController extends Controller
 
         AuditLog::create([
             'user_id' => Auth::id(),
-            'activity' => 'Membuat Pengumuman: ' . $announcement->title,
+            'activity' => 'Membuat Pengumuman: '.$announcement->title,
             'ip_address' => $request->ip(),
             'user_agent' => $request->userAgent(),
             'metadata' => [
@@ -96,7 +96,7 @@ class AdminAnnouncementController extends Controller
 
         AuditLog::create([
             'user_id' => Auth::id(),
-            'activity' => 'Mengubah Pengumuman: ' . $announcement->title,
+            'activity' => 'Mengubah Pengumuman: '.$announcement->title,
             'ip_address' => $request->ip(),
             'user_agent' => $request->userAgent(),
             'metadata' => [
@@ -115,7 +115,7 @@ class AdminAnnouncementController extends Controller
 
         AuditLog::create([
             'user_id' => Auth::id(),
-            'activity' => 'Menghapus Pengumuman: ' . $title,
+            'activity' => 'Menghapus Pengumuman: '.$title,
             'ip_address' => $request->ip(),
             'user_agent' => $request->userAgent(),
         ]);
@@ -127,7 +127,7 @@ class AdminAnnouncementController extends Controller
     public function toggleStatus(Request $request, Announcement $announcement)
     {
         $announcement->update([
-            'is_active' => !$announcement->is_active
+            'is_active' => ! $announcement->is_active,
         ]);
 
         return redirect()->back()->with('success', 'Status pengumuman berhasil diperbarui!');

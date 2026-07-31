@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Application;
+use App\Models\ApplicationCategory;
 use App\Models\Role;
 use App\Services\AuditLogger;
 use Exception;
@@ -19,7 +20,7 @@ class AdminApplicationController extends Controller
     public function index()
     {
         $applications = Application::with(['roles', 'category'])->latest()->paginate(15);
-        $categories = \App\Models\ApplicationCategory::orderBy('display_order')->get();
+        $categories = ApplicationCategory::orderBy('display_order')->get();
 
         return view('admin.applications.index', compact('applications', 'categories'));
     }
@@ -27,7 +28,7 @@ class AdminApplicationController extends Controller
     public function create()
     {
         $roles = Role::all();
-        $categories = \App\Models\ApplicationCategory::orderBy('display_order')->get();
+        $categories = ApplicationCategory::orderBy('display_order')->get();
         $generatedClientId = 'app_'.Str::lower(Str::random(12));
         $generatedSecret = 'sec_'.Str::random(32);
 
@@ -94,7 +95,7 @@ class AdminApplicationController extends Controller
     public function edit(Application $application)
     {
         $roles = Role::all();
-        $categories = \App\Models\ApplicationCategory::orderBy('display_order')->get();
+        $categories = ApplicationCategory::orderBy('display_order')->get();
 
         return view('admin.applications.edit', compact('application', 'roles', 'categories'));
     }

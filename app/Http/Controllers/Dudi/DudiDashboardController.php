@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Dudi;
 
 use App\Http\Controllers\Controller;
 use App\Models\Application;
-use App\Models\User;
+use App\Models\ApplicationCategory;
 use Illuminate\Support\Facades\Auth;
 
 class DudiDashboardController extends Controller
@@ -20,7 +20,7 @@ class DudiDashboardController extends Controller
             })
             ->get();
 
-        $categories = \App\Models\ApplicationCategory::where('is_active', true)
+        $categories = ApplicationCategory::where('is_active', true)
             ->orderBy('display_order')
             ->get();
 
@@ -40,7 +40,7 @@ class DudiDashboardController extends Controller
             })
             ->get();
 
-        $categories = \App\Models\ApplicationCategory::where('is_active', true)
+        $categories = ApplicationCategory::where('is_active', true)
             ->orderBy('display_order')
             ->get();
 

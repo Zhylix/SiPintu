@@ -22,4 +22,3 @@ class Role extends SpatieRole
         return $this->belongsToMany(Application::class, 'application_role');
     }
 }
-

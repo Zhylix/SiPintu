@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
 use App\Models\Application;
+use App\Models\ApplicationCategory;
 use Illuminate\Support\Facades\Auth;
 
 class StudentDashboardController extends Controller
@@ -19,7 +20,7 @@ class StudentDashboardController extends Controller
             })
             ->get();
 
-        $categories = \App\Models\ApplicationCategory::where('is_active', true)
+        $categories = ApplicationCategory::where('is_active', true)
             ->orderBy('display_order')
             ->get();
 
@@ -39,7 +40,7 @@ class StudentDashboardController extends Controller
             })
             ->get();
 
-        $categories = \App\Models\ApplicationCategory::where('is_active', true)
+        $categories = ApplicationCategory::where('is_active', true)
             ->orderBy('display_order')
             ->get();
 

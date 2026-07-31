@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Teacher;
 
 use App\Http\Controllers\Controller;
 use App\Models\Application;
-use App\Models\User;
+use App\Models\ApplicationCategory;
 use Illuminate\Support\Facades\Auth;
 
 class TeacherDashboardController extends Controller
@@ -20,7 +20,7 @@ class TeacherDashboardController extends Controller
             })
             ->get();
 
-        $categories = \App\Models\ApplicationCategory::where('is_active', true)
+        $categories = ApplicationCategory::where('is_active', true)
             ->orderBy('display_order')
             ->get();
 
@@ -45,7 +45,7 @@ class TeacherDashboardController extends Controller
             })
             ->get();
 
-        $categories = \App\Models\ApplicationCategory::where('is_active', true)
+        $categories = ApplicationCategory::where('is_active', true)
             ->orderBy('display_order')
             ->get();
 

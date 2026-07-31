@@ -34,11 +34,11 @@ class AdminApplicationCategoryController extends Controller
 
         $category = ApplicationCategory::create([
             'name' => $validated['name'],
-            'slug' => !empty($validated['slug']) ? Str::slug($validated['slug']) : Str::slug($validated['name']),
+            'slug' => ! empty($validated['slug']) ? Str::slug($validated['slug']) : Str::slug($validated['name']),
             'icon' => $validated['icon'] ?? 'folder',
             'description' => $validated['description'] ?? null,
             'display_order' => $validated['display_order'] ?? 0,
-            'is_active' => $request->has('is_active') ? (bool)$request->is_active : true,
+            'is_active' => $request->has('is_active') ? (bool) $request->is_active : true,
         ]);
 
         AuditLogger::log('admin_create_app_category', [
@@ -63,11 +63,11 @@ class AdminApplicationCategoryController extends Controller
 
         $category->update([
             'name' => $validated['name'],
-            'slug' => !empty($validated['slug']) ? Str::slug($validated['slug']) : Str::slug($validated['name']),
+            'slug' => ! empty($validated['slug']) ? Str::slug($validated['slug']) : Str::slug($validated['name']),
             'icon' => $validated['icon'] ?? 'folder',
             'description' => $validated['description'] ?? null,
             'display_order' => $validated['display_order'] ?? 0,
-            'is_active' => $request->has('is_active') ? (bool)$request->is_active : false,
+            'is_active' => $request->has('is_active') ? (bool) $request->is_active : false,
         ]);
 
         AuditLogger::log('admin_update_app_category', [

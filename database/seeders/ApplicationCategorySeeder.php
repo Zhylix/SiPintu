@@ -67,7 +67,7 @@ class ApplicationCategorySeeder extends Seeder
 
         $apps = Application::all();
         foreach ($apps as $app) {
-            if (!$app->category_id) {
+            if (! $app->category_id) {
                 if (str_contains(strtolower($app->name), 'sijuna') || str_contains(strtolower($app->name), 'demo')) {
                     $app->category_id = $utilityCat?->id;
                 } elseif (str_contains(strtolower($app->name), 'dudi') || str_contains(strtolower($app->name), 'mitra')) {

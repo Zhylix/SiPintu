@@ -102,7 +102,7 @@ class SyncSijunaStudentsJob implements ShouldQueue
             ], $studentUserIds);
 
             foreach (array_chunk($pivotData, 500) as $chunk) {
-                \Illuminate\Support\Facades\DB::table('model_has_roles')->insertOrIgnore($chunk);
+                DB::table('model_has_roles')->insertOrIgnore($chunk);
             }
 
             $syncLog->update([

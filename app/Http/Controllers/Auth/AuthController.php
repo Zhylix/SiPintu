@@ -90,9 +90,9 @@ class AuthController extends Controller
             $roleMismatch = false;
             if ($accountType === 'siswa' && ! $user->isStudent()) {
                 $roleMismatch = true;
-            } elseif ($accountType === 'guru' && ! $user->isTeacher() && ! $user->isAdmin()) {
+            } elseif ($accountType === 'guru' && ! $user->isTeacher()) {
                 $roleMismatch = true;
-            } elseif ($accountType === 'dudi' && ! $user->isDudi() && ! $user->isAdmin()) {
+            } elseif ($accountType === 'dudi' && ! $user->isDudi()) {
                 $roleMismatch = true;
             }
 
@@ -110,12 +110,6 @@ class AuthController extends Controller
                     'selected_tab' => $accountType,
                     'actual_role' => $user->role,
                 ]);
-
-                if ($user->isAdmin()) {
-                    return back()->withErrors([
-                        'identity' => 'Akun Anda terdaftar sebagai Administrator. Silakan masukkan kata sandi Anda untuk masuk.',
-                    ])->onlyInput('identity', 'account_type');
-                }
 
                 return back()->withErrors([
                     'identity' => "Akun Anda terdaftar sebagai {$userRoleName}. Silakan pilih tab login {$targetTab} untuk masuk.",

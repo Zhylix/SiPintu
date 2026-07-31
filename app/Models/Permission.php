@@ -16,4 +16,3 @@ class Permission extends SpatiePermission
         return $this->name;
     }
 }
-

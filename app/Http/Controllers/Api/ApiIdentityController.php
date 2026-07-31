@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Services\SijunaApiService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -16,7 +17,7 @@ class ApiIdentityController extends Controller
     {
         $user = $request->attributes->get('oauth_user');
 
-        $primaryRole = $user->roles->first()?->slug ?? $user->role;
+        $primaryRole = $user->roles->first()?->name ?? $user->role;
 
         $response = [
             'id' => (string) $user->id,
@@ -56,7 +57,7 @@ class ApiIdentityController extends Controller
             'role' => $user->role,
             'user_type' => $user->role,
             'status' => $user->status,
-            'roles' => $user->roles->pluck('slug'),
+            'roles' => $user->roles->pluck('name'),
             'sijuna_data' => $sijunaData,
             'accessed_via_app' => $app ? [
                 'name' => $app->name,
@@ -79,10 +80,10 @@ class ApiIdentityController extends Controller
                 return [
                     'id' => $role->id,
                     'name' => $role->name,
-                    'slug' => $role->slug,
+                    'slug' => $role->name,
                 ];
             }),
-            'permissions' => $user->permissions()->pluck('slug')->values(),
+            'permissions' => $user->permissions()->pluck('name')->values(),
         ]);
     }
 
@@ -97,7 +98,7 @@ class ApiIdentityController extends Controller
             $student = $sijunaService->getStudentByExternalId($nis);
 
             if (! $student) {
-                $localUser = \App\Models\User::where('username', $nis)
+                $localUser = User::where('username', $nis)
                     ->orWhere('external_id', $nis)
                     ->first();
 
@@ -147,7 +148,7 @@ class ApiIdentityController extends Controller
         $student = $sijunaService->getStudentByExternalId($externalId);
 
         if (! $student) {
-            $localUser = \App\Models\User::where('username', $externalId)
+            $localUser = User::where('username', $externalId)
                 ->orWhere('external_id', $externalId)
                 ->first();
 

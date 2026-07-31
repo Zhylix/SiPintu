@@ -8,9 +8,9 @@ use Illuminate\Support\Facades\Auth;
 
 class AuditLogger
 {
-    public static function log(string $activity, array $metadata = [], ?int $userId = null): AuditLog
+    public static function log(string $activity, array $metadata = [], int|string|null $userId = null): AuditLog
     {
-        $resolvedUserId = $userId ?? Auth::user()?->id;
+        $resolvedUserId = $userId !== null ? (int) $userId : Auth::id();
 
         if ($resolvedUserId && ! User::where('id', $resolvedUserId)->exists()) {
             $resolvedUserId = null;
