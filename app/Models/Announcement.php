@@ -35,8 +35,12 @@ class Announcement extends Model
         return $query->where('is_active', true);
     }
 
-    public function scopeForRole($query, string $role)
+    public function scopeForRole($query, ?string $role)
     {
+        if (empty($role)) {
+            return $query->where('target_role', 'all');
+        }
+
         return $query->whereIn('target_role', ['all', $role]);
     }
 }

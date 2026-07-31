@@ -128,7 +128,7 @@ class ExternalAppDemoController extends Controller
             $primaryRole = is_array($userData['roles'] ?? null) ? implode(', ', $userData['roles']) : ($userData['role'] ?? $userData['user_type'] ?? 'user');
 
             return redirect()->route('demo.index', ['appSlug' => $appSlug])
-                ->with('success', "Single Sign-On Berhasil! Terhubung sebagai {$userData['name']} ({$primaryRole}) - Data SIJUNA terhubung via Gateway Proxy.");
+                ->with('success', "Berhasil! Terhubung sebagai {$userData['name']} ({$primaryRole}) - Data SIJUNA terhubung via Gateway Proxy.");
 
         } catch (Exception $e) {
             return view('demo.external_app', [

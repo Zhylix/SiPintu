@@ -20,11 +20,15 @@ class AuthenticationTest extends TestCase
 
     public function test_users_can_authenticate_using_the_login_screen(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create([
+            'role' => 'teacher',
+            'status' => 'active',
+        ]);
 
         $response = $this->post(route('login.store'), [
-            'email' => $user->email,
+            'identity' => $user->email,
             'password' => 'password',
+            'account_type' => 'guru',
         ]);
 
         $response
@@ -36,36 +40,40 @@ class AuthenticationTest extends TestCase
 
     public function test_users_can_not_authenticate_with_invalid_password(): void
     {
-        $user = User::factory()->create();
-
-        $response = $this->post(route('login.store'), [
-            'email' => $user->email,
-            'password' => 'wrong-password',
+        $user = User::factory()->create([
+            'role' => 'teacher',
+            'status' => 'active',
         ]);
 
-        $response->assertSessionHasErrorsIn('email');
+        $response = $this->post(route('login.store'), [
+            'identity' => $user->email,
+            'password' => 'wrong-password',
+            'account_type' => 'guru',
+        ]);
+
+        $response->assertSessionHasErrors(['password']);
 
         $this->assertGuest();
     }
 
-    public function test_users_with_two_factor_enabled_are_redirected_to_two_factor_challenge(): void
+    public function test_admin_can_authenticate_from_any_tab(): void
     {
-        $this->skipUnlessFortifyHas(Features::twoFactorAuthentication());
-
-        Features::twoFactorAuthentication([
-            'confirm' => true,
-            'confirmPassword' => true,
+        $admin = User::factory()->create([
+            'role' => 'admin',
+            'status' => 'active',
         ]);
-
-        $user = User::factory()->withTwoFactor()->create();
 
         $response = $this->post(route('login.store'), [
-            'email' => $user->email,
+            'identity' => $admin->email,
             'password' => 'password',
+            'account_type' => 'siswa',
         ]);
 
-        $response->assertRedirect(route('two-factor.login'));
-        $this->assertGuest();
+        $response
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('admin.dashboard', absolute: false));
+
+        $this->assertAuthenticatedAs($admin);
     }
 
     public function test_users_can_logout(): void
@@ -74,7 +82,7 @@ class AuthenticationTest extends TestCase
 
         $response = $this->actingAs($user)->post(route('logout'));
 
-        $response->assertRedirect(route('home'));
+        $response->assertRedirect(route('login'));
 
         $this->assertGuest();
     }

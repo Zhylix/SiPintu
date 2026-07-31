@@ -31,7 +31,7 @@ class AuthController extends Controller
         $credentials = $request->validate([
             'identity' => ['required', 'string'],
             'password' => ['nullable', 'string'],
-            'account_type' => ['nullable', 'string', 'in:siswa,guru,dudi'],
+            'account_type' => ['nullable', 'string', 'in:siswa,guru,dudi,admin'],
         ], [
             'identity.required' => 'Masukkan Email, Username, atau Identifier Siswa/NISN.',
         ]);
@@ -142,7 +142,13 @@ class AuthController extends Controller
             }
 
             // 4. Handle Internal Users (Guru, DUDI) password verification
-            if ($password && Hash::check($password, $user->password)) {
+            if (empty($password)) {
+                return back()->withErrors([
+                    'password' => 'Kata sandi wajib diisi untuk masuk sebagai '.$user->getUserTypeName().'.',
+                ])->onlyInput('identity', 'account_type');
+            }
+
+            if (Hash::check($password, $user->password)) {
                 if ($user->status !== 'active') {
                     AuditLogger::log('login_failed_suspended', ['identity' => $identity]);
 

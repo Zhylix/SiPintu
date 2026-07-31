@@ -1,22 +1,36 @@
 <!DOCTYPE html>
-<html lang="id" class="h-full bg-slate-950 text-slate-100 dark">
+<html lang="id" class="h-full bg-slate-50 text-slate-800">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $title ?? 'SiPintu' }}</title>
+    <title>{{ $title ?? 'Login Gateway' }} - SMKN 1 BANGSRI</title>
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
-            darkMode: 'class',
             theme: {
                 extend: {
                     fontFamily: {
                         sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        emerald: {
+                            50: '#ecfdf5',
+                            100: '#d1fae5',
+                            200: '#a7f3d0',
+                            300: '#6ee7b7',
+                            400: '#34d399',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                            800: '#065f46',
+                            900: '#064e3b',
+                            950: '#022c22',
+                        }
                     }
                 }
             }
@@ -25,21 +39,44 @@
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
-<body class="h-full font-sans antialiased bg-slate-950 text-slate-100 flex items-center justify-center p-4 relative overflow-x-hidden">
-    <!-- Ambient Background Glows -->
-    <div class="fixed top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-600/20 rounded-full blur-[140px] pointer-events-none"></div>
-    <div class="fixed bottom-10 right-10 w-[400px] h-[400px] bg-purple-600/15 rounded-full blur-[120px] pointer-events-none"></div>
+<body class="h-full font-sans antialiased bg-slate-100 text-slate-800 flex flex-col justify-between min-h-screen relative overflow-x-hidden selection:bg-emerald-700 selection:text-white">
+    
+    <!-- Watermark Logo Sekolah di Background -->
+    <div class="fixed inset-0 flex items-center justify-center opacity-[0.06] pointer-events-none z-0">
+        <img src="{{ asset('images/logo-smkn1bangsri.png') }}" alt="Watermark SMKN 1 Bangsri" class="w-[650px] h-[650px] object-contain">
+    </div>
 
-    <div class="w-full max-w-md relative z-10">
-        <!-- Logo Badge -->
-        <div class="text-center mb-8">
-            <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-purple-500 shadow-xl shadow-indigo-500/30 text-white font-black text-2xl mb-4 transform hover:scale-105 transition-transform">
-                G
+    <!-- Official Top Institutional Header Bar -->
+    <div class="bg-emerald-900 text-white text-[11px] font-bold py-2 px-4 border-b-2 border-emerald-600 relative z-10">
+        <div class="max-w-6xl mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+                <span>PEMERINTAH PROVINSI JAWA TENGAH &bull; DINAS PENDIDIKAN DAN KEBUDAYAAN</span>
             </div>
-            <h1 class="text-2xl font-extrabold text-white tracking-tight">SiPintu</h1>
+            <div class="hidden sm:block text-emerald-200">
+                GATEWAY RESMI SMKN 1 BANGSRI
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Container -->
+    <div class="w-full max-w-md mx-auto my-auto p-4 relative z-10">
+        <!-- Logo Badge Header -->
+        <div class="text-center mb-6">
+            <a href="/" class="inline-block mb-3">
+                <img src="{{ asset('images/logo-smkn1bangsri.png') }}" alt="Logo SMKN 1 Bangsri" class="w-24 h-24 mx-auto drop-shadow-md hover:scale-105 transition-transform">
+            </a>
+            <h1 class="text-2xl font-black text-emerald-950 tracking-tight">
+                SiPintu <span class="text-emerald-700 font-extrabold">GATEWAY</span>
+            </h1>
+            <p class="text-xs font-bold text-slate-600 tracking-wider uppercase mt-0.5">SMK NEGERI 1 BANGSRI</p>
         </div>
 
         @yield('content')
     </div>
+
+    <!-- Official School Footer -->
+    <footer class="bg-white border-t border-slate-200 py-3 text-center text-xs text-slate-500 relative z-10 font-medium">
+        <div>&copy; {{ date('Y') }} SMK Negeri 1 Bangsri. Hak Cipta Dilindungi Undang-Undang.</div>
+    </footer>
 </body>
 </html>
