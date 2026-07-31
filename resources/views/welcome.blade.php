@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>SiPintu Gateway - SMKN 1 BANGSRI</title>
+    <title>SiPintu</title>
     <meta name="description" content="Portal Resmi Gateway SMKN 1 Bangsri.">
 
     <!-- Google Fonts -->
@@ -41,6 +41,20 @@
     </script>
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        @keyframes marquee {
+            0% { transform: translateX(0%); }
+            100% { transform: translateX(-50%); }
+        }
+        .animate-marquee {
+            display: flex;
+            width: max-content;
+            animation: marquee 25s linear infinite;
+        }
+        .animate-marquee:hover {
+            animation-play-state: paused;
+        }
+    </style>
 </head>
 <body class="h-full font-sans antialiased bg-slate-50 text-slate-800 relative overflow-x-hidden selection:bg-emerald-700 selection:text-white">
     
@@ -50,15 +64,30 @@
     </div>
 
     <!-- Official Top Institutional Header Bar -->
-    <div class="bg-emerald-950 text-white text-[11px] font-bold py-2 px-6 border-b-2 border-emerald-600 flex items-center justify-between relative z-20">
-        <div class="flex items-center space-x-3">
-            <img src="{{ asset('images/logo-smkn1bangsri.png') }}" class="w-5 h-5 object-contain" alt="Logo">
-            <span>PEMERINTAH PROVINSI JAWA TENGAH &bull; DINAS PENDIDIKAN DAN KEBUDAYAAN &bull; SMKN 1 BANGSRI</span>
-        </div>
-        <div class="hidden md:flex items-center space-x-4 text-emerald-200 text-[10px]">
-            <span>NPSN: 20360604</span>
-            <span>&bull;</span>
-            <span>PORTAL GATEWAY RESMI</span>
+    <div class="bg-emerald-950 text-white text-[11px] font-bold py-2 border-b-2 border-emerald-600 relative z-20 overflow-hidden select-none">
+        <div class="animate-marquee flex items-center">
+            <div class="flex items-center space-x-6 shrink-0 px-4">
+                <img src="{{ asset('images/logo-smkn1bangsri.png') }}" class="w-4 h-4 object-contain" alt="Logo">
+                <span>PEMERINTAH PROVINSI JAWA TENGAH &bull; DINAS PENDIDIKAN DAN KEBUDAYAAN &bull; SMKN 1 BANGSRI</span>
+                <span class="text-emerald-400">&bull;</span>
+                <span class="text-emerald-200">GATEWAY RESMI SMKN 1 BANGSRI</span>
+                <span class="text-emerald-400">&bull;</span>
+                <span>NPSN: 20360604</span>
+                <span class="text-emerald-400">&bull;</span>
+                <span class="text-emerald-200">PORTAL AKSES TERPADU</span>
+                <span class="text-emerald-400">&bull;</span>
+            </div>
+            <div class="flex items-center space-x-6 shrink-0 px-4" aria-hidden="true">
+                <img src="{{ asset('images/logo-smkn1bangsri.png') }}" class="w-4 h-4 object-contain" alt="Logo">
+                <span>PEMERINTAH PROVINSI JAWA TENGAH &bull; DINAS PENDIDIKAN DAN KEBUDAYAAN &bull; SMKN 1 BANGSRI</span>
+                <span class="text-emerald-400">&bull;</span>
+                <span class="text-emerald-200">GATEWAY RESMI SMKN 1 BANGSRI</span>
+                <span class="text-emerald-400">&bull;</span>
+                <span>NPSN: 20360604</span>
+                <span class="text-emerald-400">&bull;</span>
+                <span class="text-emerald-200">PORTAL AKSES TERPADU</span>
+                <span class="text-emerald-400">&bull;</span>
+            </div>
         </div>
     </div>
 
@@ -80,7 +109,7 @@
 
                     <!-- Navigation Links -->
                     <nav class="hidden md:flex items-center space-x-8 text-sm font-bold text-slate-700">
-                        <a href="#layanan" class="hover:text-emerald-700 transition-colors">Akses Terpadu (SSO)</a>
+                        <a href="#layanan" class="hover:text-emerald-700 transition-colors">Akses Terpadu</a>
                         <a href="#portal" class="hover:text-emerald-700 transition-colors">Portal Peran</a>
                         <a href="#sijuna" class="hover:text-emerald-700 transition-colors">Integrasi SIJUNA</a>
                         <a href="#tentang" class="hover:text-emerald-700 transition-colors">Tentang Sekolah</a>
@@ -111,7 +140,7 @@
                     <div class="lg:col-span-7 space-y-6 text-center lg:text-left">
                         <div class="inline-flex items-center space-x-2.5 px-4 py-2 rounded-full bg-emerald-100 border border-emerald-300 text-emerald-900 text-xs font-extrabold">
                             <img src="{{ asset('images/logo-smkn1bangsri.png') }}" class="w-4 h-4 object-contain" alt="Logo">
-                            <span>Portal Akses Terpadu (SSO) Resmi SMKN 1 Bangsri</span>
+                            <span>Portal Akses Terpadu Resmi SMKN 1 Bangsri</span>
                         </div>
 
                         <h1 class="text-4xl sm:text-5xl lg:text-6xl font-black text-emerald-950 tracking-tight leading-tight">
@@ -119,12 +148,12 @@
                         </h1>
 
                         <p class="text-base sm:text-lg text-slate-600 font-medium leading-relaxed max-w-2xl mx-auto lg:mx-0">
-                            <strong>SiPintu</strong> adalah sistem gateway identitas resmi yang menghubungkan seluruh aplikasi siswa, presensi pengajar, evaluasi PKL Mitra DUDI, dan SIJUNA API dalam satu akun terpadu.
+                            <strong>SiPintu</strong> adalah sistem gateway identitas resmi yang menghubungkan seluruh aplikasi siswa, portal pengajar, aplikasi mitra DUDI, dan SIJUNA API dalam satu akun terpadu.
                         </p>
 
                         <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
                             <a href="{{ route('login') }}" class="w-full sm:w-auto px-8 py-4 bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold text-sm rounded-2xl shadow-lg transition-all flex items-center justify-center space-x-3">
-                                <span>Masuk ke Gateway (Akses Terpadu SSO)</span>
+                                <span>Masuk ke Gateway (Akses Terpadu)</span>
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                             </a>
                             <a href="#portal" class="w-full sm:w-auto px-6 py-4 bg-white hover:bg-slate-50 text-slate-700 font-bold text-sm rounded-2xl border border-slate-300 transition-all flex items-center justify-center space-x-2 shadow-xs">
@@ -261,7 +290,7 @@
                             </div>
                             <h3 class="text-xl font-black text-emerald-950 group-hover:text-emerald-700 transition-colors">Portal Guru & Pengajar</h3>
                             <p class="text-xs text-slate-600 leading-relaxed font-medium">
-                                Pengelolaan bimbingan siswa PKL, evaluasi akademis, absensi mengajar, serta akses SSO aplikasi pengajar.
+                                Akses Single Sign-On (SSO) ke aplikasi-aplikasi internal pendidik, jurnal mengajar, dan katalog terpadu.
                             </p>
                         </div>
                         <div class="pt-6 border-t border-slate-100 mt-6">
@@ -280,7 +309,7 @@
                             </div>
                             <h3 class="text-xl font-black text-emerald-950 group-hover:text-emerald-700 transition-colors">Portal Mitra DUDI</h3>
                             <p class="text-xs text-slate-600 leading-relaxed font-medium">
-                                Perusahaan mitra industri dapat memberikan penilaian kerja praktik siswa PKL dan mengakses sertifikasi industri.
+                                Akses Single Sign-On (SSO) untuk perusahaan mitra industri dalam mengakses layanan dan sistem integrasi sekolah.
                             </p>
                         </div>
                         <div class="pt-6 border-t border-slate-100 mt-6">

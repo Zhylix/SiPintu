@@ -91,19 +91,19 @@
                     </div>
 
                     <p class="text-xs text-slate-600 leading-relaxed line-clamp-2 font-medium">
-                        {{ $app->description ?? 'Aplikasi terintegrasi dengan SSO Gateway SiPintu.' }}
+                        {{ $app->description ?? 'Aplikasi terintegrasi dengan Gateway SiPintu.' }}
                     </p>
                 </div>
 
                 <!-- Footer Launch Button -->
                 <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
                     <span class="inline-flex items-center text-[10px] font-extrabold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-300">
-                        ● Terintegrasi (SSO)
+                        ● Terintegrasi
                     </span>
 
                     <a href="{{ route('oauth.authorize', ['client_id' => $app->client_id, 'redirect_uri' => $app->redirect_uri, 'response_type' => 'code', 'scope' => 'openid profile email']) }}"
                        class="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl transition-all shadow-md shadow-emerald-600/20">
-                        <span>Masuk Akses Terpadu (SSO)</span>
+                        <span>Masuk Akses Terpadu</span>
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
                         </svg>

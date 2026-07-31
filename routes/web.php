@@ -112,8 +112,6 @@ Route::prefix('siswa')->name('student.')->middleware(['auth', 'role:student'])->
 */
 Route::prefix('guru')->name('teacher.')->middleware(['auth', 'role:teacher'])->group(function () {
     Route::get('/dashboard', [TeacherDashboardController::class, 'index'])->name('dashboard');
-    Route::get('/siswa-bimbingan', [TeacherDashboardController::class, 'students'])->name('students');
-    Route::get('/penilaian', [TeacherDashboardController::class, 'evaluations'])->name('evaluations');
     Route::get('/apps', [TeacherDashboardController::class, 'apps'])->name('apps');
 });
 
@@ -124,7 +122,6 @@ Route::prefix('guru')->name('teacher.')->middleware(['auth', 'role:teacher'])->g
 */
 Route::prefix('dudi')->name('dudi.')->middleware(['auth', 'role:dudi'])->group(function () {
     Route::get('/dashboard', [DudiDashboardController::class, 'index'])->name('dashboard');
-    Route::get('/evaluasi', [DudiDashboardController::class, 'evaluations'])->name('evaluations');
     Route::get('/apps', [DudiDashboardController::class, 'apps'])->name('apps');
 });
 

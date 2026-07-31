@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $title ?? 'SiPintu Gateway' }} - SMKN 1 BANGSRI</title>
+    <title>{{ $title ?? 'SiPintu' }}</title>
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -38,6 +38,20 @@
     </script>
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        @keyframes marquee {
+            0% { transform: translateX(0%); }
+            100% { transform: translateX(-50%); }
+        }
+        .animate-marquee {
+            display: flex;
+            width: max-content;
+            animation: marquee 25s linear infinite;
+        }
+        .animate-marquee:hover {
+            animation-play-state: paused;
+        }
+    </style>
 </head>
 <body class="h-full font-sans antialiased bg-slate-100 text-slate-800 selection:bg-emerald-700 selection:text-white relative">
     
@@ -48,15 +62,30 @@
 
     <div class="min-h-full flex flex-col relative z-10">
         <!-- Top Institutional Ministry Bar -->
-        <div class="bg-emerald-950 text-white text-[11px] font-bold py-2 px-6 border-b-2 border-emerald-600 flex items-center justify-between">
-            <div class="flex items-center space-x-3">
-                <img src="{{ asset('images/logo-smkn1bangsri.png') }}" class="w-5 h-5 object-contain" alt="Logo">
-                <span>PEMERINTAH PROVINSI JAWA TENGAH &bull; DINAS PENDIDIKAN DAN KEBUDAYAAN &bull; SMKN 1 BANGSRI</span>
-            </div>
-            <div class="hidden md:flex items-center space-x-4 text-emerald-200 text-[10px]">
-                <span>NPSN: 20360604</span>
-                <span>&bull;</span>
-                <span>PORTAL GATEWAY TERPADU</span>
+        <div class="bg-emerald-950 text-white text-[11px] font-bold py-2 border-b-2 border-emerald-600 relative z-20 overflow-hidden select-none">
+            <div class="animate-marquee flex items-center">
+                <div class="flex items-center space-x-6 shrink-0 px-4">
+                    <img src="{{ asset('images/logo-smkn1bangsri.png') }}" class="w-4 h-4 object-contain" alt="Logo">
+                    <span>PEMERINTAH PROVINSI JAWA TENGAH &bull; DINAS PENDIDIKAN DAN KEBUDAYAAN &bull; SMKN 1 BANGSRI</span>
+                    <span class="text-emerald-400">&bull;</span>
+                    <span class="text-emerald-200">GATEWAY RESMI SMKN 1 BANGSRI</span>
+                    <span class="text-emerald-400">&bull;</span>
+                    <span>NPSN: 20360604</span>
+                    <span class="text-emerald-400">&bull;</span>
+                    <span class="text-emerald-200">PORTAL AKSES TERPADU</span>
+                    <span class="text-emerald-400">&bull;</span>
+                </div>
+                <div class="flex items-center space-x-6 shrink-0 px-4" aria-hidden="true">
+                    <img src="{{ asset('images/logo-smkn1bangsri.png') }}" class="w-4 h-4 object-contain" alt="Logo">
+                    <span>PEMERINTAH PROVINSI JAWA TENGAH &bull; DINAS PENDIDIKAN DAN KEBUDAYAAN &bull; SMKN 1 BANGSRI</span>
+                    <span class="text-emerald-400">&bull;</span>
+                    <span class="text-emerald-200">GATEWAY RESMI SMKN 1 BANGSRI</span>
+                    <span class="text-emerald-400">&bull;</span>
+                    <span>NPSN: 20360604</span>
+                    <span class="text-emerald-400">&bull;</span>
+                    <span class="text-emerald-200">PORTAL AKSES TERPADU</span>
+                    <span class="text-emerald-400">&bull;</span>
+                </div>
             </div>
         </div>
 
@@ -83,7 +112,7 @@
                         
                         <a href="{{ route('admin.dashboard') }}" class="flex items-center px-3 py-2.5 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('admin.dashboard') ? 'bg-emerald-700 text-white shadow-md shadow-emerald-700/20' : 'text-slate-700 hover:text-emerald-800 hover:bg-emerald-50' }}">
                             <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
-                            Dashboard Admin
+                            Dashboard 
                         </a>
 
                         <a href="{{ route('admin.users.index') }}" class="flex items-center px-3 py-2.5 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('admin.users.*') ? 'bg-emerald-700 text-white shadow-md shadow-emerald-700/20' : 'text-slate-700 hover:text-emerald-800 hover:bg-emerald-50' }}">
@@ -130,16 +159,6 @@
                             Dashboard Guru
                         </a>
 
-                        <a href="{{ route('teacher.students') }}" class="flex items-center px-3 py-2.5 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('teacher.students') ? 'bg-emerald-700 text-white shadow-md shadow-emerald-700/20' : 'text-slate-700 hover:text-emerald-800 hover:bg-emerald-50' }}">
-                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                            Siswa Bimbingan
-                        </a>
-
-                        <a href="{{ route('teacher.evaluations') }}" class="flex items-center px-3 py-2.5 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('teacher.evaluations') ? 'bg-emerald-700 text-white shadow-md shadow-emerald-700/20' : 'text-slate-700 hover:text-emerald-800 hover:bg-emerald-50' }}">
-                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
-                            Penilaian & Evaluasi
-                        </a>
-
                         <div class="pt-4 px-3 pb-2 text-[11px] font-extrabold text-emerald-900 uppercase tracking-wider">Layanan Akses Terpadu</div>
 
                         <a href="{{ route('teacher.apps') }}" class="flex items-center px-3 py-2.5 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('teacher.apps') ? 'bg-emerald-700 text-white shadow-md shadow-emerald-700/20' : 'text-slate-700 hover:text-emerald-800 hover:bg-emerald-50' }}">
@@ -154,16 +173,11 @@
                             Dashboard DUDI
                         </a>
 
-                        <a href="{{ route('dudi.evaluations') }}" class="flex items-center px-3 py-2.5 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('dudi.evaluations') ? 'bg-emerald-700 text-white shadow-md shadow-emerald-700/20' : 'text-slate-700 hover:text-emerald-800 hover:bg-emerald-50' }}">
-                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                            Evaluasi Industri
-                        </a>
-
                         <div class="pt-4 px-3 pb-2 text-[11px] font-extrabold text-emerald-900 uppercase tracking-wider">Layanan Akses Terpadu</div>
 
                         <a href="{{ route('dudi.apps') }}" class="flex items-center px-3 py-2.5 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('dudi.apps') ? 'bg-emerald-700 text-white shadow-md shadow-emerald-700/20' : 'text-slate-700 hover:text-emerald-800 hover:bg-emerald-50' }}">
                             <svg class="w-5 h-5 mr-3 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-                            Aplikasi Terpadu DUDI (SSO)
+                            Aplikasi Terpadu DUDI
                         </a>
                     @elseif(auth()->user()->isStudent())
                         <div class="px-3 pb-2 text-[11px] font-extrabold text-emerald-900 uppercase tracking-wider">Portal Siswa SMKN 1 Bangsri</div>
@@ -177,7 +191,8 @@
 
                         <a href="{{ route('student.apps') }}" class="flex items-center px-3 py-2.5 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('student.apps') ? 'bg-emerald-700 text-white shadow-md shadow-emerald-700/20' : 'text-slate-700 hover:text-emerald-800 hover:bg-emerald-50' }}">
                             <svg class="w-5 h-5 mr-3 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-                            Aplikasi Terpadu Siswa (SSO)
+                            Aplikasi Terpadu
+                        
                         </a>
                     @endif
                 </nav>
@@ -211,7 +226,7 @@
                     <div class="flex items-center space-x-4">
                         <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300">
                             <span class="w-2 h-2 rounded-full bg-emerald-600 mr-2 animate-pulse"></span>
-                            Layanan Gateway (SSO) Aktif
+                            Layanan Aktif
                         </span>
 
                         <a href="{{ route('profile') }}" class="text-xs font-bold text-slate-700 hover:text-emerald-800 transition-colors">

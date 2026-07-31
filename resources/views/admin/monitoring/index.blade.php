@@ -37,7 +37,7 @@
         </div>
 
         <div class="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-2">
-            <span class="text-xs font-extrabold text-slate-500 uppercase tracking-wider block">Sesi Token Akses Terpadu (SSO) Aktif</span>
+            <span class="text-xs font-extrabold text-slate-500 uppercase tracking-wider block">Sesi Token Akses Terpadu Aktif</span>
             <div class="text-2xl font-black text-emerald-700">{{ number_format($activeTokens) }}</div>
             <p class="text-xs text-slate-600 font-medium">Access Tokens OAuth 2.0 yang sedang berlaku</p>
         </div>

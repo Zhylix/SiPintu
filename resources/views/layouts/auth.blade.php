@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $title ?? 'Login Gateway' }} - SMKN 1 BANGSRI</title>
+    <title>{{ $title ?? 'Login' }}</title>
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -38,6 +38,20 @@
     </script>
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        @keyframes marquee {
+            0% { transform: translateX(0%); }
+            100% { transform: translateX(-50%); }
+        }
+        .animate-marquee {
+            display: flex;
+            width: max-content;
+            animation: marquee 25s linear infinite;
+        }
+        .animate-marquee:hover {
+            animation-play-state: paused;
+        }
+    </style>
 </head>
 <body class="h-full font-sans antialiased bg-slate-100 text-slate-800 flex flex-col justify-between min-h-screen relative overflow-x-hidden selection:bg-emerald-700 selection:text-white">
     
@@ -47,13 +61,29 @@
     </div>
 
     <!-- Official Top Institutional Header Bar -->
-    <div class="bg-emerald-900 text-white text-[11px] font-bold py-2 px-4 border-b-2 border-emerald-600 relative z-10">
-        <div class="max-w-6xl mx-auto flex items-center justify-between">
-            <div class="flex items-center space-x-2">
-                <span>PEMERINTAH PROVINSI JAWA TENGAH &bull; DINAS PENDIDIKAN DAN KEBUDAYAAN</span>
+    <div class="bg-emerald-950 text-white text-[11px] font-bold py-2 border-b-2 border-emerald-600 relative z-10 overflow-hidden select-none">
+        <div class="animate-marquee flex items-center">
+            <div class="flex items-center space-x-6 shrink-0 px-4">
+                <img src="{{ asset('images/logo-smkn1bangsri.png') }}" class="w-4 h-4 object-contain" alt="Logo">
+                <span>PEMERINTAH PROVINSI JAWA TENGAH &bull; DINAS PENDIDIKAN DAN KEBUDAYAAN &bull; SMKN 1 BANGSRI</span>
+                <span class="text-emerald-400">&bull;</span>
+                <span class="text-emerald-200">GATEWAY RESMI SMKN 1 BANGSRI</span>
+                <span class="text-emerald-400">&bull;</span>
+                <span>NPSN: 20360604</span>
+                <span class="text-emerald-400">&bull;</span>
+                <span class="text-emerald-200">PORTAL AKSES TERPADU</span>
+                <span class="text-emerald-400">&bull;</span>
             </div>
-            <div class="hidden sm:block text-emerald-200">
-                GATEWAY RESMI SMKN 1 BANGSRI
+            <div class="flex items-center space-x-6 shrink-0 px-4" aria-hidden="true">
+                <img src="{{ asset('images/logo-smkn1bangsri.png') }}" class="w-4 h-4 object-contain" alt="Logo">
+                <span>PEMERINTAH PROVINSI JAWA TENGAH &bull; DINAS PENDIDIKAN DAN KEBUDAYAAN &bull; SMKN 1 BANGSRI</span>
+                <span class="text-emerald-400">&bull;</span>
+                <span class="text-emerald-200">GATEWAY RESMI SMKN 1 BANGSRI</span>
+                <span class="text-emerald-400">&bull;</span>
+                <span>NPSN: 20360604</span>
+                <span class="text-emerald-400">&bull;</span>
+                <span class="text-emerald-200">PORTAL AKSES TERPADU</span>
+                <span class="text-emerald-400">&bull;</span>
             </div>
         </div>
     </div>
@@ -66,7 +96,7 @@
                 <img src="{{ asset('images/logo-smkn1bangsri.png') }}" alt="Logo SMKN 1 Bangsri" class="w-24 h-24 mx-auto drop-shadow-md hover:scale-105 transition-transform">
             </a>
             <h1 class="text-2xl font-black text-emerald-950 tracking-tight">
-                SiPintu <span class="text-emerald-700 font-extrabold">GATEWAY</span>
+                SiPintu <span class="text-emerald-700 font-extrabold">SKANSABA</span>
             </h1>
             <p class="text-xs font-bold text-slate-600 tracking-wider uppercase mt-0.5">SMK NEGERI 1 BANGSRI</p>
         </div>

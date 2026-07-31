@@ -28,33 +28,11 @@ class TeacherDashboardController extends Controller
         $favoriteApps = $applications->whereIn('id', $favoriteAppIds);
 
         $stats = [
-            'total_students' => User::where('role', 'student')->count(),
-            'guided_students' => 24,
+            'total_apps' => $applications->count(),
+            'favorite_apps' => count($favoriteAppIds),
         ];
 
-        $guidedStudents = User::where('role', 'student')->take(5)->get();
-
-        return view('teacher.dashboard', compact('user', 'applications', 'categories', 'favoriteAppIds', 'favoriteApps', 'stats', 'guidedStudents'));
-    }
-
-    public function students()
-    {
-        $user = Auth::user();
-        $students = User::where('role', 'student')->paginate(15);
-
-        return view('teacher.students', compact('user', 'students'));
-    }
-
-    public function evaluations()
-    {
-        $user = Auth::user();
-
-        $evaluations = [
-            ['student_name' => 'Ahmad Rizky', 'nisn' => '0054231890', 'dudi' => 'PT Telkom Indonesia', 'score' => 95, 'status' => 'Selesai'],
-            ['student_name' => 'Budi Pratama', 'nisn' => '0054231891', 'dudi' => 'PT Telkom Indonesia', 'score' => 90, 'status' => 'Selesai'],
-        ];
-
-        return view('teacher.evaluations', compact('user', 'evaluations'));
+        return view('teacher.dashboard', compact('user', 'applications', 'categories', 'favoriteAppIds', 'favoriteApps', 'stats'));
     }
 
     public function apps()

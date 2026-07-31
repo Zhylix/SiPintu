@@ -30,7 +30,6 @@
         <button type="submit" class="w-full py-3.5 px-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl shadow-lg shadow-indigo-600/30 transition-all text-sm">
             Kirim Link Pemulihan &rarr;
         </button>
-
         <div class="text-center pt-2">
             <a href="{{ route('login') }}" class="text-xs font-semibold text-slate-400 hover:text-white transition-colors">&larr; Kembali ke Halaman Login</a>
         </div>

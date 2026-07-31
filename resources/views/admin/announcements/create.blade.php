@@ -20,7 +20,7 @@
         <!-- Judul -->
         <div>
             <label for="title" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Judul Pengumuman</label>
-            <input type="text" name="title" id="title" value="{{ old('title') }}" required placeholder="Contoh: Pemeliharaan Server Akses Terpadu (SSO) Malam Ini"
+            <input type="text" name="title" id="title" value="{{ old('title') }}" required placeholder="Contoh: Pemeliharaan Server Akses Terpadu) Malam Ini"
                    class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 font-semibold focus:outline-none focus:border-emerald-600 focus:bg-white transition-all @error('title') border-rose-500 @enderror">
             @error('title')
                 <p class="text-xs text-rose-600 font-bold mt-1">{{ $message }}</p>

@@ -75,7 +75,7 @@
         <div class="flex items-center justify-between">
             <div>
                 <h3 class="text-base font-black text-emerald-950">Aplikasi Eksternal Terdaftar (Registry & Access Control)</h3>
-                <p class="text-xs text-slate-600 font-medium mt-0.5">Daftar aplikasi eksternal tersambung OAuth 2.0 / SSO Gateway SMKN 1 Bangsri</p>
+                <p class="text-xs text-slate-600 font-medium mt-0.5">Daftar aplikasi eksternal tersambung OAuth 2.0 / Gateway SMKN 1 Bangsri</p>
             </div>
             <a href="{{ route('admin.applications.create') }}" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl transition-all shadow-md shadow-emerald-600/20">
                 + Daftarkan Aplikasi

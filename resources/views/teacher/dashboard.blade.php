@@ -20,8 +20,8 @@
                 </div>
             </div>
             <div class="flex items-center space-x-3 shrink-0">
-                <a href="{{ route('teacher.students') }}" class="px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl transition-all shadow-md shadow-emerald-600/20">
-                    Kelola Siswa Bimbingan &rarr;
+                <a href="{{ route('teacher.apps') }}" class="px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl transition-all shadow-md shadow-emerald-600/20">
+                    Aplikasi Terintegrasi &rarr;
                 </a>
             </div>
         </div>
@@ -30,53 +30,15 @@
     <!-- Teacher Stats Overview Grid -->
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <div class="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-2">
-            <span class="text-xs font-extrabold text-slate-500 uppercase tracking-wider">Siswa Bimbingan</span>
-            <div class="text-3xl font-black text-emerald-700">{{ $stats['guided_students'] }}</div>
-            <p class="text-xs text-slate-600 font-medium">Siswa aktif bimbingan PKL</p>
+            <span class="text-xs font-extrabold text-slate-500 uppercase tracking-wider">Aplikasi Terintegrasi</span>
+            <div class="text-3xl font-black text-emerald-700">{{ $stats['total_apps'] }}</div>
+            <p class="text-xs text-slate-600 font-medium">Aplikasi SSO Khusus Guru</p>
         </div>
 
         <div class="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-2">
-            <span class="text-xs font-extrabold text-slate-500 uppercase tracking-wider">Total Siswa Terdaftar</span>
-            <div class="text-3xl font-black text-emerald-950">{{ number_format($stats['total_students']) }}</div>
-            <p class="text-xs text-slate-600 font-medium">Database SIJUNA Central</p>
-        </div>
-    </div>
-
-    <!-- Guided Students Table -->
-    <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-4 shadow-sm">
-        <div class="flex items-center justify-between">
-            <div>
-                <h3 class="text-base font-black text-emerald-950">Daftar Siswa Bimbingan Terkini</h3>
-                <p class="text-xs text-slate-600 font-medium mt-0.5">Monitoring progress siswa bimbingan</p>
-            </div>
-            <a href="{{ route('teacher.students') }}" class="text-xs font-extrabold text-emerald-700 hover:underline">
-                Lihat Semua Siswa &rarr;
-            </a>
-        </div>
-
-        <div class="overflow-x-auto border border-slate-200 rounded-xl">
-            <table class="w-full text-left text-xs">
-                <thead class="bg-emerald-50 text-emerald-900 uppercase font-black text-[10px] border-b border-slate-200">
-                    <tr>
-                        <th class="px-4 py-3">Nama Siswa</th>
-                        <th class="px-4 py-3">NISN / Identifier</th>
-                        <th class="px-4 py-3">Email</th>
-                        <th class="px-4 py-3">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-200 text-slate-700 font-sans bg-white">
-                    @foreach($guidedStudents as $s)
-                        <tr class="hover:bg-emerald-50/50">
-                            <td class="px-4 py-3 font-bold text-slate-900">{{ $s->name }}</td>
-                            <td class="px-4 py-3 font-mono font-bold text-emerald-800">{{ $s->external_id ?? $s->username ?? '-' }}</td>
-                            <td class="px-4 py-3 font-mono text-slate-600 font-semibold">{{ $s->email }}</td>
-                            <td class="px-4 py-3">
-                                <a href="{{ route('teacher.evaluations') }}" class="text-emerald-700 hover:underline font-extrabold text-[11px]">Beri Penilaian</a>
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
+            <span class="text-xs font-extrabold text-slate-500 uppercase tracking-wider">Aplikasi Favorit Saya</span>
+            <div class="text-3xl font-black text-emerald-950">{{ $stats['favorite_apps'] }}</div>
+            <p class="text-xs text-slate-600 font-medium">Ditandai ⭐ oleh Anda</p>
         </div>
     </div>
 

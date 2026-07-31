@@ -1,10 +1,10 @@
-@extends('layouts.auth', ['title' => 'Login Gateway'])
+@extends('layouts.auth', ['title' => 'Login'])
 
 @section('content')
 <div class="bg-white border border-emerald-100 rounded-3xl p-8 shadow-2xl shadow-emerald-900/10">
     <div class="mb-6 text-center">
         <h2 class="text-xl font-black text-emerald-950">Portal Login Gateway Sekolah</h2>
-        <p class="text-xs text-slate-600 font-semibold mt-1">Layanan Akses Terpadu Terintegrasi SMKN 1 Bangsri</p>
+        <p class="text-xs text-slate-600 font-semibold mt-1">Layanan Akses SMKN 1 Bangsri</p>
     </div>
 
     @if(session('info'))
@@ -31,7 +31,7 @@
 
         <!-- Account Type Helper Tabs -->
         <div>
-            <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Pilih Peran Akun Gateway</label>
+            <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Pilih Tipe Akun</label>
             <div class="grid grid-cols-3 gap-2 p-1.5 bg-slate-100 rounded-xl border border-slate-200 text-xs">
                 <button type="button" @click="accountType = 'siswa'" :class="accountType === 'siswa' ? 'bg-emerald-600 text-white font-extrabold shadow-md shadow-emerald-600/30' : 'text-slate-600 hover:text-emerald-700 hover:bg-white'" class="py-2.5 rounded-lg transition-all text-center">
                     Siswa
@@ -40,7 +40,7 @@
                     Guru
                 </button>
                 <button type="button" @click="accountType = 'dudi'" :class="accountType === 'dudi' ? 'bg-emerald-600 text-white font-extrabold shadow-md shadow-emerald-600/30' : 'text-slate-600 hover:text-emerald-700 hover:bg-white'" class="py-2.5 rounded-lg transition-all text-center">
-                    Mitra DUDI
+                    DUDI
                 </button>
             </div>
         </div>
@@ -48,9 +48,9 @@
         <!-- Identity Input -->
         <div>
             <label for="identity" class="block text-xs font-bold text-slate-700 mb-1.5">
-                <span x-show="accountType === 'siswa'">Identifier Siswa / NISN / Email SIJUNA</span>
+                <span x-show="accountType === 'siswa'">Identifier Siswa</span>
                 <span x-show="accountType === 'guru'">Email atau Username Guru</span>
-                <span x-show="accountType === 'dudi'">Email atau Username Mitra DUDI</span>
+                <span x-show="accountType === 'dudi'">Email atau Username DUDI</span>
             </label>
             <input type="text" id="identity" name="identity" required autofocus x-model="identity"
                 :placeholder="accountType === 'siswa' ? 'Contoh: NIS Siswa' : (accountType === 'guru' ? 'Contoh: guru@smkn1bangsri.sch.id' : 'Contoh: admin@majujaya.co.id')"
@@ -61,7 +61,7 @@
         <div>
             <div class="flex items-center justify-between mb-1.5">
                 <label for="password" class="block text-xs font-bold text-slate-700">
-                    Kata Sandi <span x-show="accountType === 'siswa'" class="text-slate-500 font-normal text-[11px]">(Guru / DUDI / Admin)</span>
+                    Kata Sandi <span x-show="accountType === 'siswa'" class="text-slate-500 font-normal text-[11px]">(Guru / DUDI)</span>
                 </label>
                 <a href="{{ route('password.request') }}" class="text-xs font-bold text-emerald-600 hover:text-emerald-700 hover:underline">Lupa Password?</a>
             </div>
@@ -78,7 +78,7 @@
         </div>
 
         <button type="submit" class="w-full py-3.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl shadow-lg shadow-emerald-600/30 hover:shadow-emerald-600/40 transition-all transform active:scale-[0.99] text-sm flex items-center justify-center space-x-2">
-            <span>Masuk ke Gateway SMKN 1 Bangsri</span>
+            <span>Login ke Dashboard</span>
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
         </button>
     </form>

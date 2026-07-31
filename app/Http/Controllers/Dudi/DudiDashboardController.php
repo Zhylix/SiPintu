@@ -30,18 +30,6 @@ class DudiDashboardController extends Controller
         return view('dudi.dashboard', compact('user', 'applications', 'categories', 'favoriteAppIds', 'favoriteApps'));
     }
 
-    public function evaluations()
-    {
-        $user = Auth::user();
-
-        $evaluations = [
-            ['student_name' => 'Ahmad Rizky', 'division' => 'Network & Software', 'period' => '2026', 'score' => 94, 'status' => 'Selesai'],
-            ['student_name' => 'Budi Pratama', 'division' => 'Backend Development', 'period' => '2026', 'score' => 92, 'status' => 'Selesai'],
-        ];
-
-        return view('dudi.evaluations', compact('user', 'evaluations'));
-    }
-
     public function apps()
     {
         $user = Auth::user();
