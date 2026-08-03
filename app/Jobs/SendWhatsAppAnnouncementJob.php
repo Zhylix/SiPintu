@@ -59,10 +59,15 @@ class SendWhatsAppAnnouncementJob implements ShouldQueue
                 'error_message' => null,
             ]);
         } else {
+            $errorMessage = $result['error'] ?? 'Pengiriman gagal.';
             $log->update([
                 'status' => 'failed',
-                'error_message' => $result['error'] ?? 'Pengiriman gagal.',
+                'error_message' => $errorMessage,
             ]);
+
+            if ($this->attempts() < $this->tries) {
+                throw new \RuntimeException($errorMessage);
+            }
         }
     }
 }
