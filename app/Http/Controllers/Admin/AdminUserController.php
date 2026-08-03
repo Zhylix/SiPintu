@@ -33,7 +33,7 @@ class AdminUserController extends Controller
             });
         }
 
-        $users = $query->latest()->paginate(15);
+        $users = $query->orderByRaw("COALESCE(NULLIF(external_id, ''), NULLIF(username, ''), name) ASC")->paginate(15);
         $roles = Role::all();
 
         return view('admin.users.index', compact('users', 'roles'));
@@ -109,6 +109,10 @@ class AdminUserController extends Controller
             'status' => ['required', Rule::in(['active', 'inactive', 'suspended'])],
             'password' => ['nullable', 'string', 'min:8'],
         ]);
+
+        if (auth()->id() === $user->id && $validated['role'] !== 'admin') {
+            return back()->with('error', 'Anda tidak dapat mengubah role Anda sendiri dari Administrator.');
+        }
 
         $updateData = [
             'name' => $validated['name'],

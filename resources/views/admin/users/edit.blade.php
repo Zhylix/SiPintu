@@ -16,12 +16,19 @@
 
         <div>
             <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Peran / Role Utama</label>
-            <select name="role" required class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 font-semibold text-sm focus:border-emerald-600 focus:bg-white focus:outline-none transition-all">
-                <option value="student" {{ old('role', $user->role) === 'student' ? 'selected' : '' }}>Siswa (Role: student)</option>
-                <option value="teacher" {{ old('role', $user->role) === 'teacher' ? 'selected' : '' }}>Guru / Pendidik (Role: teacher)</option>
-                <option value="dudi" {{ old('role', $user->role) === 'dudi' ? 'selected' : '' }}>DUDI / Mitra Industri (Role: dudi)</option>
-                <option value="admin" {{ old('role', $user->role) === 'admin' ? 'selected' : '' }}>Administrator Gateway (Role: admin)</option>
-            </select>
+            @if(auth()->id() === $user->id)
+                <input type="hidden" name="role" value="admin">
+                <input type="text" value="Administrator Gateway (Role Utama Anda - Terkunci)" disabled
+                    class="w-full px-4 py-2.5 rounded-xl bg-slate-100 border border-slate-200 text-slate-600 font-semibold text-sm cursor-not-allowed">
+                <p class="text-[11px] text-amber-700 font-semibold mt-1">● Anda sedang mengedit akun Anda sendiri. Role Administrator tidak dapat diubah ke role lain.</p>
+            @else
+                <select name="role" required class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 font-semibold text-sm focus:border-emerald-600 focus:bg-white focus:outline-none transition-all">
+                    <option value="student" {{ old('role', $user->role) === 'student' ? 'selected' : '' }}>Siswa</option>
+                    <option value="teacher" {{ old('role', $user->role) === 'teacher' ? 'selected' : '' }}>Guru / Pendidik</option>
+                    <option value="dudi" {{ old('role', $user->role) === 'dudi' ? 'selected' : '' }}>Mitra DUDI</option>
+                    <option value="admin" {{ old('role', $user->role) === 'admin' ? 'selected' : '' }}>Administrator Gateway</option>
+                </select>
+            @endif
         </div>
 
         <div>

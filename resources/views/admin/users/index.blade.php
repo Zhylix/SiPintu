@@ -12,7 +12,7 @@
         <div class="flex items-center space-x-3">
             <a href="{{ route('admin.users.create') }}" class="px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-extrabold rounded-xl transition-all shadow-md shadow-emerald-700/20 flex items-center space-x-2">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                <span>+ Buat Akun Guru / DUDI</span>
+                <span>Buat Akun Guru / DUDI</span>
             </a>
         </div>
     </div>
@@ -42,8 +42,85 @@
         </form>
     </div>
 
-    <!-- Users Table -->
-    <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+    <!-- Mobile Card View (No horizontal scrolling needed on small screens) -->
+    <div class="block md:hidden space-y-4">
+        @forelse($users as $user)
+            <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4">
+                <!-- User Basic Info Header -->
+                <div class="flex items-start justify-between gap-3">
+                    <div class="flex items-center space-x-3 min-w-0">
+                        <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center justify-center font-extrabold text-sm shrink-0">
+                            {{ $user->initials() }}
+                        </div>
+                        <div class="min-w-0">
+                            <h3 class="font-bold text-slate-900 text-sm truncate">{{ $user->name }}</h3>
+                            <p class="text-slate-600 text-xs font-medium truncate">{{ $user->email }}</p>
+                        </div>
+                    </div>
+                    <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider shrink-0
+                        {{ $user->role === 'admin' ? 'bg-purple-100 text-purple-800 border border-purple-300' : '' }}
+                        {{ $user->role === 'teacher' ? 'bg-blue-100 text-blue-800 border border-blue-300' : '' }}
+                        {{ $user->role === 'dudi' ? 'bg-amber-100 text-amber-800 border border-amber-300' : '' }}
+                        {{ $user->role === 'student' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : '' }}">
+                        {{ $user->getUserTypeName() }}
+                    </span>
+                </div>
+
+                <!-- User Details Grid -->
+                <div class="grid grid-cols-2 gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100 text-xs">
+                    <div>
+                        <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">NIS / External ID</span>
+                        <span class="font-mono font-bold text-emerald-800 text-xs break-all">
+                            {{ $user->external_id ?: ($user->username ?: '-') }}
+                        </span>
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Kontak / Phone</span>
+                        <span class="text-slate-700 font-semibold text-xs">
+                            {{ $user->phone ?: '-' }}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Footer: Status & Actions -->
+                <div class="flex items-center justify-between pt-2 border-t border-slate-100 gap-3">
+                    <div>
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase {{ $user->status === 'active' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-rose-100 text-rose-800 border border-rose-300' }}">
+                            {{ $user->status }}
+                        </span>
+                    </div>
+
+                    <div class="flex items-center space-x-2">
+                        <a href="{{ route('admin.users.edit', $user) }}" class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold transition-all">
+                            Edit
+                        </a>
+                        @if(!$user->isAdmin())
+                            <form action="{{ route('admin.users.destroy', $user) }}" method="POST" class="inline" onsubmit="return confirm('Hapus akun pengguna {{ $user->name }}?')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="px-3.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-xs font-bold transition-all">
+                                    Hapus
+                                </button>
+                            </form>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        @empty
+            <div class="p-8 text-center bg-white rounded-2xl border border-slate-200 text-slate-500 font-medium text-xs">
+                Tidak ada data pengguna yang ditemukan.
+            </div>
+        @endforelse
+
+        @if($users->hasPages())
+            <div class="bg-white rounded-2xl border border-slate-200 p-4">
+                {{ $users->links() }}
+            </div>
+        @endif
+    </div>
+
+    <!-- Desktop Users Table -->
+    <div class="hidden md:block bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
         <div class="overflow-x-auto">
             <table class="w-full text-left text-xs">
                 <thead class="bg-emerald-50 text-emerald-900 uppercase font-black text-[10px] border-b border-slate-200">
@@ -76,7 +153,7 @@
                                     {{ $user->role === 'teacher' ? 'bg-blue-100 text-blue-800 border border-blue-300' : '' }}
                                     {{ $user->role === 'dudi' ? 'bg-amber-100 text-amber-800 border border-amber-300' : '' }}
                                     {{ $user->role === 'student' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : '' }}">
-                                    {{ $user->role }}
+                                    {{ $user->getUserTypeName() }}
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap font-mono font-bold text-emerald-800">

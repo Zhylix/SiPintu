@@ -32,7 +32,6 @@
         <div class="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-2">
             <span class="text-xs font-extrabold text-slate-500 uppercase tracking-wider">Aplikasi Terintegrasi</span>
             <div class="text-3xl font-black text-emerald-700">{{ $stats['total_apps'] }}</div>
-            <p class="text-xs text-slate-600 font-medium">Aplikasi SSO Khusus Guru</p>
         </div>
 
         <div class="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-2">
@@ -46,7 +45,7 @@
     <div class="space-y-4">
         <div class="flex items-center justify-between">
             <div>
-                <h3 class="text-lg font-black text-emerald-950">Aplikasi Terintegrasi (Portal Guru)</h3>
+                <h3 class="text-lg font-black text-emerald-950">Aplikasi Terintegrasi</h3>
                 <p class="text-xs text-slate-600 font-medium mt-0.5">Filter aplikasi berdasarkan kategori atau tandai ⭐ favorit Anda</p>
             </div>
         </div>

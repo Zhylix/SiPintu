@@ -111,7 +111,7 @@
                     <label class="flex items-center space-x-2.5 p-3 rounded-xl bg-white border border-slate-200 cursor-pointer hover:border-emerald-500 transition-all">
                         <input type="checkbox" name="roles[]" value="{{ $role->id }}" checked class="rounded border-slate-300 text-emerald-700 focus:ring-emerald-600">
                         <div>
-                            <span class="block text-xs font-bold text-slate-900 uppercase">{{ $role->slug }}</span>
+                            <span class="block text-xs font-bold text-slate-900 uppercase">{{ $role->getDisplayName() }}</span>
                             <span class="block text-[10px] text-slate-500 truncate font-semibold">{{ $role->name }}</span>
                         </div>
                     </label>

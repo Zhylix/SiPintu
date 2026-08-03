@@ -82,7 +82,7 @@
                                 <div class="flex flex-wrap gap-1">
                                     @foreach($app->roles as $role)
                                         <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300 uppercase">
-                                            {{ $role->slug }}
+                                            {{ $role->getDisplayName() }}
                                         </span>
                                     @endforeach
                                 </div>

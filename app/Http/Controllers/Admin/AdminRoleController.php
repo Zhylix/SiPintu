@@ -21,6 +21,10 @@ class AdminRoleController extends Controller
 
     public function updatePermissions(Request $request, Role $role): RedirectResponse
     {
+        if (in_array(strtolower($role->name), ['admin', 'administrator'])) {
+            return back()->with('error', 'Hak akses untuk Role Administrator terkunci dan tidak dapat diubah (Superadmin Akses Penuh).');
+        }
+
         $validated = $request->validate([
             'permissions' => ['nullable', 'array'],
             'permissions.*' => ['exists:permissions,id'],

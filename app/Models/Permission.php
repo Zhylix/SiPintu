@@ -15,4 +15,17 @@ class Permission extends SpatiePermission
     {
         return $this->name;
     }
+
+    public function getDisplayName(): string
+    {
+        return match ($this->name) {
+            'manage-users' => 'Kelola Akun Pengguna',
+            'manage-applications' => 'Kelola Aplikasi Eksternal',
+            'manage-roles' => 'Kelola Role & Hak Akses',
+            'sync-sijuna' => 'Sinkronisasi Data Siswa SIJUNA',
+            'view-audit-logs' => 'Lihat Audit Log & Aktivitas',
+            'access-external-apps' => 'Akses Aplikasi Terintegrasi (SSO)',
+            default => ucwords(str_replace(['-', '_'], ' ', $this->name)),
+        };
+    }
 }
