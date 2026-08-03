@@ -26,4 +26,11 @@ class DashboardTest extends TestCase
         $response = $this->get(route('dashboard'));
         $response->assertRedirect(route('student.dashboard'));
     }
+
+    public function test_demo_routes_are_accessible(): void
+    {
+        $response = $this->get(route('demo.index'));
+        $response->assertOk();
+    }
 }
+

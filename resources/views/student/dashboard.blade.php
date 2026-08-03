@@ -1,4 +1,4 @@
-@extends('layouts.app', ['headerTitle' => 'Portal Siswa - Gateway SMKN 1 BANGSRI'])
+@extends('layouts.app', ['headerTitle' => 'Portal Siswa'])
 
 @section('content')
 <div class="space-y-8">
@@ -34,7 +34,7 @@
     <div class="space-y-4">
         <div class="flex items-center justify-between">
             <div>
-                <h3 class="text-lg font-black text-emerald-950">Katalog Aplikasi Sekolah</h3>
+                <h3 class="text-lg font-black text-emerald-950">Katalog Aplikasi</h3>
                 <p class="text-xs text-slate-600 font-medium mt-0.5">Filter berdasarkan kategori atau tandai ⭐ favorit untuk akses cepat ke portal aplikasi Anda</p>
             </div>
         </div>

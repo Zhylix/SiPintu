@@ -1,4 +1,4 @@
-@extends('layouts.app', ['headerTitle' => 'Portal Guru / Pendidik - Gateway SMKN 1 BANGSRI'])
+@extends('layouts.app', ['headerTitle' => 'Portal Guru'])
 
 @section('content')
 <div class="space-y-8">

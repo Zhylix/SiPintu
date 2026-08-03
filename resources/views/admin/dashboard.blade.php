@@ -1,4 +1,4 @@
-@extends('layouts.app', ['headerTitle' => 'Dashboard Gateway SMKN 1 BANGSRI'])
+@extends('layouts.app', ['headerTitle' => 'Dashboard Gateway'])
 
 @section('content')
 <div class="space-y-8">
@@ -70,20 +70,41 @@
         </div>
     </div>
 
-    <!-- Registered Applications Status Grid -->
-    <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-4 shadow-sm">
-        <div class="flex items-center justify-between">
+    <!-- User Application Catalog Grid (Tampilan Perspektif User) -->
+    <div class="space-y-4 pt-2">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
             <div>
-                <h3 class="text-base font-black text-emerald-950">Aplikasi Eksternal Terdaftar (Registry & Access Control)</h3>
-                <p class="text-xs text-slate-600 font-medium mt-0.5">Daftar aplikasi eksternal tersambung OAuth 2.0 / Gateway SMKN 1 Bangsri</p>
+                <div class="flex items-center gap-2">
+                    <h3 class="text-lg font-black text-emerald-950 whitespace-nowrap">Katalog Aplikasi</h3>
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-emerald-100 text-emerald-800 border border-emerald-300 whitespace-nowrap">
+                        Pratinjau User
+                    </span>
+                </div>
+                <p class="text-xs text-slate-600 font-medium mt-0.5">Akses cepat dan filter portal aplikasi Anda.</p>
             </div>
-            <a href="{{ route('admin.applications.create') }}" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl transition-all shadow-md shadow-emerald-600/20">
-                + Daftarkan Aplikasi
+            <a href="{{ route('admin.apps') }}" class="text-xs font-extrabold text-emerald-700 hover:underline whitespace-nowrap shrink-0 inline-flex items-center gap-1">
+                <span>Buka Halaman</span> &rarr;
+            </a>
+        </div>
+
+        @include('partials.app-catalog-grid')
+    </div>
+
+    <!-- Registered Applications Status Grid (Registry & Access Control) -->
+    <div class="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 space-y-4 shadow-sm">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+            <div>
+                <h3 class="text-base font-black text-emerald-950">Aplikasi Eksternal Terdaftar</h3>
+                <p class="text-xs text-slate-600 font-medium mt-0.5">Daftar aplikasi tersambung gateway OAuth 2.0.</p>
+            </div>
+            <a href="{{ route('admin.applications.create') }}" class="inline-flex items-center justify-center space-x-1.5 px-4 py-2 bg-emerald-700 hover:bg-emerald-800 active:bg-emerald-900 text-white text-xs font-extrabold rounded-xl transition-all shadow-sm whitespace-nowrap shrink-0">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+                <span class="whitespace-nowrap">Daftarkan Aplikasi</span>
             </a>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
-            @foreach($applications as $app)
+            @foreach($registeredApps as $app)
                 <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3 hover:border-emerald-400 transition-all">
                     <div class="flex items-start justify-between">
                         <div>
@@ -113,14 +134,14 @@
     </div>
 
     <!-- Recent Audit Activity Log Stream -->
-    <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-4 shadow-sm">
-        <div class="flex items-center justify-between">
+    <div class="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 space-y-4 shadow-sm">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
             <div>
-                <h3 class="text-base font-black text-emerald-950">Stream Activity & Audit Log Terbaru</h3>
-                <p class="text-xs text-slate-600 font-medium mt-0.5">Catatan realtime autentikasi, SSO login, dan perubahan konfigurasi gateway</p>
+                <h3 class="text-base font-black text-emerald-950">Audit Log Activity</h3>
+                <p class="text-xs text-slate-600 font-medium mt-0.5">Catatan aktivitas autentikasi & SSO gateway.</p>
             </div>
-            <a href="{{ route('admin.audit-logs.index') }}" class="text-xs font-extrabold text-emerald-700 hover:underline">
-                Lihat Seluruh Audit Log &rarr;
+            <a href="{{ route('admin.audit-logs.index') }}" class="text-xs font-extrabold text-emerald-700 hover:underline whitespace-nowrap shrink-0 inline-flex items-center gap-1">
+                <span>Lihat Seluruh Log</span> &rarr;
             </a>
         </div>
 

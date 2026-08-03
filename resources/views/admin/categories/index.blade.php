@@ -6,7 +6,7 @@
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
         <div>
             <h2 class="text-xl font-black text-emerald-950 tracking-tight">Kategori Aplikasi</h2>
-            <p class="text-xs text-slate-600 font-medium mt-1">Pengelompokan aplikasi untuk kerapian dan navigasi di katalog aplikasi SiPintu.</p>
+            <p class="text-xs text-slate-600 font-medium mt-1">Pengelompokan aplikasi untuk kerapian dan navigasi di katalog Aplikasi.</p>
         </div>
         <button onclick="document.getElementById('modal-create-category').classList.remove('hidden')"
                 class="inline-flex items-center justify-center px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-extrabold rounded-xl transition-all shadow-md shadow-emerald-700/20">

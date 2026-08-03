@@ -81,6 +81,9 @@ Route::middleware('auth')->group(function () {
 
     // Toggle favorite application for user
     Route::post('/applications/{application}/favorite', [UserApplicationFavoriteController::class, 'toggleFavorite'])->name('applications.favorite.toggle');
+
+    // Mobile UI Design Preview
+    Route::view('/mobile-preview', 'mobile-preview')->name('mobile-preview');
 });
 
 /*
@@ -132,6 +135,7 @@ Route::prefix('dudi')->name('dudi.')->middleware(['auth', 'role:dudi'])->group(f
 */
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/apps', [AdminDashboardController::class, 'apps'])->name('apps');
 
     // User Management (Teachers, DUDI, Students, Admins)
     Route::resource('users', AdminUserController::class);
@@ -163,3 +167,19 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::resource('announcements', AdminAnnouncementController::class);
     Route::patch('/announcements/{announcement}/toggle', [AdminAnnouncementController::class, 'toggleStatus'])->name('announcements.toggle');
 });
+
+/*
+|--------------------------------------------------------------------------
+| External Application SSO Simulator & Demo Routes
+|--------------------------------------------------------------------------
+*/
+use App\Http\Controllers\Demo\ExternalAppDemoController;
+
+Route::prefix('demo')->name('demo.')->group(function () {
+    Route::get('/{appSlug?}', [ExternalAppDemoController::class, 'index'])->name('index');
+    Route::get('/{appSlug}/login', [ExternalAppDemoController::class, 'loginRedirect'])->name('login');
+    Route::get('/{appSlug}/callback', [ExternalAppDemoController::class, 'callback'])->name('callback');
+    Route::get('/{appSlug}/logout', [ExternalAppDemoController::class, 'logout'])->name('logout');
+    Route::get('/{appSlug}/health', [ExternalAppDemoController::class, 'healthCheck'])->name('health');
+});
+
