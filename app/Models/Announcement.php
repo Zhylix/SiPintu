@@ -25,9 +25,29 @@ class Announcement extends Model
         'published_at' => 'datetime',
     ];
 
+    /**
+     * Enforce maximum active announcements = 1.
+     * When any announcement is activated (is_active = true), all other announcements are automatically deactivated.
+     */
+    protected static function booted()
+    {
+        static::saving(function ($announcement) {
+            if ($announcement->is_active) {
+                static::where('id', '!=', $announcement->id ?? 0)
+                    ->where('is_active', true)
+                    ->update(['is_active' => false]);
+            }
+        });
+    }
+
     public function author(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function whatsAppLogs(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(WhatsAppLog::class);
     }
 
     public function scopeActive($query)
@@ -41,6 +61,11 @@ class Announcement extends Model
             return $query->where('target_role', 'all');
         }
 
-        return $query->whereIn('target_role', ['all', $role]);
+        if ($role === 'admin') {
+            return $query->whereIn('target_role', ['all', 'admin']);
+        }
+
+        // Non-admin users (student, teacher, dudi) see 'all', 'user', and their specific role
+        return $query->whereIn('target_role', ['all', 'user', $role]);
     }
 }

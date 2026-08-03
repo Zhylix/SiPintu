@@ -139,6 +139,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
 
     // User Management (Teachers, DUDI, Students, Admins)
     Route::resource('users', AdminUserController::class);
+    Route::patch('/users/{user}/update-phone', [AdminUserController::class, 'updatePhone'])->name('users.update-phone');
 
     // Application Categories Management
     Route::resource('categories', AdminApplicationCategoryController::class);
@@ -164,8 +165,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::post('/monitoring/health-checks', [AdminMonitoringController::class, 'runHealthChecks'])->name('monitoring.run-health-checks');
 
     // Announcement Management
+    Route::get('/announcements/bot-status', [AdminAnnouncementController::class, 'botStatus'])->name('announcements.bot-status');
+    Route::post('/announcements/logout-bot', [AdminAnnouncementController::class, 'logoutBot'])->name('announcements.logout-bot');
     Route::resource('announcements', AdminAnnouncementController::class);
     Route::patch('/announcements/{announcement}/toggle', [AdminAnnouncementController::class, 'toggleStatus'])->name('announcements.toggle');
+    Route::post('/announcements/{announcement}/send-whatsapp', [AdminAnnouncementController::class, 'sendWhatsApp'])->name('announcements.send-whatsapp');
+    Route::get('/announcements/{announcement}/whatsapp-logs', [AdminAnnouncementController::class, 'whatsAppLogs'])->name('announcements.whatsapp-logs');
 });
 
 /*

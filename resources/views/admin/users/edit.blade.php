@@ -59,9 +59,10 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Nomor Telepon / WA</label>
-                <input type="text" name="phone" value="{{ old('phone', $user->phone) }}"
+                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Nomor Telepon / WhatsApp</label>
+                <input type="text" name="phone" value="{{ old('phone', $user->phone) }}" placeholder="Contoh: 08123456789"
                     class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 font-semibold text-sm focus:border-emerald-600 focus:bg-white focus:outline-none transition-all">
+                <p class="text-[11px] text-slate-500 font-medium mt-1">📱 Digunakan sebagai tujuan penerima Pengumuman WhatsApp.</p>
             </div>
 
             <div>

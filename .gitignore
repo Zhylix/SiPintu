@@ -1,5 +1,7 @@
 /.phpunit.cache
-/node_modules
+node_modules/
+whatsapp-bot/auth_info_baileys/
+whatsapp-bot/.env
 /public/build
 /public/fonts-manifest.dev.json
 /public/hot

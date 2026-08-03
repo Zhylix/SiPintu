@@ -23,12 +23,23 @@ class AdminUserController extends Controller
             $query->where('role', $request->role);
         }
 
+        if ($request->filled('phone_status')) {
+            if ($request->phone_status === 'with_phone') {
+                $query->whereNotNull('phone')->where('phone', '!=', '')->where('phone', '!=', '0');
+            } elseif ($request->phone_status === 'without_phone') {
+                $query->where(function ($q) {
+                    $q->whereNull('phone')->orWhere('phone', '')->orWhere('phone', '0');
+                });
+            }
+        }
+
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                     ->orWhere('email', 'like', "%{$search}%")
                     ->orWhere('username', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%")
                     ->orWhere('external_id', 'like', "%{$search}%");
             });
         }
@@ -156,5 +167,27 @@ class AdminUserController extends Controller
         $user->delete();
 
         return redirect()->route('admin.users.index')->with('success', "Pengguna {$userName} telah dihapus.");
+    }
+
+    public function updatePhone(Request $request, User $user): RedirectResponse
+    {
+        $validated = $request->validate([
+            'phone' => ['nullable', 'string', 'max:30'],
+        ]);
+
+        $oldPhone = $user->phone;
+        $newPhone = !empty($validated['phone']) ? trim($validated['phone']) : null;
+
+        $user->update(['phone' => $newPhone]);
+
+        AuditLogger::log('admin_update_user_phone', [
+            'updated_user_id' => $user->id,
+            'user_name' => $user->name,
+            'old_phone' => $oldPhone,
+            'new_phone' => $newPhone,
+        ]);
+
+        $phoneDisplay = $newPhone ?: '(kosong/dihapus)';
+        return back()->with('success', "Nomor WhatsApp untuk {$user->name} berhasil diperbarui menjadi {$phoneDisplay}.");
     }
 }
