@@ -29,7 +29,14 @@ class AdminAnnouncementController extends Controller
         }
 
         if ($request->filled('search')) {
-            $query->where('title', 'like', '%'.$request->search.'%');
+            $search = trim($request->search);
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', '%'.$search.'%')
+                  ->orWhere('content', 'like', '%'.$search.'%')
+                  ->orWhereHas('author', function ($aq) use ($search) {
+                      $aq->where('name', 'like', '%'.$search.'%');
+                  });
+            });
         }
 
         $announcements = $query->paginate(10)->withQueryString();
@@ -213,6 +220,37 @@ class AdminAnnouncementController extends Controller
         }
 
         return back()->with('error', $result['error'] ?? 'Gagal mengeluarkan sesi Bot WhatsApp.');
+    }
+
+    /**
+     * Toggle WhatsApp Bot ON/OFF power status without logging out session.
+     */
+    public function toggleBotPower(Request $request, WhatsAppService $whatsAppService)
+    {
+        $enabled = $request->has('enabled') ? $request->boolean('enabled') : null;
+        $result = $whatsAppService->toggleBotPower($enabled);
+
+        if ($result['success']) {
+            $isBotEnabled = $result['bot_enabled'] ?? true;
+            $statusText = $isBotEnabled ? 'DIAKTIFKAN (ON)' : 'DINONAKTIFKAN (OFF)';
+
+            AuditLog::create([
+                'user_id' => Auth::id(),
+                'activity' => 'Ubah Status Bot WhatsApp: ' . $statusText,
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+                'metadata' => [
+                    'bot_enabled' => $isBotEnabled,
+                ],
+            ]);
+
+            return back()->with(
+                'success',
+                "Status Bot WhatsApp berhasil {$statusText}! Sesi terhubung ke WhatsApp tetap tersimpan (tidak logout)."
+            );
+        }
+
+        return back()->with('error', $result['error'] ?? 'Gagal mengubah status aktif/non-aktif bot WhatsApp.');
     }
 
     /**

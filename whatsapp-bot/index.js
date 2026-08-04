@@ -33,6 +33,8 @@ let connectionState = 'close';
 let lastQr = null;
 let lastQrImage = null;
 let isConnecting = false;
+let isBotEnabled = true;
+let isManualLogoutRequested = false;
 
 // Anti-crash process error handlers
 process.on('uncaughtException', (err) => {
@@ -111,26 +113,21 @@ async function connectToWhatsApp() {
                 connectionState = 'close';
                 const statusCode = lastDisconnect?.error?.output?.statusCode;
                 const errorReason = lastDisconnect?.error?.message || lastDisconnect?.error;
-                const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
                 
                 console.log(`[WhatsApp Bot] Koneksi terputus. Status Code: ${statusCode || 'N/A'}, Detail: ${errorReason || 'Unknown'}`);
 
-                if (statusCode === DisconnectReason.loggedOut) {
-                    console.log('[WhatsApp Bot] Sesi dikeluarkan oleh pengguna/WhatsApp. Membersihkan folder auth_info_baileys...');
+                if (statusCode === DisconnectReason.loggedOut && isManualLogoutRequested) {
+                    console.log('[WhatsApp Bot] Sesi dikeluarkan secara manual oleh admin. Membersihkan folder auth_info_baileys...');
                     cleanAuthFolder();
+                    isManualLogoutRequested = false;
+                } else if (statusCode === DisconnectReason.loggedOut && !isManualLogoutRequested) {
+                    console.log('[WhatsApp Bot] Terputus sementara (401). Mempertahankan sesi auth_info_baileys & mencoba menghubungkan ulang...');
                 }
 
-                if (shouldReconnect) {
-                    console.log('[WhatsApp Bot] Mencoba menghubungkan kembali dalam 5 detik...');
-                    setTimeout(() => {
-                        connectToWhatsApp();
-                    }, 5000);
-                } else {
-                    console.log('[WhatsApp Bot] Sesi di-logout. Memulai ulang koneksi untuk QR code baru...');
-                    setTimeout(() => {
-                        connectToWhatsApp();
-                    }, 2000);
-                }
+                console.log('[WhatsApp Bot] Mempertahankan sesi & mencoba menghubungkan kembali dalam 5 detik...');
+                setTimeout(() => {
+                    connectToWhatsApp();
+                }, 5000);
             } else if (connection === 'open') {
                 connectionState = 'open';
                 lastQr = null;
@@ -174,14 +171,33 @@ app.get('/status', (req, res) => {
         connection: connectionState,
         bot_user: sock?.user || null,
         bot_phone: botPhone,
+        bot_enabled: isBotEnabled,
         qr_code: lastQrImage,
         timestamp: new Date().toISOString()
+    });
+});
+
+// 1.5 Toggle Bot Power (ON/OFF) Without Logout
+app.post('/toggle-power', authenticateApiKey, (req, res) => {
+    if (typeof req.body.enabled === 'boolean') {
+        isBotEnabled = req.body.enabled;
+    } else {
+        isBotEnabled = !isBotEnabled;
+    }
+
+    console.log(`[WhatsApp Bot] Status bot diubah ke: ${isBotEnabled ? 'AKTIF (ON)' : 'NON-AKTIF (OFF)'}`);
+
+    return res.json({
+        status: 'success',
+        bot_enabled: isBotEnabled,
+        message: `Bot WhatsApp berhasil ${isBotEnabled ? 'diaktifkan (ON)' : 'dinonaktifkan (OFF)'}.`
     });
 });
 
 // 2. Logout / Reset Bot Session (Ganti Nomor WA Bot)
 app.post('/logout', authenticateApiKey, async (req, res) => {
     console.log('[WhatsApp Bot] Request Logout / Ganti Nomor Bot diterima...');
+    isManualLogoutRequested = true;
 
     try {
         if (sock) {
@@ -229,6 +245,13 @@ app.post('/send-message', authenticateApiKey, async (req, res) => {
         return res.status(400).json({
             status: 'error',
             message: 'Parameter "phone" dan "message" wajib diisi.'
+        });
+    }
+
+    if (!isBotEnabled) {
+        return res.status(503).json({
+            status: 'error',
+            message: 'Bot WhatsApp sedang dalam posisi NON-AKTIF (OFF). Silakan aktifkan bot terlebih dahulu.'
         });
     }
 

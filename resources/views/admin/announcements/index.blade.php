@@ -34,6 +34,7 @@
         connection: '{{ $botStatus['data']['connection'] ?? 'close' }}',
         botPhone: '{{ $botStatus['data']['bot_phone'] ?? '' }}',
         qrCode: '{{ $botStatus['data']['qr_code'] ?? '' }}',
+        botEnabled: {{ isset($botStatus['data']['bot_enabled']) ? ($botStatus['data']['bot_enabled'] ? 'true' : 'false') : 'true' }},
         fetchStatus() {
             fetch('{{ route('admin.announcements.bot-status') }}')
                 .then(res => res.json())
@@ -43,6 +44,7 @@
                         this.connection = data.data.connection || 'close';
                         this.botPhone = data.data.bot_phone || '';
                         this.qrCode = data.data.qr_code || '';
+                        this.botEnabled = data.data.bot_enabled !== undefined ? data.data.bot_enabled : true;
                     }
                 }).catch(() => { this.online = false; });
         },
@@ -57,11 +59,11 @@
                     🤖
                 </div>
                 <div>
-                    <h3 class="font-extrabold text-slate-900 text-sm flex items-center gap-2">
+                    <h3 class="font-extrabold text-slate-900 text-sm flex items-center gap-2 flex-wrap">
                         <span>Status Server Bot WhatsApp Sending</span>
                         <template x-if="online && connection === 'open'">
-                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300 uppercase">
-                                🟢 Terhubung
+                            <span :class="botEnabled ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-amber-100 text-amber-800 border-amber-300'" class="px-2.5 py-0.5 rounded-full text-[10px] font-black border uppercase">
+                                <span x-text="botEnabled ? '🟢 Terhubung (ON)' : '⏸️ Terhubung (OFF)'"></span>
                             </span>
                         </template>
                         <template x-if="online && connection === 'connecting'">
@@ -77,7 +79,9 @@
                     </h3>
                     <p class="text-xs text-slate-600 font-medium mt-0.5">
                         <template x-if="online && connection === 'open' && botPhone">
-                            <span>Nomor Bot Pengirim Aktif: <strong class="font-mono text-emerald-800" x-text="'+' + botPhone"></strong></span>
+                            <span>Nomor Bot Pengirim Aktif: <strong class="font-mono text-emerald-800" x-text="'+' + botPhone"></strong>
+                                <span x-show="!botEnabled" class="text-amber-700 font-bold ml-1">(Pengiriman WhatsApp di-nonaktifkan / OFF)</span>
+                            </span>
                         </template>
                         <template x-if="!online || connection !== 'open'">
                             <span>Sistem Baileys belum terhubung ke WhatsApp HP. Silakan scan QR code di bawah.</span>
@@ -87,6 +91,19 @@
             </div>
 
             <div class="flex flex-wrap items-center gap-2">
+                <!-- Toggle Power ON/OFF Button -->
+                <template x-if="online">
+                    <form action="{{ route('admin.announcements.toggle-bot-power') }}" method="POST">
+                        @csrf
+                        <button type="submit" 
+                                :class="botEnabled ? 'bg-amber-50 hover:bg-amber-100 text-amber-800 border-amber-300' : 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600'" 
+                                class="px-4 py-2 border text-xs font-black rounded-xl transition-all shadow-sm flex items-center space-x-1.5"
+                                :title="botEnabled ? 'Non-aktifkan fitur kirim bot tanpa logout' : 'Aktifkan kembali fitur pengiriman bot'">
+                            <span x-text="botEnabled ? 'Matikan Bot' : 'Aktifkan Bot'"></span>
+                        </button>
+                    </form>
+                </template>
+
                 <template x-if="!online || connection !== 'open'">
                     <button type="button" @click="qrModalOpen = true" class="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-extrabold rounded-xl transition-all shadow-md shadow-emerald-700/20 flex items-center space-x-1.5">
                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m0 14v1m8-8h-1M5 12H4m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z"></path></svg>
@@ -97,7 +114,7 @@
                 <template x-if="online && connection === 'open'">
                     <form action="{{ route('admin.announcements.logout-bot') }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin MENGGANTI NOMOR WHATSAPP BOT?\n\nSesi WhatsApp bot yang sedang terhubung akan di-logout dan QR Code baru akan dibuat untuk di-scan dengan nomor lain.')">
                         @csrf
-                        <button type="submit" class="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-black rounded-xl transition-all shadow-sm flex items-center space-x-1.5">
+                        <button type="submit" class="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-black rounded-xl transition-all shadow-sm flex items-center space-x-1.5" title="Keluarkan akun WhatsApp untuk ganti ke nomor lain">
                             <span>Logout</span>
                         </button>
                     </form>
@@ -203,10 +220,15 @@
     <div class="p-4 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-4 justify-between items-center">
         <form method="GET" action="{{ route('admin.announcements.index') }}" class="flex flex-col sm:flex-row gap-3 w-full">
             <!-- Search -->
-            <div class="relative flex-1">
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari judul pengumuman..." 
-                       class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 font-semibold placeholder-slate-400 focus:outline-none focus:border-emerald-600 focus:bg-white transition-all">
-                <svg class="w-4 h-4 text-slate-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            <div class="relative flex-1 flex items-center gap-2">
+                <div class="relative flex-1">
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari judul, isi, atau pembuat pengumuman..." 
+                           class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 font-semibold placeholder-slate-400 focus:outline-none focus:border-emerald-600 focus:bg-white transition-all">
+                    <svg class="w-4 h-4 text-slate-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                </div>
+                <button type="submit" class="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-extrabold rounded-xl transition-all shadow-md shadow-emerald-700/20 shrink-0 flex items-center gap-1">
+                    <span>Cari</span>
+                </button>
             </div>
 
             <!-- Channel Filter -->
@@ -271,15 +293,15 @@
                             <td class="px-5 py-4 whitespace-nowrap">
                                 @if($announcement->channel === 'web')
                                     <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-slate-100 text-slate-800 border border-slate-300 inline-flex items-center gap-1">
-                                        🌐 Web Saja
+                                        Website
                                     </span>
                                 @elseif($announcement->channel === 'whatsapp')
                                     <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300 inline-flex items-center gap-1">
-                                        💬 WhatsApp Saja
+                                        WhatsApp
                                     </span>
                                 @else
                                     <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-indigo-100 text-indigo-800 border border-indigo-300 inline-flex items-center gap-1">
-                                        🌐💬 Web & WA
+                                        Website & Whatsapp
                                     </span>
                                 @endif
                             </td>
@@ -341,8 +363,8 @@
                     @empty
                         <tr>
                             <td colspan="8" class="px-5 py-12 text-center text-slate-500 font-medium">
-                                <svg class="w-10 h-10 mx-auto text-slate-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path></svg>
-                                Belum ada pengumuman yang dipublikasikan.
+                            <svg class="w-10 h-10 mx-auto text-slate-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path></svg>
+                            Belum ada pengumuman yang dipublikasikan.
                             </td>
                         </tr>
                     @endforelse

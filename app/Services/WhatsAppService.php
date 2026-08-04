@@ -277,4 +277,45 @@ class WhatsAppService
             ];
         }
     }
+
+    /**
+     * Toggle or set WhatsApp Bot ON/OFF power status without logging out.
+     *
+     * @param bool|null $enabled
+     * @return array
+     */
+    public function toggleBotPower(?bool $enabled = null): array
+    {
+        try {
+            $payload = [];
+            if ($enabled !== null) {
+                $payload['enabled'] = $enabled;
+            }
+
+            $response = Http::withHeaders([
+                'x-api-key' => $this->apiKey,
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+            ])->timeout(10)->post("{$this->botUrl}/toggle-power", $payload);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                return [
+                    'success' => true,
+                    'bot_enabled' => $data['bot_enabled'] ?? true,
+                    'message' => $data['message'] ?? 'Status aktif bot WhatsApp berhasil diperbarui.',
+                ];
+            }
+
+            return [
+                'success' => false,
+                'error' => $response->json()['message'] ?? 'Gagal mengubah status aktif bot WhatsApp.',
+            ];
+        } catch (\Throwable $e) {
+            return [
+                'success' => false,
+                'error' => 'Tidak dapat terhubung ke bot untuk mengubah status daya: ' . $e->getMessage(),
+            ];
+        }
+    }
 }

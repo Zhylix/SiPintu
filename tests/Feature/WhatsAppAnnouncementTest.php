@@ -121,4 +121,40 @@ class WhatsAppAnnouncementTest extends TestCase
             'error_message' => null,
         ]);
     }
+
+    public function test_toggle_bot_power_via_service(): void
+    {
+        Http::fake([
+            'http://127.0.0.1:3000/toggle-power' => Http::response([
+                'status' => 'success',
+                'bot_enabled' => false,
+                'message' => 'Bot WhatsApp berhasil dinonaktifkan (OFF).',
+            ], 200),
+        ]);
+
+        $service = new WhatsAppService();
+        $result = $service->toggleBotPower(false);
+
+        $this->assertTrue($result['success']);
+        $this->assertFalse($result['bot_enabled']);
+    }
+
+    public function test_admin_can_toggle_bot_power_route(): void
+    {
+        Http::fake([
+            'http://127.0.0.1:3000/toggle-power' => Http::response([
+                'status' => 'success',
+                'bot_enabled' => false,
+                'message' => 'Bot WhatsApp berhasil dinonaktifkan (OFF).',
+            ], 200),
+        ]);
+
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        $response = $this->actingAs($admin)
+            ->post(route('admin.announcements.toggle-bot-power'));
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+    }
 }

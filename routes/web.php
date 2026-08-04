@@ -167,6 +167,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     // Announcement Management
     Route::get('/announcements/bot-status', [AdminAnnouncementController::class, 'botStatus'])->name('announcements.bot-status');
     Route::post('/announcements/logout-bot', [AdminAnnouncementController::class, 'logoutBot'])->name('announcements.logout-bot');
+    Route::post('/announcements/toggle-bot-power', [AdminAnnouncementController::class, 'toggleBotPower'])->name('announcements.toggle-bot-power');
     Route::resource('announcements', AdminAnnouncementController::class);
     Route::patch('/announcements/{announcement}/toggle', [AdminAnnouncementController::class, 'toggleStatus'])->name('announcements.toggle');
     Route::post('/announcements/{announcement}/send-whatsapp', [AdminAnnouncementController::class, 'sendWhatsApp'])->name('announcements.send-whatsapp');

@@ -4,7 +4,8 @@
     "type": "module",
     "scripts": {
         "build": "vite build",
-        "dev": "vite"
+        "dev": "vite",
+        "bot": "node whatsapp-bot/index.js"
     },
     "dependencies": {
         "@laravel/passkeys": "^0.2.0",

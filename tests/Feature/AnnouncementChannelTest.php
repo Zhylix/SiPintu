@@ -16,7 +16,7 @@ class AnnouncementChannelTest extends TestCase
     public function test_create_announcement_with_channel_validation()
     {
         $admin = User::factory()->create(['role' => 'admin']);
-
+        
         $response = $this->actingAs($admin)->post(route('admin.announcements.store'), [
             'title' => 'Pengumuman Web Saja',
             'content' => 'Isi pesan khusus web',
