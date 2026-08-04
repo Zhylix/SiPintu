@@ -19,7 +19,7 @@ import makeWASocket, {
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3005;
 const API_KEY = process.env.API_KEY || 'sipintu_wa_secret_key_2026';
 const AUTH_DIR = 'auth_info_baileys';
 
