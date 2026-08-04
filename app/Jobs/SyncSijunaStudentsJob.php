@@ -45,7 +45,7 @@ class SyncSijunaStudentsJob implements ShouldQueue
 
             $userRows = [];
             $now = now()->toDateTimeString();
-            $defaultPasswordHash = Hash::make('SIJUNA_SSO_STUDENT_PASSTHROUGH');
+            $defaultPasswordHash = Hash::make('password');
 
             foreach ($studentsData as $student) {
                 $nis = isset($student['nis']) ? (string) $student['nis'] : null;

@@ -47,6 +47,7 @@
                 }).catch(() => { this.online = false; });
         },
         init() {
+            this.fetchStatus();
             setInterval(() => this.fetchStatus(), 3000);
         }
     }" x-init="init()" class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-4">
@@ -86,9 +87,10 @@
             </div>
 
             <div class="flex flex-wrap items-center gap-2">
-                <template x-if="qrCode">
+                <template x-if="!online || connection !== 'open'">
                     <button type="button" @click="qrModalOpen = true" class="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-extrabold rounded-xl transition-all shadow-md shadow-emerald-700/20 flex items-center space-x-1.5">
-                        <span>QR Code</span>
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m0 14v1m8-8h-1M5 12H4m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z"></path></svg>
+                        <span>QR Code Modal</span>
                     </button>
                 </template>
 
@@ -96,42 +98,64 @@
                     <form action="{{ route('admin.announcements.logout-bot') }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin MENGGANTI NOMOR WHATSAPP BOT?\n\nSesi WhatsApp bot yang sedang terhubung akan di-logout dan QR Code baru akan dibuat untuk di-scan dengan nomor lain.')">
                         @csrf
                         <button type="submit" class="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-black rounded-xl transition-all shadow-sm flex items-center space-x-1.5">
-                            <span>  Logout</span>
+                            <span>Logout</span>
                         </button>
                     </form>
                 </template>
 
                 <template x-if="!online">
-                    <span class="text-xs text-rose-600 font-semibold italic">⚠️ Server Bot Sedang Tidak Terhubung.</span>
+                    <span class="text-xs text-rose-600 font-semibold italic">Tidak Terhubung.</span>
                 </template>
             </div>
         </div>
 
         <!-- Live QR Code Card Display if disconnected / waiting scan -->
-        <template x-if="qrCode">
-            <div class="p-5 bg-emerald-50/60 border border-emerald-200 rounded-2xl flex flex-col md:flex-row items-center gap-6 shadow-inner">
-                <div class="relative group">
-                    <img :src="qrCode" alt="QR Code WhatsApp Bot" class="w-48 h-48 bg-white p-2.5 border-2 border-emerald-400 rounded-2xl shadow-md">
-                    <div class="absolute -bottom-2 -right-2 bg-emerald-700 text-white text-[9px] font-black px-2 py-0.5 rounded-full shadow">
-                        LIVE QR
+        <template x-if="!online || connection !== 'open'">
+            <div class="p-5 bg-emerald-50/60 border border-emerald-200 rounded-2xl shadow-inner">
+                <template x-if="qrCode">
+                    <div class="flex flex-col md:flex-row items-center gap-6">
+                        <div class="relative group shrink-0">
+                            <img :src="qrCode" alt="QR Code WhatsApp Bot" class="w-48 h-48 bg-white p-2.5 border-2 border-emerald-400 rounded-2xl shadow-md">
+                            <div class="absolute -bottom-2 -right-2 bg-emerald-700 text-white text-[9px] font-black px-2 py-0.5 rounded-full shadow">
+                                LIVE QR
+                            </div>
+                        </div>
+                        <div class="space-y-2 text-center md:text-left flex-1">
+                            <div class="inline-flex items-center space-x-2 bg-emerald-100 text-emerald-900 px-3 py-1 rounded-full text-xs font-black">
+                                <span>Scan QR Code</span>
+                            </div>
+                            <h4 class="text-sm font-black text-slate-900">Langkah Menghubungkan Nomor WhatsApp Pengirim:</h4>
+                            <ol class="text-xs text-slate-700 font-medium space-y-1 list-decimal list-inside">
+                                <li>Buka aplikasi <strong>WhatsApp</strong> di Smartphone Anda.</li>
+                                <li>Buka menu <strong>Pengaturan / Setelan</strong> &rarr; pilih <strong>Perangkat Tertaut (Linked Devices)</strong>.</li>
+                                <li>Klik <strong>Tautkan Perangkat (Link a Device)</strong>.</li>
+                                <li>Arahkan kamera HP Anda ke gambar <strong>QR Code</strong> di samping.</li>
+                            </ol>
+                            <p class="text-[11px] text-emerald-800 font-bold flex items-center gap-1 mt-2">
+                                <span class="w-2 h-2 rounded-full bg-emerald-600 animate-ping"></span>
+                                <span>QR Code diperbarui secara otomatis secara real-time setiap 3 detik.</span>
+                            </p>
+                        </div>
                     </div>
-                </div>
-                <div class="space-y-2 text-center md:text-left flex-1">
-                    <div class="inline-flex items-center space-x-2 bg-emerald-100 text-emerald-900 px-3 py-1 rounded-full text-xs font-black">
-                        <span>SCAN QR UNTUK MENGHUBUNGKAN NOMOR WA BOT</span>
+                </template>
+                <template x-if="!qrCode">
+                    <div class="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left p-4 bg-white/80 rounded-xl border border-emerald-100">
+                        <div class="w-12 h-12 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center text-2xl shrink-0 animate-pulse">
+                            🔄
+                        </div>
+                        <div>
+                            <h4 class="text-xs font-black text-slate-900">Menyiapkan QR Code WhatsApp...</h4>
+                            <p class="text-[11px] text-slate-600 font-medium mt-0.5">
+                                <template x-if="!online">
+                                    <span>Pastikan server Node.js WhatsApp Bot (port 3000) sudah aktif. Menghubungkan ulang...</span>
+                                </template>
+                                <template x-if="online">
+                                    <span>Memuat QR Code, Mohon tunggu beberapa detik...</span>
+                                </template>
+                            </p>
+                        </div>
                     </div>
-                    <h4 class="text-sm font-black text-slate-900">Langkah Menghubungkan Nomor WhatsApp Pengirim:</h4>
-                    <ol class="text-xs text-slate-700 font-medium space-y-1 list-decimal list-inside">
-                        <li>Buka aplikasi <strong>WhatsApp</strong> di Smartphone Anda.</li>
-                        <li>Buka menu <strong>Pengaturan / Setelan</strong> &rarr; pilih <strong>Perangkat Tertaut (Linked Devices)</strong>.</li>
-                        <li>Klik <strong>Tautkan Perangkat (Link a Device)</strong>.</li>
-                        <li>Arahkan kamera HP Anda ke gambar <strong>QR Code</strong> di samping.</li>
-                    </ol>
-                    <p class="text-[11px] text-emerald-800 font-bold flex items-center gap-1 mt-2">
-                        <span class="w-2 h-2 rounded-full bg-emerald-600 animate-ping"></span>
-                        <span>QR Code diperbarui secara otomatis secara real-time setiap 3 detik.</span>
-                    </p>
-                </div>
+                </template>
             </div>
         </template>
 
@@ -160,7 +184,6 @@
                         </template>
                         <template x-if="!qrCode">
                             <div class="p-8 text-center bg-slate-50 rounded-2xl text-slate-500 font-bold text-xs">
-                                <span class="block text-2xl mb-2">🔄</span>
                                 <span x-text="connection === 'open' ? 'WhatsApp Bot sudah terhubung!' : 'Menyiapkan QR Code...'"></span>
                             </div>
                         </template>

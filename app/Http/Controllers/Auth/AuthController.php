@@ -30,10 +30,11 @@ class AuthController extends Controller
     {
         $credentials = $request->validate([
             'identity' => ['required', 'string'],
-            'password' => ['nullable', 'string'],
+            'password' => ['required', 'string'],
             'account_type' => ['nullable', 'string', 'in:siswa,guru,dudi,admin'],
         ], [
             'identity.required' => 'Masukkan Email, Username, atau Identifier Siswa/NISN.',
+            'password.required' => 'Kata sandi wajib diisi.',
         ]);
 
         $identity = trim($credentials['identity']);
@@ -49,12 +50,6 @@ class AuthController extends Controller
         if ($user) {
             // 1. Direct login for Administrator with valid password regardless of active tab (Guru / DUDI / Siswa)
             if ($user->isAdmin()) {
-                if (empty($password)) {
-                    return back()->withErrors([
-                        'password' => 'Kata sandi wajib diisi untuk masuk sebagai Administrator.',
-                    ])->onlyInput('identity', 'account_type');
-                }
-
                 if (! Hash::check($password, $user->password)) {
                     AuditLogger::log('login_failed_password', ['identity' => $identity]);
 
@@ -116,59 +111,36 @@ class AuthController extends Controller
                 ])->onlyInput('identity', 'account_type');
             }
 
-            // 3. Handle Siswa login via SIJUNA identifier / external_id matching
-            if ($user->isStudent()) {
-                Auth::login($user, $request->boolean('remember'));
-                $request->session()->regenerate();
+            // 3. Handle password verification for all users (Siswa, Guru, DUDI)
+            if (! Hash::check($password, $user->password)) {
+                AuditLogger::log('login_failed_password', ['identity' => $identity]);
 
-                AuditLogger::log('login_success_student', [
-                    'external_id' => $user->external_id,
-                    'user_id' => $user->id,
-                ], $user->id);
-
-                if (session()->has('oauth_return_to')) {
-                    $returnTo = session()->pull('oauth_return_to');
-
-                    return redirect()->to($returnTo);
-                }
-
-                return redirect()->intended(route('dashboard'))->with('success', 'Selamat datang kembali, '.$user->name);
-            }
-
-            // 4. Handle Internal Users (Guru, DUDI) password verification
-            if (empty($password)) {
                 return back()->withErrors([
-                    'password' => 'Kata sandi wajib diisi untuk masuk sebagai '.$user->getUserTypeName().'.',
+                    'password' => 'Kata sandi yang Anda masukkan salah.',
                 ])->onlyInput('identity', 'account_type');
             }
 
-            if (Hash::check($password, $user->password)) {
-                if ($user->status !== 'active') {
-                    AuditLogger::log('login_failed_suspended', ['identity' => $identity]);
+            if ($user->status !== 'active') {
+                AuditLogger::log('login_failed_suspended', ['identity' => $identity]);
 
-                    return back()->withErrors(['identity' => 'Akun Anda sedang dinonaktifkan atau ditangguhkan.'])->onlyInput('identity', 'account_type');
-                }
-
-                Auth::login($user, $request->boolean('remember'));
-                $request->session()->regenerate();
-
-                AuditLogger::log('login_success', [
-                    'user_id' => $user->id,
-                    'role' => $user->role,
-                ], $user->id);
-
-                if (session()->has('oauth_return_to')) {
-                    $returnTo = session()->pull('oauth_return_to');
-
-                    return redirect()->to($returnTo);
-                }
-
-                return redirect()->intended(route('dashboard'))->with('success', 'Berhasil login sebagai '.$user->name);
+                return back()->withErrors(['identity' => 'Akun Anda sedang dinonaktifkan atau ditangguhkan.'])->onlyInput('identity', 'account_type');
             }
 
-            return back()->withErrors([
-                'password' => 'Kata sandi yang Anda masukkan salah.',
-            ])->onlyInput('identity', 'account_type');
+            Auth::login($user, $request->boolean('remember'));
+            $request->session()->regenerate();
+
+            AuditLogger::log($user->isStudent() ? 'login_success_student' : 'login_success', [
+                'user_id' => $user->id,
+                'role' => $user->role,
+            ], $user->id);
+
+            if (session()->has('oauth_return_to')) {
+                $returnTo = session()->pull('oauth_return_to');
+
+                return redirect()->to($returnTo);
+            }
+
+            return redirect()->intended(route('dashboard'))->with('success', 'Berhasil login sebagai '.$user->name);
         }
 
         // 4. Try SIJUNA API lookup if student user does not exist locally yet (Only for Siswa tab)
@@ -191,7 +163,7 @@ class AuthController extends Controller
                         'role' => 'student',
                         'phone' => $phone,
                         'status' => 'active',
-                        'password' => Hash::make(Str::random(32)),
+                        'password' => Hash::make($password),
                     ]);
 
                     $studentRole = Role::firstOrCreate(['name' => 'student', 'guard_name' => 'web']);
@@ -265,11 +237,6 @@ class AuthController extends Controller
     {
         $user = Auth::user();
 
-        // Students identity from SIJUNA don't use internal passwords
-        if ($user->isStudent()) {
-            return back()->with('error', 'Akun siswa dikelola melalui SIJUNA dan tidak menggunakan kata sandi Gateway.');
-        }
-
         $request->validate([
             'current_password' => ['required', 'current_password'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
@@ -302,10 +269,6 @@ class AuthController extends Controller
         $user = User::where('email', $request->email)->first();
         if (! $user) {
             return back()->with('error', 'Alamat email tidak terdaftar dalam Gateway.');
-        }
-
-        if ($user->isStudent()) {
-            return back()->with('error', 'Akun siswa dikelola secara terpusat oleh SIJUNA.');
         }
 
         AuditLogger::log('forgot_password_request', ['email' => $request->email]);

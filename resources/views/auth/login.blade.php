@@ -61,11 +61,11 @@
         <div>
             <div class="flex items-center justify-between mb-1.5">
                 <label for="password" class="block text-xs font-bold text-slate-700">
-                    Kata Sandi <span x-show="accountType === 'siswa'" class="text-slate-500 font-normal text-[11px]">(Guru / DUDI)</span>
+                    Kata Sandi
                 </label>
                 <a href="{{ route('password.request') }}" class="text-xs font-bold text-emerald-600 hover:text-emerald-700 hover:underline">Lupa Password?</a>
             </div>
-            <input type="password" id="password" name="password" x-model="password"
+            <input type="password" id="password" name="password" required x-model="password"
                 placeholder="••••••••"
                 class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-all text-sm font-semibold">
         </div>
