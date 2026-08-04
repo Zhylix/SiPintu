@@ -20,6 +20,10 @@ class AdminAnnouncementController extends Controller
             $query->where('target_role', $request->target_role);
         }
 
+        if ($request->filled('channel') && $request->channel !== 'all_channels') {
+            $query->where('channel', $request->channel);
+        }
+
         if ($request->filled('type')) {
             $query->where('type', $request->type);
         }
@@ -46,6 +50,7 @@ class AdminAnnouncementController extends Controller
             'content' => 'required|string',
             'type' => 'required|string|in:info,warning,danger,success',
             'target_role' => 'required|string|in:all,user,student,teacher,dudi',
+            'channel' => 'required|string|in:web,whatsapp,both',
             'is_active' => 'nullable|boolean',
             'send_whatsapp' => 'nullable|boolean',
         ]);
@@ -55,6 +60,7 @@ class AdminAnnouncementController extends Controller
             'content' => $validated['content'],
             'type' => $validated['type'],
             'target_role' => $validated['target_role'],
+            'channel' => $validated['channel'],
             'is_active' => $request->has('is_active'),
             'created_by' => Auth::id(),
             'published_at' => now(),
@@ -68,11 +74,12 @@ class AdminAnnouncementController extends Controller
             'metadata' => [
                 'announcement_id' => $announcement->id,
                 'target_role' => $announcement->target_role,
+                'channel' => $announcement->channel,
             ],
         ]);
 
         $waMsg = '';
-        if ($request->has('send_whatsapp') && $request->boolean('send_whatsapp')) {
+        if ($announcement->channel !== 'web' || $request->boolean('send_whatsapp')) {
             $result = $whatsAppService->dispatchAnnouncementToUsers($announcement);
             $waMsg = " Pengiriman WhatsApp di-antrikan untuk {$result['dispatched']} penerima.";
         }
@@ -93,6 +100,7 @@ class AdminAnnouncementController extends Controller
             'content' => 'required|string',
             'type' => 'required|string|in:info,warning,danger,success',
             'target_role' => 'required|string|in:all,user,student,teacher,dudi',
+            'channel' => 'required|string|in:web,whatsapp,both',
             'is_active' => 'nullable|boolean',
         ]);
 
@@ -101,6 +109,7 @@ class AdminAnnouncementController extends Controller
             'content' => $validated['content'],
             'type' => $validated['type'],
             'target_role' => $validated['target_role'],
+            'channel' => $validated['channel'],
             'is_active' => $request->has('is_active'),
         ]);
 
@@ -111,6 +120,7 @@ class AdminAnnouncementController extends Controller
             'user_agent' => $request->userAgent(),
             'metadata' => [
                 'announcement_id' => $announcement->id,
+                'channel' => $announcement->channel,
             ],
         ]);
 

@@ -424,6 +424,7 @@
                     @auth
                         @php
                             $userAnnouncements = \App\Models\Announcement::active()
+                                ->forWeb()
                                 ->forRole(auth()->user()->role)
                                 ->latest()
                                 ->take(3)

@@ -209,6 +209,14 @@
                 <svg class="w-4 h-4 text-slate-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
             </div>
 
+            <!-- Channel Filter -->
+            <select name="channel" onchange="this.form.submit()" class="bg-slate-50 border border-slate-200 text-xs text-slate-900 font-semibold rounded-xl px-3 py-2 focus:outline-none focus:border-emerald-600">
+                <option value="all_channels">Semua Saluran</option>
+                <option value="both" {{ request('channel') === 'both' ? 'selected' : '' }}>Keduanya (Web & WA)</option>
+                <option value="web" {{ request('channel') === 'web' ? 'selected' : '' }}>Web Saja</option>
+                <option value="whatsapp" {{ request('channel') === 'whatsapp' ? 'selected' : '' }}>WhatsApp Saja</option>
+            </select>
+
             <!-- Role Filter -->
             <select name="target_role" onchange="this.form.submit()" class="bg-slate-50 border border-slate-200 text-xs text-slate-900 font-semibold rounded-xl px-3 py-2 focus:outline-none focus:border-emerald-600">
                 <option value="all_roles">Semua Sasaran Role</option>
@@ -228,7 +236,7 @@
                 <option value="success" {{ request('type') === 'success' ? 'selected' : '' }}>Sukses (Hijau)</option>
             </select>
 
-            @if(request()->anyFilled(['search', 'target_role', 'type']))
+            @if(request()->anyFilled(['search', 'target_role', 'channel', 'type']))
                 <a href="{{ route('admin.announcements.index') }}" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl border border-slate-200 flex items-center justify-center">
                     Reset
                 </a>
@@ -243,6 +251,7 @@
                 <thead class="bg-emerald-50 text-emerald-900 uppercase font-black text-[10px] border-b border-slate-200">
                     <tr>
                         <th class="px-5 py-4">Judul & Isi</th>
+                        <th class="px-5 py-4">Saluran</th>
                         <th class="px-5 py-4">Tipe Alert</th>
                         <th class="px-5 py-4">Target Role</th>
                         <th class="px-5 py-4">Status Active</th>
@@ -258,6 +267,21 @@
                                 <div class="font-bold text-slate-900 text-sm">{{ $announcement->title }}</div>
                                 <div class="text-slate-600 mt-1 line-clamp-2 text-xs font-sans max-w-xl font-medium">{{ $announcement->content }}</div>
                                 <div class="text-[10px] text-emerald-800 font-bold mt-1">Publikasi: {{ $announcement->published_at?->format('d M Y H:i') ?? '-' }}</div>
+                            </td>
+                            <td class="px-5 py-4 whitespace-nowrap">
+                                @if($announcement->channel === 'web')
+                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-slate-100 text-slate-800 border border-slate-300 inline-flex items-center gap-1">
+                                        🌐 Web Saja
+                                    </span>
+                                @elseif($announcement->channel === 'whatsapp')
+                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300 inline-flex items-center gap-1">
+                                        💬 WhatsApp Saja
+                                    </span>
+                                @else
+                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-indigo-100 text-indigo-800 border border-indigo-300 inline-flex items-center gap-1">
+                                        🌐💬 Web & WA
+                                    </span>
+                                @endif
                             </td>
                             <td class="px-5 py-4 whitespace-nowrap">
                                 @if($announcement->type === 'info')
@@ -316,7 +340,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="px-5 py-12 text-center text-slate-500 font-medium">
+                            <td colspan="8" class="px-5 py-12 text-center text-slate-500 font-medium">
                                 <svg class="w-10 h-10 mx-auto text-slate-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path></svg>
                                 Belum ada pengumuman yang dipublikasikan.
                             </td>

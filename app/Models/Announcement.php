@@ -15,6 +15,7 @@ class Announcement extends Model
         'content',
         'type',
         'target_role',
+        'channel',
         'is_active',
         'created_by',
         'published_at',
@@ -53,6 +54,26 @@ class Announcement extends Model
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
+    }
+
+    public function scopeForWeb($query)
+    {
+        return $query->whereIn('channel', ['web', 'both']);
+    }
+
+    public function scopeForWhatsApp($query)
+    {
+        return $query->whereIn('channel', ['whatsapp', 'both']);
+    }
+
+    public function getChannelLabelAttribute(): string
+    {
+        return match ($this->channel) {
+            'web' => 'Web Saja',
+            'whatsapp' => 'WhatsApp Saja',
+            'both' => 'Web & WhatsApp',
+            default => 'Web & WhatsApp',
+        };
     }
 
     public function scopeForRole($query, ?string $role)

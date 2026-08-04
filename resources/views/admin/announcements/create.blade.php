@@ -27,8 +27,8 @@
             @enderror
         </div>
 
-        <!-- Target Role & Tipe Alert Grid -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <!-- Target Role, Channel & Tipe Alert Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <!-- Target Role -->
             <div>
                 <label for="target_role" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Target Pengguna (Role)</label>
@@ -40,6 +40,19 @@
                     <option value="dudi" {{ old('target_role') === 'dudi' ? 'selected' : '' }}>Mitra DUDI Saja</option>
                 </select>
                 @error('target_role')
+                    <p class="text-xs text-rose-600 font-bold mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <!-- Saluran Pengumuman (Channel) -->
+            <div>
+                <label for="channel" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Saluran Pengumuman</label>
+                <select name="channel" id="channel" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 font-semibold focus:outline-none focus:border-emerald-600 focus:bg-white transition-all">
+                    <option value="both" {{ old('channel', 'both') === 'both' ? 'selected' : '' }}>Keduanya (Web & WhatsApp)</option>
+                    <option value="web" {{ old('channel') === 'web' ? 'selected' : '' }}>Web Saja (Tampil di Web)</option>
+                    <option value="whatsapp" {{ old('channel') === 'whatsapp' ? 'selected' : '' }}>WhatsApp Saja (Kirim Pesan WA)</option>
+                </select>
+                @error('channel')
                     <p class="text-xs text-rose-600 font-bold mt-1">{{ $message }}</p>
                 @enderror
             </div>
