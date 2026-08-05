@@ -81,7 +81,8 @@ class AdminMonitoringController extends Controller
             ], 400);
         }
 
-        $result = $validator->validateClientConnection((string) $clientId, $secret ? (string) $secret : null, true);
+        // Dry-run validation from Admin UI (do not alter client connection timestamp/counter)
+        $result = $validator->validateClientConnection((string) $clientId, $secret ? (string) $secret : null, false);
 
         return response()->json([
             'status' => 'success',

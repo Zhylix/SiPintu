@@ -43,14 +43,14 @@
             const data = await res.json();
             this.clientResult = data.data;
 
-            // Refresh client list status dynamically
+            // Refresh client info dynamically from server response
             if (this.clientResult && this.clientResult.application) {
                 const updatedApp = this.clientResult.application;
                 const idx = this.clients.findIndex(c => c.client_id === updatedApp.client_id);
                 if (idx !== -1) {
-                    this.clients[idx].connection_status = 'connected';
+                    this.clients[idx].connection_status = updatedApp.connection_status;
                     this.clients[idx].last_connected_human = updatedApp.last_connected_human;
-                    this.clients[idx].last_connected_ip = updatedApp.last_connected_ip || '127.0.0.1';
+                    this.clients[idx].last_connected_ip = updatedApp.last_connected_ip || '-';
                     this.clients[idx].total_api_requests = updatedApp.total_api_requests;
                 }
             }

@@ -116,17 +116,24 @@ class GatewayHealthValidationService
             }
         }
 
-        // Record connection event
+        // Record connection event if initiated by actual client app
         if ($recordConnection) {
             $app->recordApiConnection();
             $app->refresh();
         }
 
+        $isConnected = ($app->realtime_connection_status === 'connected');
+        $msg = $recordConnection
+            ? "Aplikasi downstream '{$app->name}' berhasil terverifikasi dan terkoneksi ke REST API Gateway."
+            : ($isConnected
+                ? "Kredensial aplikasi downstream '{$app->name}' valid dan aplikasi saat ini TERKONEKSI (Aktif)."
+                : "Kredensial aplikasi downstream '{$app->name}' valid di database (Status real-time: {$app->realtime_connection_status}).");
+
         return [
             'valid' => true,
-            'is_connected' => true,
-            'status' => 'verified_and_connected',
-            'message' => "Aplikasi downstream '{$app->name}' berhasil terverifikasi dan terkoneksi ke REST API Gateway.",
+            'is_connected' => $isConnected,
+            'status' => $isConnected ? 'verified_and_connected' : 'credentials_valid',
+            'message' => $msg,
             'application' => [
                 'id' => $app->id,
                 'name' => $app->name,
@@ -134,8 +141,8 @@ class GatewayHealthValidationService
                 'status' => $app->status,
                 'connection_status' => $app->realtime_connection_status,
                 'last_connected_at' => $app->last_connected_at?->toIso8601String(),
-                'last_connected_human' => $app->last_connected_at ? $app->last_connected_at->diffForHumans() : 'Baru saja',
-                'last_connected_ip' => $app->last_connected_ip,
+                'last_connected_human' => $app->last_connected_at ? $app->last_connected_at->diffForHumans() : 'Belum pernah terkoneksi',
+                'last_connected_ip' => $app->last_connected_ip ?: '-',
                 'total_api_requests' => (int) $app->total_api_requests,
                 'redirect_uri' => $app->redirect_uri,
             ],
