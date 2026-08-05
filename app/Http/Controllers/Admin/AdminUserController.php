@@ -176,7 +176,7 @@ class AdminUserController extends Controller
         ]);
 
         $oldPhone = $user->phone;
-        $newPhone = !empty($validated['phone']) ? trim($validated['phone']) : null;
+        $newPhone = ! empty($validated['phone']) ? trim($validated['phone']) : null;
 
         $user->update(['phone' => $newPhone]);
 
@@ -188,6 +188,7 @@ class AdminUserController extends Controller
         ]);
 
         $phoneDisplay = $newPhone ?: '(kosong/dihapus)';
+
         return back()->with('success', "Nomor WhatsApp untuk {$user->name} berhasil diperbarui menjadi {$phoneDisplay}.");
     }
 }

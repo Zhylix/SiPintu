@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Log;
 class WhatsAppService
 {
     protected string $botUrl;
+
     protected string $apiKey;
 
     public function __construct()
@@ -22,9 +23,6 @@ class WhatsAppService
 
     /**
      * Format phone number to international Indonesian format (e.g. 628123456789).
-     *
-     * @param string|null $phone
-     * @return string|null
      */
     public function formatPhoneNumber(?string $phone): ?string
     {
@@ -41,13 +39,13 @@ class WhatsAppService
 
         // Standardize Indonesian prefix
         if (str_starts_with($cleaned, '0')) {
-            $cleaned = '62' . substr($cleaned, 1);
+            $cleaned = '62'.substr($cleaned, 1);
         } elseif (str_starts_with($cleaned, '8')) {
-            $cleaned = '62' . $cleaned;
+            $cleaned = '62'.$cleaned;
         }
 
         // Validate basic format: Indonesian country code (62) followed by 8xx... and 9 to 13 total digits
-        if (!preg_match('/^62[2-9]\d{7,12}$/', $cleaned)) {
+        if (! preg_match('/^62[2-9]\d{7,12}$/', $cleaned)) {
             return null;
         }
 
@@ -56,9 +54,6 @@ class WhatsAppService
 
     /**
      * Check if a phone number is valid.
-     *
-     * @param string|null $phone
-     * @return bool
      */
     public function isValidPhoneNumber(?string $phone): bool
     {
@@ -67,31 +62,23 @@ class WhatsAppService
 
     /**
      * Format announcement message template according to system specifications.
-     *
-     * @param string $userName
-     * @param string $content
-     * @return string
      */
     public function formatAnnouncementMessage(string $userName, string $content): string
     {
-        return "📢 PENGUMUMAN\n\n" .
-               "Halo, {$userName}\n\n" .
-               "{$content}\n\n" .
-               "Terima kasih.";
+        return "📢 PENGUMUMAN\n\n".
+               "Halo, {$userName}\n\n".
+               "{$content}\n\n".
+               'Terima kasih.';
     }
 
     /**
      * Send HTTP request to Baileys API Bot.
-     *
-     * @param string $phone
-     * @param string $message
-     * @return array
      */
     public function sendMessage(string $phone, string $message): array
     {
         $formattedPhone = $this->formatPhoneNumber($phone);
 
-        if (!$formattedPhone) {
+        if (! $formattedPhone) {
             return [
                 'success' => false,
                 'error' => 'Nomor telepon kosong atau format tidak valid.',
@@ -118,13 +105,14 @@ class WhatsAppService
                 }
 
                 $errorMsg = $data['message'] ?? 'Bot Baileys mengembalikan respon gagal.';
+
                 return [
                     'success' => false,
                     'error' => $errorMsg,
                 ];
             }
 
-            $errorMessage = "HTTP Request gagal dengan status code {$response->status()}: " . $response->body();
+            $errorMessage = "HTTP Request gagal dengan status code {$response->status()}: ".$response->body();
             Log::error("[WhatsAppService] Send message failed: {$errorMessage}");
 
             return [
@@ -132,7 +120,7 @@ class WhatsAppService
                 'error' => $errorMessage,
             ];
         } catch (\Throwable $e) {
-            $errorMsg = 'Koneksi ke API Bot Baileys gagal: ' . $e->getMessage();
+            $errorMsg = 'Koneksi ke API Bot Baileys gagal: '.$e->getMessage();
             Log::error("[WhatsAppService] Exception: {$errorMsg}");
 
             return [
@@ -144,9 +132,6 @@ class WhatsAppService
 
     /**
      * Dispatch Queue Jobs for all eligible target users of an announcement.
-     *
-     * @param Announcement $announcement
-     * @return array
      */
     public function dispatchAnnouncementToUsers(Announcement $announcement): array
     {
@@ -179,7 +164,7 @@ class WhatsAppService
         foreach ($users as $user) {
             $formattedPhone = $this->formatPhoneNumber($user->phone);
 
-            if (!$formattedPhone) {
+            if (! $formattedPhone) {
                 // Create failed log for invalid/empty phone number
                 WhatsAppLog::create([
                     'announcement_id' => $announcement->id,
@@ -191,6 +176,7 @@ class WhatsAppService
                     'sent_at' => null,
                 ]);
                 $skippedCount++;
+
                 continue;
             }
 
@@ -219,8 +205,6 @@ class WhatsAppService
 
     /**
      * Get real-time status of the WhatsApp Bot service.
-     *
-     * @return array
      */
     public function getBotStatus(): array
     {
@@ -236,20 +220,18 @@ class WhatsAppService
 
             return [
                 'online' => false,
-                'error' => 'Bot service HTTP error ' . $response->status(),
+                'error' => 'Bot service HTTP error '.$response->status(),
             ];
         } catch (\Throwable $e) {
             return [
                 'online' => false,
-                'error' => 'Koneksi ke Bot Baileys offline / gagal: ' . $e->getMessage(),
+                'error' => 'Koneksi ke Bot Baileys offline / gagal: '.$e->getMessage(),
             ];
         }
     }
 
     /**
      * Logout WhatsApp Bot session to allow scanning a new WhatsApp number.
-     *
-     * @return array
      */
     public function logoutBot(): array
     {
@@ -273,16 +255,13 @@ class WhatsAppService
         } catch (\Throwable $e) {
             return [
                 'success' => false,
-                'error' => 'Tidak dapat terhubung ke bot untuk logout: ' . $e->getMessage(),
+                'error' => 'Tidak dapat terhubung ke bot untuk logout: '.$e->getMessage(),
             ];
         }
     }
 
     /**
      * Toggle or set WhatsApp Bot ON/OFF power status without logging out.
-     *
-     * @param bool|null $enabled
-     * @return array
      */
     public function toggleBotPower(?bool $enabled = null): array
     {
@@ -300,6 +279,7 @@ class WhatsAppService
 
             if ($response->successful()) {
                 $data = $response->json();
+
                 return [
                     'success' => true,
                     'bot_enabled' => $data['bot_enabled'] ?? true,
@@ -314,7 +294,7 @@ class WhatsAppService
         } catch (\Throwable $e) {
             return [
                 'success' => false,
-                'error' => 'Tidak dapat terhubung ke bot untuk mengubah status daya: ' . $e->getMessage(),
+                'error' => 'Tidak dapat terhubung ke bot untuk mengubah status daya: '.$e->getMessage(),
             ];
         }
     }

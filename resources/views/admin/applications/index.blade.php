@@ -39,6 +39,38 @@
         </div>
     @endif
 
+    <!-- Patokan Standar Integrasi & Indikator -->
+    <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-4 shadow-sm">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-3">
+            <div class="flex items-center space-x-2.5 font-black text-sm tracking-tight text-emerald-950">
+                <svg class="w-5 h-5 text-emerald-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <span>Patokan Standar Integrasi Klien SSO SiPintu</span>
+            </div>
+            <span class="text-[10px] font-mono bg-white text-slate-700 px-2.5 py-0.5 rounded-full border border-slate-300 font-bold self-start sm:self-auto">
+                OAuth 2.0 / OpenID Connect Specification
+            </span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+            <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs">
+                <span class="text-emerald-700 font-extrabold block text-[11px] uppercase">Terkoneksi</span>
+                <p class="text-slate-600 mt-1 text-[11px] leading-relaxed">Aplikasi `ACTIVE`, Client ID terverifikasi, & Health Check HTTP 200 merespons.</p>
+            </div>
+            <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs">
+                <span class="text-rose-600 font-extrabold block text-[11px] uppercase">Terputus</span>
+                <p class="text-slate-600 mt-1 text-[11px] leading-relaxed">Aplikasi `INACTIVE` atau URL Health Check tidak merespons (Offline).</p>
+            </div>
+            <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs">
+                <span class="text-amber-700 font-extrabold block text-[11px] uppercase">Autentikasi Header</span>
+                <p class="text-mono text-slate-700 mt-1 text-[11px] leading-relaxed">`X-Client-ID` & `X-Client-Secret` pada Server-to-Server API Gateway.</p>
+            </div>
+            <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs">
+                <span class="text-emerald-700 font-extrabold block text-[11px] uppercase">Target Response Time</span>
+                <p class="text-slate-600 mt-1 text-[11px] leading-relaxed">Latency ideal < 200 ms untuk autentikasi SSO seamless.</p>
+            </div>
+        </div>
+    </div>
+
     <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
         <div class="overflow-x-auto">
             <table class="w-full text-left text-xs">
@@ -49,13 +81,16 @@
                         <th class="px-6 py-4">Client ID</th>
                         <th class="px-6 py-4">Base URL & Redirect URI</th>
                         <th class="px-6 py-4">Role Akses Diizinkan</th>
-                        <th class="px-6 py-4">Status & Health</th>
+                        <th class="px-6 py-4">Status Koneksi SSO</th>
                         <th class="px-6 py-4 text-right">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200 bg-white font-sans">
                     @forelse($applications as $app)
-                        <tr class="hover:bg-emerald-50/50 transition-colors">
+                        @php
+                            $isConnected = $app->status === 'active' && ($app->last_health_status !== 'offline');
+                        @endphp
+                        <tr class="hover:bg-emerald-50/50 transition-colors {{ $isConnected ? '' : 'bg-rose-50/30' }}">
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="font-bold text-slate-900 text-sm">{{ $app->name }}</div>
                                 <div class="text-slate-600 text-xs truncate max-w-xs font-medium">{{ $app->description }}</div>
@@ -71,7 +106,7 @@
                                     </span>
                                 @endif
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap font-mono font-bold text-emerald-800">
+                            <td class="px-6 py-4 whitespace-nowrap font-mono font-bold text-emerald-800 select-all">
                                 {{ $app->client_id }}
                             </td>
                             <td class="px-6 py-4 text-slate-600">
@@ -88,9 +123,18 @@
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase {{ $app->status === 'active' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-slate-100 text-slate-600' }}">
-                                    {{ $app->status }}
-                                </span>
+                                @if($isConnected)
+                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase bg-emerald-100 text-emerald-800 border border-emerald-300 inline-flex items-center gap-1.5 shadow-2xs">
+                                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                                        <span>BERHASIL TERKONEKSI</span>
+                                    </span>
+                                @else
+                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase bg-rose-100 text-rose-800 border border-rose-300 inline-flex items-center gap-1">
+                                        <span class="w-2 h-2 rounded-full bg-rose-600"></span>
+                                        <span>TERPUTUS / PROBLEM</span>
+                                    </span>
+                                @endif
+                                
                                 @if($app->last_health_status)
                                     <div class="mt-1 text-[10px] text-slate-500 font-semibold">
                                         Health: <span class="font-bold uppercase {{ $app->last_health_status === 'online' ? 'text-emerald-700' : 'text-rose-600' }}">{{ $app->last_health_status }}</span>

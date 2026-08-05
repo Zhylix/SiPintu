@@ -8,11 +8,13 @@
             <p class="text-xs text-slate-600 font-medium mt-1">Konfigurasi koneksi backend Gateway dengan SIJUNA External API</p>
         </div>
 
-        <form action="{{ route('admin.sijuna.sync') }}" method="POST">
+        <form action="{{ route('admin.sijuna.sync') }}" method="POST" x-data="{ loading: false }" @submit="loading = true">
             @csrf
-            <button type="submit" class="px-5 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-extrabold rounded-xl shadow-md shadow-emerald-700/20 flex items-center space-x-2 transition-all">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                <span>Jalankan Sinkronisasi Sekarang</span>
+            <button type="submit" :disabled="loading" class="px-5 py-2.5 bg-emerald-700 hover:bg-emerald-800 disabled:bg-emerald-600 disabled:opacity-80 text-white text-xs font-extrabold rounded-xl shadow-md shadow-emerald-700/20 flex items-center space-x-2 transition-all cursor-pointer disabled:cursor-not-allowed">
+                <svg class="w-4 h-4 shrink-0 transition-transform" :class="loading ? 'animate-spin' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                </svg>
+                <span x-text="loading ? 'Menyinkronkan Data SIJUNA...' : 'Jalankan Sinkronisasi Sekarang'">Jalankan Sinkronisasi Sekarang</span>
             </button>
         </form>
     </div>

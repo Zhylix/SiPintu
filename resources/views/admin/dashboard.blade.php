@@ -90,46 +90,131 @@
         @include('partials.app-catalog-grid')
     </div>
 
-    <!-- Registered Applications Status Grid (Registry & Access Control) -->
-    <div class="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 space-y-4 shadow-sm">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+    <!-- Registered Applications SSO Connection Status & Benchmark List Widget -->
+    <div class="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 space-y-6 shadow-sm" x-data="{ filter: 'connected' }">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
             <div>
-                <h3 class="text-base font-black text-emerald-950">Aplikasi Eksternal Terdaftar</h3>
-                <p class="text-xs text-slate-600 font-medium mt-0.5">Daftar aplikasi tersambung gateway OAuth 2.0.</p>
+                <div class="flex items-center gap-2">
+                    <h3 class="text-base font-black text-emerald-950">Daftar Status Koneksi SSO Klien</h3>
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-emerald-100 text-emerald-800 border border-emerald-300">
+                        Realtime List
+                    </span>
+                </div>
+                <p class="text-xs text-slate-600 font-medium mt-0.5">Memantau koneksi aplikasi turunan yang tersambung ke SiPintu Gateway secara rinci.</p>
             </div>
-            <a href="{{ route('admin.applications.create') }}" class="inline-flex items-center justify-center space-x-1.5 px-4 py-2 bg-emerald-700 hover:bg-emerald-800 active:bg-emerald-900 text-white text-xs font-extrabold rounded-xl transition-all shadow-sm whitespace-nowrap shrink-0">
-                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
-                <span class="whitespace-nowrap">Daftarkan Aplikasi</span>
-            </a>
+
+            <!-- Interactive Connection Status Filter Tabs -->
+            <div class="flex items-center space-x-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-bold shrink-0">
+                <button type="button" @click="filter = 'connected'" :class="filter === 'connected' ? 'bg-emerald-700 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'" class="px-3 py-1.5 rounded-lg transition-all flex items-center space-x-1.5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                    <span>Terkoneksi (Berhasil)</span>
+                </button>
+                <button type="button" @click="filter = 'disconnected'" :class="filter === 'disconnected' ? 'bg-rose-700 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'" class="px-3 py-1.5 rounded-lg transition-all flex items-center space-x-1.5">
+                    <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                    <span>Terputus / Problem</span>
+                </button>
+                <button type="button" @click="filter = 'all'" :class="filter === 'all' ? 'bg-slate-800 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'" class="px-3 py-1.5 rounded-lg transition-all">
+                    <span>Semua Aplikasi</span>
+                </button>
+            </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
-            @foreach($registeredApps as $app)
-                <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3 hover:border-emerald-400 transition-all">
-                    <div class="flex items-start justify-between">
-                        <div>
-                            <span class="text-sm font-black text-slate-900 block">{{ $app->name }}</span>
-                            <a href="{{ $app->base_url }}" target="_blank" class="text-xs text-emerald-700 font-extrabold hover:underline font-mono">{{ $app->base_url }}</a>
+        <!-- Patokan Standar Integrasi & Reference Info Box (Light Aesthetic) -->
+        <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2 font-black text-xs uppercase tracking-wider text-emerald-900">
+                    <svg class="w-4 h-4 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span>Patokan Standar Parameter Koneksi SSO</span>
+                </div>
+                <span class="text-[10px] font-mono bg-white text-slate-700 px-2.5 py-0.5 rounded-md border border-slate-300 font-bold">Standard Spec v2.0</span>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 text-xs font-sans">
+                <div class="bg-white p-3 rounded-lg border border-slate-200">
+                    <span class="text-slate-500 font-bold block text-[10px] uppercase">1. Syarat Terkoneksi</span>
+                    <span class="font-bold text-emerald-800 block mt-0.5 text-[11px]">Status Active + Client ID Match</span>
+                </div>
+                <div class="bg-white p-3 rounded-lg border border-slate-200">
+                    <span class="text-slate-500 font-bold block text-[10px] uppercase">2. Auth & Token Endpoints</span>
+                    <span class="font-mono text-slate-800 font-bold block mt-0.5 text-[11px]">/oauth/authorize & /oauth/token</span>
+                </div>
+                <div class="bg-white p-3 rounded-lg border border-slate-200">
+                    <span class="text-slate-500 font-bold block text-[10px] uppercase">3. Autentikasi Header API</span>
+                    <span class="font-mono text-emerald-800 font-bold block mt-0.5 text-[11px]">X-Client-ID & X-Client-Secret</span>
+                </div>
+                <div class="bg-white p-3 rounded-lg border border-slate-200">
+                    <span class="text-slate-500 font-bold block text-[10px] uppercase">4. Patokan Latensi</span>
+                    <span class="font-bold text-emerald-800 block mt-0.5 text-[11px]">Response Time < 200 ms</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Clean Vertical List Layout -->
+        <div class="space-y-3">
+            @forelse($registeredApps as $app)
+                @php
+                    $isConnected = $app->status === 'active' && ($app->last_health_status !== 'offline');
+                @endphp
+                <div x-show="(filter === 'connected' && {{ $isConnected ? 'true' : 'false' }}) || (filter === 'disconnected' && {{ ! $isConnected ? 'true' : 'false' }}) || filter === 'all'"
+                     class="p-4 rounded-xl border transition-all flex flex-col lg:flex-row lg:items-center justify-between gap-4 {{ $isConnected ? 'bg-emerald-50/20 border-emerald-200 hover:border-emerald-400' : 'bg-rose-50/30 border-rose-200 hover:border-rose-300' }}">
+                    
+                    <!-- Left: App Identity & Client ID -->
+                    <div class="flex items-start space-x-3.5 min-w-0">
+                        <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 font-extrabold text-sm {{ $isConnected ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-rose-100 text-rose-800 border border-rose-300' }}">
+                            {{ strtoupper(substr($app->name, 0, 2)) }}
                         </div>
-                        <span class="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase {{ $app->status === 'active' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-slate-200 text-slate-600' }}">
-                            {{ $app->status }}
-                        </span>
+                        <div class="min-w-0">
+                            <div class="flex items-center space-x-2">
+                                <h4 class="text-sm font-black text-slate-900 truncate">{{ $app->name }}</h4>
+                                <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-white text-emerald-800 border border-emerald-300 shrink-0 select-all">
+                                    {{ $app->client_id }}
+                                </span>
+                            </div>
+                            <div class="flex items-center space-x-3 text-xs mt-1">
+                                <a href="{{ $app->base_url }}" target="_blank" class="text-emerald-700 font-bold hover:underline font-mono truncate max-w-xs">{{ $app->base_url }}</a>
+                                <span class="text-slate-300">&bull;</span>
+                                <span class="text-slate-500 font-mono truncate max-w-xs" title="{{ $app->redirect_uri }}">{{ $app->redirect_uri }}</span>
+                            </div>
+                        </div>
                     </div>
 
-                    <p class="text-xs text-slate-600 font-medium line-clamp-2">{{ $app->description }}</p>
+                    <!-- Middle: Allowed Roles -->
+                    <div class="flex items-center space-x-1.5 shrink-0">
+                        <span class="text-xs text-slate-500 font-semibold mr-1">Role:</span>
+                        @foreach($app->roles as $role)
+                            <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-white text-slate-700 border border-slate-200 uppercase">
+                                {{ $role->getDisplayName() }}
+                            </span>
+                        @endforeach
+                    </div>
 
-                    <div class="pt-2 border-t border-slate-200 flex items-center justify-between text-xs">
-                        <span class="text-slate-500 font-semibold">Role Diizinkan:</span>
-                        <div class="flex flex-wrap gap-1">
-                            @foreach($app->roles as $role)
-                                <span class="px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300 uppercase">
-                                    {{ $role->getDisplayName() }}
-                                </span>
-                            @endforeach
-                        </div>
+                    <!-- Right: Connection Badge & Action Button -->
+                    <div class="flex items-center justify-between lg:justify-end space-x-3 shrink-0 pt-2 lg:pt-0 border-t lg:border-t-0 border-slate-100">
+                        @if($isConnected)
+                            <span class="px-3 py-1 rounded-full text-[11px] font-black uppercase bg-emerald-100 text-emerald-800 border border-emerald-300 inline-flex items-center gap-1.5 shadow-2xs">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                <span>BERHASIL TERKONEKSI</span>
+                            </span>
+                        @else
+                            <span class="px-3 py-1 rounded-full text-[11px] font-black uppercase bg-rose-100 text-rose-800 border border-rose-300 inline-flex items-center gap-1.5">
+                                <span class="w-2 h-2 rounded-full bg-rose-600"></span>
+                                <span>TERPUTUS / PROBLEM</span>
+                            </span>
+                        @endif
+
+                        <form action="{{ route('admin.applications.test-health', $app) }}" method="POST" class="inline">
+                            @csrf
+                            <button type="submit" class="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg text-xs font-extrabold transition-colors shadow-2xs">
+                                Test Health
+                            </button>
+                        </form>
                     </div>
                 </div>
-            @endforeach
+            @empty
+                <div class="p-8 text-center bg-slate-50 rounded-xl border border-slate-200 text-slate-500 text-xs font-semibold">
+                    Belum ada aplikasi SSO Klien yang terdaftar.
+                </div>
+            @endforelse
         </div>
     </div>
 

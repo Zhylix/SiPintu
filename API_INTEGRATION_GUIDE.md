@@ -14,15 +14,30 @@ SiPintu mendukung **2 Metode Integrasi**:
 
 ---
 
-## 🗝️ Langkah 1: Registrasi Aplikasi Client
+---
 
-Sebelum dapat mengakses API, daftarkan aplikasi Anda di Dashboard Admin SiPintu untuk mendapatkan kredensial:
+## 🗝️ Langkah 1: Registrasi Aplikasi Client (Cara Tercepat via CLI)
+
+Anda dapat mendaftarkan aplikasi klien dan mendapatkan kredensial SSO secara instan menggunakan perintah Artisan di folder `SiPintu`:
+
+```bash
+# 1. Daftarkan aplikasi klien baru
+php artisan sipintu:sso-client "TESApi App" --redirect=http://localhost:8001/oauth/callback --base-url=http://localhost:8001
+
+# 2. Lihat daftar aplikasi terdaftar
+php artisan sipintu:sso-list
+
+# 3. Uji kesehatan sistem OAuth Gateway
+php artisan sipintu:sso-health
+```
 
 | Parameter | Deskripsi | Contoh (Development) |
 | :--- | :--- | :--- |
-| **Client ID** | ID Unik Aplikasi Anda | `app_sijuna_dev` |
-| **Client Secret** | Kunci Rahasia Aplikasi | CONTOH : `sec_xyz1234567890...` |
-| **Redirect URI** | URL Callback SSO Aplikasi Anda | `http://localhost:3000/api/auth/callback` |
+| **Client ID** | ID Unik Aplikasi Anda | `app_mecmvhpduc8e` |
+| **Client Secret** | Kunci Rahasia Aplikasi | `sec_uEr8wGucp1jda8Ls6qOBsW03HrYVj6UK` |
+| **Redirect URI** | URL Callback SSO Aplikasi Anda | `http://localhost:8001/oauth/callback` |
+
+> 📌 **Dokumentasi Detail Kode:** Lihat file [SIPINTU_SSO_GUIDE.md](SIPINTU_SSO_GUIDE.md) untuk panduan lengkap controller & route copy-paste.
 
 ---
 

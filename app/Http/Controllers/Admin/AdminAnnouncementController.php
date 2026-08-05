@@ -32,10 +32,10 @@ class AdminAnnouncementController extends Controller
             $search = trim($request->search);
             $query->where(function ($q) use ($search) {
                 $q->where('title', 'like', '%'.$search.'%')
-                  ->orWhere('content', 'like', '%'.$search.'%')
-                  ->orWhereHas('author', function ($aq) use ($search) {
-                      $aq->where('name', 'like', '%'.$search.'%');
-                  });
+                    ->orWhere('content', 'like', '%'.$search.'%')
+                    ->orWhereHas('author', function ($aq) use ($search) {
+                        $aq->where('name', 'like', '%'.$search.'%');
+                    });
             });
         }
 
@@ -92,7 +92,7 @@ class AdminAnnouncementController extends Controller
         }
 
         return redirect()->route('admin.announcements.index')
-            ->with('success', 'Pengumuman berhasil dipublikasikan!' . $waMsg);
+            ->with('success', 'Pengumuman berhasil dipublikasikan!'.$waMsg);
     }
 
     public function edit(Announcement $announcement)
@@ -236,7 +236,7 @@ class AdminAnnouncementController extends Controller
 
             AuditLog::create([
                 'user_id' => Auth::id(),
-                'activity' => 'Ubah Status Bot WhatsApp: ' . $statusText,
+                'activity' => 'Ubah Status Bot WhatsApp: '.$statusText,
                 'ip_address' => $request->ip(),
                 'user_agent' => $request->userAgent(),
                 'metadata' => [

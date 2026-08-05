@@ -5,8 +5,8 @@ namespace App\Jobs;
 use App\Models\WhatsAppLog;
 use App\Services\WhatsAppService;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 
@@ -18,15 +18,11 @@ class SendWhatsAppAnnouncementJob implements ShouldQueue
 
     /**
      * The number of times the job may be attempted.
-     *
-     * @var int
      */
     public int $tries = 3;
 
     /**
      * The number of seconds to wait before retrying the job.
-     *
-     * @var int
      */
     public int $backoff = 10;
 
@@ -45,7 +41,7 @@ class SendWhatsAppAnnouncementJob implements ShouldQueue
     {
         $log = WhatsAppLog::find($this->whatsAppLogId);
 
-        if (!$log) {
+        if (! $log) {
             return;
         }
 

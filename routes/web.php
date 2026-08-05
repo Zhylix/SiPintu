@@ -93,8 +93,8 @@ Route::middleware('auth')->group(function () {
 */
 
 Route::get('/oauth/authorize', [OAuthController::class, 'authorize'])->name('oauth.authorize');
-Route::post('/oauth/token', [OAuthController::class, 'token'])->name('oauth.token');
-Route::post('/oauth/logout', [OAuthController::class, 'logout'])->name('oauth.logout');
+Route::post('/oauth/token', [OAuthController::class, 'token'])->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\PreventRequestForgery::class])->name('oauth.token');
+Route::post('/oauth/logout', [OAuthController::class, 'logout'])->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\PreventRequestForgery::class])->name('oauth.logout');
 Route::get('/.well-known/openid-configuration', [OAuthController::class, 'openidConfiguration'])->name('oauth.well-known');
 Route::get('/oauth/jwks.json', [OAuthController::class, 'jwks'])->name('oauth.jwks');
 

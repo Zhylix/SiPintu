@@ -81,10 +81,9 @@ class OAuthController extends Controller
         // 5. Generate Authorization Code
         $code = Str::random(64);
         OAuthAuthCode::create([
-            'id' => (string) Str::uuid(),
+            'id' => $code,
             'user_id' => $user->id,
             'application_id' => $application->id,
-            'code' => $code,
             'redirect_uri' => $targetRedirectUri,
             'scopes' => $scope,
             'expires_at' => now()->addMinutes(5),
@@ -127,8 +126,9 @@ class OAuthController extends Controller
             return response()->json(['error' => 'invalid_client', 'error_description' => 'Client ID not found.'], 401);
         }
 
-        // Verify Client Secret
-        $secretValid = Hash::check($clientSecret, $application->client_secret) || $clientSecret === $application->client_secret;
+        // Verify Client Secret safely (supports plaintext and bcrypt)
+        $secretValid = ($clientSecret === $application->client_secret)
+            || (is_string($application->client_secret) && str_starts_with($application->client_secret, '$2y$') && Hash::check($clientSecret, $application->client_secret));
         if (! $secretValid) {
             AuditLogger::log('token_exchange_invalid_secret', ['client_id' => $clientId]);
 
@@ -139,7 +139,7 @@ class OAuthController extends Controller
             $codeStr = $request->input('code');
             $authCode = OAuthAuthCode::with('user')
                 ->where('application_id', $application->id)
-                ->where('code', $codeStr)
+                ->where('id', $codeStr)
                 ->where('revoked', false)
                 ->where('expires_at', '>', now())
                 ->first();
