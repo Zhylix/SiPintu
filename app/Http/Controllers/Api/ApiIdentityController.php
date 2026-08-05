@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\GatewayHealthValidationService;
 use App\Services\SijunaApiService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -43,8 +44,12 @@ class ApiIdentityController extends Controller
         $app = $request->attributes->get('oauth_application');
 
         $sijunaData = null;
-        if ($user->external_id) {
-            $sijunaData = $sijunaService->getStudentByExternalId($user->external_id);
+        if ($user->external_id || $user->email) {
+            if ($user->isTeacher()) {
+                $sijunaData = $sijunaService->getTeacherByExternalId($user->external_id ?: $user->email);
+            } else {
+                $sijunaData = $sijunaService->getStudentByExternalId($user->external_id ?: $user->username ?: $user->email);
+            }
         }
 
         return response()->json([
@@ -178,5 +183,193 @@ class ApiIdentityController extends Controller
             'source' => 'Gateway Proxy (SIJUNA Service + Redis Cache + DB Fallback)',
             'data' => $student,
         ]);
+    }
+
+    /**
+     * Gateway Proxy API: Retrieve teachers data from SIJUNA (https://sijuna.com/api/guru)
+     */
+    public function teachers(Request $request, SijunaApiService $sijunaService): JsonResponse
+    {
+        $nip = $request->query('nip') ?: $request->query('email');
+
+        if ($nip) {
+            $teacher = $sijunaService->getTeacherByExternalId($nip);
+
+            if (! $teacher) {
+                $localUser = User::where('email', $nip)
+                    ->orWhere('username', $nip)
+                    ->orWhere('external_id', $nip)
+                    ->first();
+
+                if ($localUser && $localUser->isTeacher()) {
+                    $teacher = [
+                        'id' => (string) $localUser->id,
+                        'external_id' => $localUser->external_id,
+                        'nip' => $localUser->username ?: $localUser->external_id,
+                        'nama' => $localUser->name,
+                        'name' => $localUser->name,
+                        'email' => $localUser->email,
+                        'role' => $localUser->role,
+                        'status' => $localUser->status,
+                    ];
+                }
+            }
+
+            if (! $teacher) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => "Data guru dengan Identifier/NIP/Email {$nip} tidak ditemukan.",
+                ], 404);
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'source' => 'Gateway Proxy (SIJUNA Service + Cache + DB Fallback)',
+                'data' => $teacher,
+            ]);
+        }
+
+        $teachers = $sijunaService->getTeachers();
+
+        return response()->json([
+            'status' => 'success',
+            'source' => 'Gateway Proxy (SIJUNA Service + Redis Cache)',
+            'count' => count($teachers),
+            'data' => $teachers,
+        ]);
+    }
+
+    /**
+     * Gateway Proxy API: Retrieve specific teacher data from SIJUNA by External ID / NIP / Email
+     */
+    public function teacherDetail(Request $request, string $externalId, SijunaApiService $sijunaService): JsonResponse
+    {
+        $teacher = $sijunaService->getTeacherByExternalId($externalId);
+
+        if (! $teacher) {
+            $localUser = User::where('email', $externalId)
+                ->orWhere('username', $externalId)
+                ->orWhere('external_id', $externalId)
+                ->first();
+
+            if ($localUser && $localUser->isTeacher()) {
+                $teacher = [
+                    'id' => (string) $localUser->id,
+                    'external_id' => $localUser->external_id,
+                    'nip' => $localUser->username ?: $localUser->external_id,
+                    'nama' => $localUser->name,
+                    'name' => $localUser->name,
+                    'email' => $localUser->email,
+                    'role' => $localUser->role,
+                    'status' => $localUser->status,
+                ];
+            }
+        }
+
+        if (! $teacher) {
+            return response()->json([
+                'status' => 'error',
+                'message' => "Data guru dengan ID/NIP/Email {$externalId} tidak ditemukan.",
+            ], 404);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'source' => 'Gateway Proxy (SIJUNA Service + Redis Cache + DB Fallback)',
+            'data' => $teacher,
+        ]);
+    }
+
+    /**
+     * Public REST API Ping / Heartbeat check endpoint for downstream applications
+     */
+    public function ping(Request $request, GatewayHealthValidationService $service): JsonResponse
+    {
+        $clientId = $request->input('client_id') ?: $request->header('X-Client-ID');
+        $clientApp = null;
+
+        if ($clientId) {
+            $validation = $service->validateClientConnection((string) $clientId, null, true);
+            $clientApp = $validation['application'] ?? null;
+        }
+
+        $db = $service->validateDatabase();
+
+        return response()->json([
+            'status' => 'online',
+            'gateway' => 'SiPintu REST API Gateway',
+            'version' => '1.0.0',
+            'timestamp' => now()->toIso8601String(),
+            'database' => [
+                'status' => $db['status'],
+                'latency_ms' => $db['latency_ms'],
+            ],
+            'client_connection' => $clientApp ? [
+                'registered' => true,
+                'client_id' => $clientApp['client_id'],
+                'name' => $clientApp['name'],
+                'status' => 'connected',
+                'last_connected_at' => $clientApp['last_connected_at'],
+                'total_api_requests' => $clientApp['total_api_requests'],
+            ] : [
+                'registered' => false,
+                'message' => 'Kirim parameter client_id atau header X-Client-ID untuk merekam heartbeat koneksi aplikasi downstream Anda.',
+            ],
+            'message' => 'REST API Gateway aktif dan siap melayani request dari aplikasi downstream.',
+        ]);
+    }
+
+    /**
+     * Validate downstream application credentials and verify active connection state
+     */
+    public function validateClientCredentials(Request $request, GatewayHealthValidationService $service): JsonResponse
+    {
+        $clientId = $request->input('client_id') ?: $request->header('X-Client-ID');
+        $clientSecret = $request->input('client_secret') ?: $request->header('X-Client-Secret');
+
+        if (! $clientId) {
+            return response()->json([
+                'valid' => false,
+                'is_connected' => false,
+                'status' => 'missing_parameters',
+                'message' => 'Parameter client_id wajib diberikan via request body or header X-Client-ID.',
+            ], 400);
+        }
+
+        $result = $service->validateClientConnection((string) $clientId, $clientSecret ? (string) $clientSecret : null, true);
+
+        $httpCode = $result['valid'] ? 200 : ($result['status'] === 'client_not_found' ? 404 : 401);
+
+        return response()->json($result, $httpCode);
+    }
+
+    /**
+     * Return connection status and summary of downstream applications connected to our REST API
+     */
+    public function gatewayStatus(Request $request, GatewayHealthValidationService $service): JsonResponse
+    {
+        $diagnosticData = $service->validateFullGateway();
+
+        $app = $request->attributes->get('oauth_application');
+        $user = $request->attributes->get('oauth_user');
+
+        if ($app) {
+            $diagnosticData['requesting_client'] = [
+                'app_name' => $app->name,
+                'client_id' => $app->client_id,
+                'connection_status' => $app->realtime_connection_status,
+                'last_connected_human' => $app->last_connected_at?->diffForHumans(),
+                'total_api_requests' => $app->total_api_requests,
+            ];
+        }
+
+        if ($user) {
+            $diagnosticData['requesting_user'] = [
+                'user_name' => $user->name,
+                'user_email' => $user->email,
+            ];
+        }
+
+        return response()->json($diagnosticData);
     }
 }

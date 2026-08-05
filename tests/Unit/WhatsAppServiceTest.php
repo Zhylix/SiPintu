@@ -12,7 +12,7 @@ class WhatsAppServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->service = new WhatsAppService();
+        $this->service = new WhatsAppService;
     }
 
     public function test_format_phone_number_standard_indonesian_08(): void

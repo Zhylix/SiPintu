@@ -27,6 +27,10 @@ class Application extends Model
         'health_check_url',
         'last_health_status',
         'last_health_check_at',
+        'last_connected_at',
+        'last_connected_ip',
+        'connection_status',
+        'total_api_requests',
     ];
 
     protected $hidden = [
@@ -35,7 +39,34 @@ class Application extends Model
 
     protected $casts = [
         'last_health_check_at' => 'datetime',
+        'last_connected_at' => 'datetime',
+        'total_api_requests' => 'integer',
     ];
+
+    /**
+     * Record API connection event from downstream application
+     */
+    public function recordApiConnection(?string $ipAddress = null): void
+    {
+        $this->update([
+            'last_connected_at' => now(),
+            'last_connected_ip' => $ipAddress ?: request()?->ip(),
+            'connection_status' => 'connected',
+            'total_api_requests' => $this->total_api_requests + 1,
+        ]);
+    }
+
+    /**
+     * Get real-time connection status (Connected if accessed in last 15 minutes)
+     */
+    public function getRealtimeConnectionStatusAttribute(): string
+    {
+        if (! $this->last_connected_at) {
+            return 'never_connected';
+        }
+
+        return $this->last_connected_at->diffInMinutes(now()) <= 15 ? 'connected' : 'disconnected';
+    }
 
     public function category(): BelongsTo
     {

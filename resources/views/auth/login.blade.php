@@ -45,16 +45,37 @@
             </div>
         </div>
 
-        <!-- Identity Input -->
-        <div>
-            <label for="identity" class="block text-xs font-bold text-slate-700 mb-1.5">
-                <span x-show="accountType === 'siswa'">Identifier Siswa</span>
-                <span x-show="accountType === 'guru'">Email atau Username Guru</span>
-                <span x-show="accountType === 'dudi'">Email atau Username DUDI</span>
+        <!-- Group 1: Siswa Field (NIS) -->
+        <div x-show="accountType === 'siswa'">
+            <label for="nis" class="block text-xs font-bold text-slate-700 mb-1.5">
+                Nomor Induk Siswa (NIS)
             </label>
-            <input type="text" id="identity" name="identity" required autofocus x-model="identity"
-                :placeholder="accountType === 'siswa' ? 'Contoh: NIS Siswa' : (accountType === 'guru' ? 'Contoh: guru@smkn1bangsri.sch.id' : 'Contoh: admin@majujaya.co.id')"
+            <input type="text" id="nis" name="nis" :required="accountType === 'siswa'" :disabled="accountType !== 'siswa'"
+                value="{{ old('nis', old('identity')) }}" placeholder="Contoh NIS: 1234"
                 class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-all text-sm font-semibold">
+            <p class="text-[11px] text-slate-600 mt-1 font-medium">Gunakan Nomor Induk Siswa (NIS) aktif terdaftar di SIJUNA.</p>
+        </div>
+
+        <!-- Group 2: Guru Field (NIP) -->
+        <div x-show="accountType === 'guru'">
+            <label for="nip" class="block text-xs font-bold text-slate-700 mb-1.5">
+                Nomor Induk Pegawai (NIP) / Email Guru
+            </label>
+            <input type="text" id="nip" name="nip" :required="accountType === 'guru'" :disabled="accountType !== 'guru'"
+                value="{{ old('nip', old('identity')) }}" placeholder="NIP atau Email"
+                class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-all text-sm font-semibold">
+            <p class="text-[11px] text-slate-600 mt-1 font-medium">Gunakan NIP resmi atau email terdaftar pendidik di SIJUNA.</p>
+        </div>
+
+        <!-- Group 3: DUDI Field (Kode DUDI) -->
+        <div x-show="accountType === 'dudi'">
+            <label for="kode_dudi" class="block text-xs font-bold text-slate-700 mb-1.5">
+                Kode Mitra DUDI / Email Perusahaan
+            </label>
+            <input type="text" id="kode_dudi" name="kode_dudi" :required="accountType === 'dudi'" :disabled="accountType !== 'dudi'"
+                value="{{ old('kode_dudi', old('identity')) }}" placeholder="Contoh Kode: DUDI-001 atau Email"
+                class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-all text-sm font-semibold">
+            <p class="text-[11px] text-slate-600 mt-1 font-medium">Gunakan Kode Mitra DUDI atau Email resmi instansi/perusahaan.</p>
         </div>
 
         <!-- Password Input -->

@@ -25,7 +25,7 @@ class WhatsAppAnnouncementTest extends TestCase
             ], 200),
         ]);
 
-        $service = new WhatsAppService();
+        $service = new WhatsAppService;
         $result = $service->sendMessage('08123456789', 'Test pesan');
 
         $this->assertTrue($result['success']);
@@ -61,7 +61,7 @@ class WhatsAppAnnouncementTest extends TestCase
             'created_by' => $userWithPhone->id,
         ]);
 
-        $service = new WhatsAppService();
+        $service = new WhatsAppService;
         $result = $service->dispatchAnnouncementToUsers($announcement);
 
         $this->assertEquals(1, $result['dispatched']);
@@ -113,7 +113,7 @@ class WhatsAppAnnouncementTest extends TestCase
         ]);
 
         $job = new SendWhatsAppAnnouncementJob($log->id);
-        $job->handle(new WhatsAppService());
+        $job->handle(new WhatsAppService);
 
         $this->assertDatabaseHas('whatsapp_logs', [
             'id' => $log->id,
@@ -132,7 +132,7 @@ class WhatsAppAnnouncementTest extends TestCase
             ], 200),
         ]);
 
-        $service = new WhatsAppService();
+        $service = new WhatsAppService;
         $result = $service->toggleBotPower(false);
 
         $this->assertTrue($result['success']);

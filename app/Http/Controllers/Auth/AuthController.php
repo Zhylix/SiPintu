@@ -27,18 +27,40 @@ class AuthController extends Controller
 
     public function login(Request $request): RedirectResponse
     {
-        $credentials = $request->validate([
-            'identity' => ['required', 'string'],
+        $accountType = $request->input('account_type', 'siswa');
+
+        $identity = match ($accountType) {
+            'guru' => trim((string) ($request->input('nip') ?: $request->input('identity', ''))),
+            'dudi' => trim((string) ($request->input('kode_dudi') ?: $request->input('identity', ''))),
+            default => trim((string) ($request->input('nis') ?: $request->input('identity', ''))),
+        };
+
+        $identityFieldName = match ($accountType) {
+            'guru' => 'nip',
+            'dudi' => 'kode_dudi',
+            default => 'nis',
+        };
+
+        $request->validate([
             'password' => ['required', 'string'],
             'account_type' => ['nullable', 'string', 'in:siswa,guru,dudi,admin'],
         ], [
-            'identity.required' => 'Masukkan Email, Username, atau Identifier Siswa/NISN.',
             'password.required' => 'Kata sandi wajib diisi.',
         ]);
 
-        $identity = trim($credentials['identity']);
+        if (empty($identity)) {
+            $label = match ($accountType) {
+                'guru' => 'NIP atau Email Guru',
+                'dudi' => 'Kode Mitra DUDI atau Email Perusahaan',
+                default => 'NIS atau NISN Siswa',
+            };
+
+            return back()->withErrors([
+                $identityFieldName => "Masukkan {$label} Anda.",
+            ])->onlyInput('account_type', 'nis', 'nip', 'kode_dudi', 'identity');
+        }
+
         $password = $request->input('password');
-        $accountType = $request->input('account_type', 'siswa');
 
         // 1. Try finding user in Gateway database by email, username, or external_id (SIJUNA)
         $user = User::where('email', $identity)
@@ -128,7 +150,7 @@ class AuthController extends Controller
             Auth::login($user, $request->boolean('remember'));
             $request->session()->regenerate();
 
-            AuditLogger::log($user->isStudent() ? 'login_success_student' : 'login_success', [
+            AuditLogger::log($user->isStudent() ? 'login_success_student' : ($user->isTeacher() ? 'login_success_teacher' : 'login_success'), [
                 'user_id' => $user->id,
                 'role' => $user->role,
             ], $user->id);
@@ -142,7 +164,55 @@ class AuthController extends Controller
             return redirect()->intended(route('dashboard'))->with('success', 'Berhasil login sebagai '.$user->name);
         }
 
-        // 4. Try SIJUNA API lookup if student user does not exist locally yet (Only for Siswa tab)
+        // 4. Try SIJUNA API lookup if teacher user does not exist locally yet (Only for Guru tab)
+        if ($accountType === 'guru') {
+            try {
+                $sijunaService = app(SijunaApiService::class);
+                $teacherData = $sijunaService->getTeacherByExternalId($identity);
+                if ($teacherData) {
+                    $nip = (string) ($teacherData['nip'] ?? $teacherData['external_id'] ?? $teacherData['id'] ?? '');
+                    $email = $teacherData['email'] ?? $teacherData['user']['email'] ?? ($nip ? $nip.'@guru.sekolah.id' : $identity);
+                    $name = $teacherData['nama'] ?? $teacherData['name'] ?? 'Guru SIJUNA';
+                    $phone = $teacherData['hp'] ?? $teacherData['phone'] ?? null;
+                    $username = $nip ?? ($teacherData['username'] ?? explode('@', $email)[0]);
+
+                    // Provision teacher user locally with default password
+                    $teacherUser = User::create([
+                        'external_id' => $nip ?: $email,
+                        'username' => $username,
+                        'name' => $name,
+                        'email' => $email,
+                        'role' => 'teacher',
+                        'phone' => $phone,
+                        'status' => 'active',
+                        'password' => Hash::make($password),
+                    ]);
+
+                    $teacherRole = Role::firstOrCreate(['name' => 'teacher', 'guard_name' => 'web']);
+                    $teacherUser->assignRole($teacherRole);
+
+                    Auth::login($teacherUser, $request->boolean('remember'));
+                    $request->session()->regenerate();
+
+                    AuditLogger::log('login_success_teacher_provisioned', [
+                        'external_id' => $teacherUser->external_id,
+                        'user_id' => $teacherUser->id,
+                    ], $teacherUser->id);
+
+                    if (session()->has('oauth_return_to')) {
+                        $returnTo = session()->pull('oauth_return_to');
+
+                        return redirect()->to($returnTo);
+                    }
+
+                    return redirect()->intended(route('dashboard'))->with('success', 'Selamat datang, '.$teacherUser->name);
+                }
+            } catch (Exception $e) {
+                // Silently continue to login failed error below
+            }
+        }
+
+        // 5. Try SIJUNA API lookup if student user does not exist locally yet (Only for Siswa tab)
         if ($accountType === 'siswa') {
             try {
                 $sijunaService = app(SijunaApiService::class);
@@ -191,9 +261,16 @@ class AuthController extends Controller
 
         AuditLogger::log('login_failed', ['identity' => $identity]);
 
+        $failedMessage = match ($accountType) {
+            'guru' => 'Akun Guru dengan NIP, Email, atau Username yang dimasukkan tidak ditemukan/tidak valid.',
+            'dudi' => 'Akun DUDI dengan Kode Mitra, Email, atau Username yang dimasukkan tidak ditemukan/tidak valid.',
+            default => 'Akun Siswa dengan NIS atau NISN yang dimasukkan tidak ditemukan/tidak valid.',
+        };
+
         return back()->withErrors([
-            'identity' => 'Kredensial atau Identifier yang dimasukkan tidak ditemukan/tidak valid.',
-        ])->onlyInput('identity', 'account_type');
+            $identityFieldName => $failedMessage,
+            'identity' => $failedMessage,
+        ])->onlyInput('account_type', 'nis', 'nip', 'kode_dudi', 'identity');
     }
 
     public function logout(Request $request): RedirectResponse

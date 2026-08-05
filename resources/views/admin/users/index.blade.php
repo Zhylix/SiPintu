@@ -33,7 +33,7 @@
             <!-- Search Input -->
             <div class="relative flex-1 flex items-center gap-2">
                 <div class="relative flex-1">
-                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama, email, username, NIS, atau nomor HP..." 
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama, email, username, NIS, NIP, Kode DUDI, atau nomor HP..." 
                            class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 font-semibold placeholder-slate-400 focus:outline-none focus:border-emerald-600 focus:bg-white transition-all">
                     <svg class="w-4 h-4 text-slate-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                 </div>
@@ -99,7 +99,9 @@
                         <span class="font-bold text-slate-800 capitalize">{{ $user->getUserTypeName() }}</span>
                     </div>
                     <div>
-                        <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">NIS / ID</span>
+                        <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">
+                            {{ $user->isTeacher() ? 'NIP Guru' : ($user->isDudi() ? 'Kode DUDI' : ($user->isStudent() ? 'NIS Siswa' : 'ID Account')) }}
+                        </span>
                         <span class="font-mono font-bold text-emerald-800 text-xs break-all">
                             {{ $user->external_id ?: ($user->username ?: '-') }}
                         </span>
@@ -149,7 +151,7 @@
                     <tr>
                         <th class="px-6 py-4">Pengguna</th>
                         <th class="px-6 py-4">Role / Type</th>
-                        <th class="px-6 py-4">Identifier / NIS</th>
+                        <th class="px-6 py-4">Identifier (NIS / NIP / Kode DUDI)</th>
                         <th class="px-6 py-4">Nomor WhatsApp</th>
                         <th class="px-6 py-4">Status Akun</th>
                         <th class="px-6 py-4 text-right">Aksi</th>

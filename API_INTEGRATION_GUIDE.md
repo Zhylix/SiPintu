@@ -41,6 +41,53 @@ php artisan sipintu:sso-health
 
 ---
 
+## 🔍 Fitur Monitoring & Validasi Koneksi Aplikasi Downstream
+
+SiPintu menyediakan fitur pemantauan dan rekaman koneksi otomatis (*connection tracking & heartbeat*) untuk mendeteksi apakah aplikasi downstream (aplikasi klien di bawah Anda) sudah terhubung dan aktif berkomunikasi dengan REST API SiPintu.
+
+### 1. Rekaman Koneksi Otomatis & Heartbeat API
+* **Otomatis via Request API**: Setiap kali aplikasi downstream melakukan request HTTP ke endpoint REST API SiPintu (`/api/v1/*`) menggunakan header `X-Client-ID` & `X-Client-Secret` atau Bearer Token, sistem akan secara otomatis memperbarui status koneksi (`last_connected_at`), IP address asal, dan menambah total counter API request.
+* **GET / POST `/api/v1/ping` (Heartbeat / Ping Check)**:
+  Aplikasi downstream dapat melakukan ping dengan menyertakan `client_id` untuk merekam status koneksi terkini:
+  ```bash
+  curl -s "http://localhost:8000/api/v1/ping?client_id=app_hp3wleynrzue"
+  ```
+  **Response Output:**
+  ```json
+  {
+    "status": "online",
+    "gateway": "SiPintu REST API Gateway",
+    "client_connection": {
+      "registered": true,
+      "client_id": "app_hp3wleynrzue",
+      "name": "Aplikasi CBT Exam",
+      "status": "connected",
+      "last_connected_at": "2026-08-05T03:37:14+00:00",
+      "total_api_requests": 1
+    }
+  }
+  ```
+
+* **POST `/api/v1/validate-client` (Uji Kredensial & Re-Koneksi)**:
+  Menguji kredensial `client_id` dan `client_secret` aplikasi downstream dan merekam status koneksi *online*:
+  ```bash
+  curl -X POST "http://localhost:8000/api/v1/validate-client" \
+       -H "Content-Type: application/json" \
+       -d '{"client_id": "app_hp3wleynrzue", "client_secret": "sec_ZFdip34r88Q0MeWVB15luHUDbN9ALgn3"}'
+  ```
+
+### 2. Perintah CLI untuk Pemantauan Aplikasi Downstream
+Admin dapat memeriksa status koneksi seluruh aplikasi downstream langsung dari terminal:
+```bash
+# Tampilkan tabel status koneksi seluruh aplikasi downstream
+php artisan sipintu:client-check
+
+# Uji & validasi koneksi spesifik aplikasi downstream
+php artisan sipintu:client-check --client-id=app_hp3wleynrzue --secret=sec_ZFdip34r88Q0MeWVB15luHUDbN9ALgn3
+```
+
+---
+
 ## 🚀 METODE 1: Server-to-Server Gateway (Data API Direct Access)
 
 Gunakan metode ini jika aplikasi Anda hanya membutuhkan akses data backend (seperti Query Data Siswa SIJUNA) tanpa keterlibatan login browser pengguna.
@@ -53,11 +100,17 @@ Setiap request HTTP wajib menyertakan header berikut:
 
 ### Endpoint Tersedia
 
-#### 1. List Data Siswa SIJUNA
+#### 1. List Data Siswa SIJUNA (Filtering via NIS)
 * **Endpoint:** `GET /api/v1/sijuna/students`
 * **Query Parameters (Opsional):**
   * `nis` (string) — Filter berdasarkan NIS siswa (misal: `?nis=1234567890`)
   * `search` (string) — Pencarian berdasarkan nama
+
+#### 2. List Data Guru SIJUNA (Filtering via NIP)
+* **Endpoint:** `GET /api/v1/sijuna/teachers`
+* **Query Parameters (Opsional):**
+  * `nip` (string) — Filter berdasarkan NIP / Email guru (misal: `?nip=198501012010011001`)
+  * `search` (string) — Pencarian berdasarkan nama guru
 
 #### Contoh Implementasi JavaScript (Node.js / Browser Fetch):
 ```javascript

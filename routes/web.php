@@ -93,8 +93,8 @@ Route::middleware('auth')->group(function () {
 */
 
 Route::get('/oauth/authorize', [OAuthController::class, 'authorize'])->name('oauth.authorize');
-Route::post('/oauth/token', [OAuthController::class, 'token'])->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\PreventRequestForgery::class])->name('oauth.token');
-Route::post('/oauth/logout', [OAuthController::class, 'logout'])->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\PreventRequestForgery::class])->name('oauth.logout');
+Route::post('/oauth/token', [OAuthController::class, 'token'])->withoutMiddleware([PreventRequestForgery::class])->name('oauth.token');
+Route::post('/oauth/logout', [OAuthController::class, 'logout'])->withoutMiddleware([PreventRequestForgery::class])->name('oauth.logout');
 Route::get('/.well-known/openid-configuration', [OAuthController::class, 'openidConfiguration'])->name('oauth.well-known');
 Route::get('/oauth/jwks.json', [OAuthController::class, 'jwks'])->name('oauth.jwks');
 
@@ -160,9 +160,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     // Audit Logs
     Route::get('/audit-logs', [AdminAuditLogController::class, 'index'])->name('audit-logs.index');
 
-    // System Monitoring
+    // System Monitoring & Gateway Validation
     Route::get('/monitoring', [AdminMonitoringController::class, 'index'])->name('monitoring.index');
     Route::post('/monitoring/health-checks', [AdminMonitoringController::class, 'runHealthChecks'])->name('monitoring.run-health-checks');
+    Route::post('/monitoring/validate-gateway', [AdminMonitoringController::class, 'validateGateway'])->name('monitoring.validate-gateway');
+    Route::post('/monitoring/validate-client', [AdminMonitoringController::class, 'validateClientApp'])->name('monitoring.validate-client');
 
     // Announcement Management
     Route::get('/announcements/bot-status', [AdminAnnouncementController::class, 'botStatus'])->name('announcements.bot-status');
@@ -180,6 +182,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
 |--------------------------------------------------------------------------
 */
 use App\Http\Controllers\Demo\ExternalAppDemoController;
+use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 
 Route::prefix('demo')->name('demo.')->group(function () {
     Route::get('/{appSlug?}', [ExternalAppDemoController::class, 'index'])->name('index');
@@ -188,4 +191,3 @@ Route::prefix('demo')->name('demo.')->group(function () {
     Route::get('/{appSlug}/logout', [ExternalAppDemoController::class, 'logout'])->name('logout');
     Route::get('/{appSlug}/health', [ExternalAppDemoController::class, 'healthCheck'])->name('health');
 });
-

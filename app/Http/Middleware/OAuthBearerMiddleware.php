@@ -28,6 +28,10 @@ class OAuthBearerMiddleware
                 $request->attributes->set('oauth_token', $accessToken);
                 $request->attributes->set('oauth_application', $accessToken->application);
 
+                if ($accessToken->application) {
+                    $accessToken->application->recordApiConnection($request->ip());
+                }
+
                 return $next($request);
             }
         }
@@ -53,6 +57,7 @@ class OAuthBearerMiddleware
 
                 if ($secretValid) {
                     $request->attributes->set('oauth_application', $application);
+                    $application->recordApiConnection($request->ip());
 
                     return $next($request);
                 }

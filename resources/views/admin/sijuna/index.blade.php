@@ -23,26 +23,31 @@
     <div class="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-4">
         <h3 class="text-xs font-black text-emerald-950 uppercase tracking-wider">Parameter Konfigurasi Backend (config/services.php)</h3>
         
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 text-xs">
             <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
                 <span class="text-slate-600 font-semibold block mb-1">SIJUNA API URL Endpoint</span>
                 <span class="font-mono text-emerald-800 font-bold block truncate">{{ $config['url'] }}</span>
             </div>
 
             <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
-                <span class="text-slate-600 font-semibold block mb-1">SIJUNA API Token (X-API-Token Header)</span>
+                <span class="text-slate-600 font-semibold block mb-1">SIJUNA API Token</span>
                 <span class="font-mono text-emerald-800 font-bold block">{{ $config['token_masked'] }}</span>
-                <span class="text-[10px] text-amber-700 font-bold block mt-1">Terlindungi & Tidak Pernah Diberikan ke Frontend</span>
+                <span class="text-[10px] text-amber-700 font-bold block mt-1">Terlindungi (Header Only)</span>
             </div>
 
             <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
                 <span class="text-slate-600 font-semibold block mb-1">Timeout & Retries</span>
-                <span class="font-bold text-slate-900 block">{{ $config['timeout'] }}s Timeout / {{ $config['retry_times'] }} Retries</span>
+                <span class="font-bold text-slate-900 block">{{ $config['timeout'] }}s / {{ $config['retry_times'] }} Retries</span>
             </div>
 
             <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
                 <span class="text-slate-600 font-semibold block mb-1">Siswa Tersinkronisasi</span>
-                <span class="font-black text-emerald-700 text-base block">{{ number_format($syncedStudentsCount) }} Akun Siswa</span>
+                <span class="font-black text-emerald-700 text-base block">{{ number_format($syncedStudentsCount) }} Akun</span>
+            </div>
+
+            <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+                <span class="text-slate-600 font-semibold block mb-1">Guru Tersinkronisasi</span>
+                <span class="font-black text-teal-700 text-base block">{{ number_format($syncedTeachersCount ?? 0) }} Akun</span>
             </div>
         </div>
     </div>

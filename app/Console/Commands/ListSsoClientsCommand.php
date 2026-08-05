@@ -31,6 +31,7 @@ class ListSsoClientsCommand extends Command
         if ($applications->isEmpty()) {
             $this->warn('Belum ada aplikasi klien SSO yang terdaftar.');
             $this->info('Jalankan: php artisan sipintu:sso-client untuk mendaftarkan aplikasi pertama Anda.');
+
             return Command::SUCCESS;
         }
 

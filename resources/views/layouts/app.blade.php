@@ -207,7 +207,7 @@
 
     <div class="min-h-full flex flex-col relative z-10">
         <!-- Top Institutional Ministry Bar -->
-        <div class="bg-emerald-950 text-white text-[11px] font-bold py-2 border-b-2 border-emerald-600 relative z-20 overflow-hidden select-none">
+        <div class="bg-emerald-800 text-white text-[11px] font-bold py-2 border-b-2 border-emerald-600 relative z-20 overflow-hidden select-none">
             <div class="animate-marquee flex items-center">
                 <div class="flex items-center space-x-6 shrink-0 px-4">
                     <img src="{{ asset('images/logo-smkn1bangsri.png') }}" class="w-4 h-4 object-contain" alt="Logo">

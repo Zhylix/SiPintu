@@ -3,11 +3,11 @@
 namespace App\Services;
 
 use Exception;
-use Throwable;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class SijunaApiService
 {
@@ -55,7 +55,7 @@ class SijunaApiService
 
                 if ($response->successful()) {
                     $json = $response->json();
-                    
+
                     $paginationData = $json['data'] ?? $json;
                     $items = [];
 
@@ -121,6 +121,105 @@ class SijunaApiService
             ['id' => '1', 'nis' => '1234567890', 'nama' => 'Ahmad Fauzi (SIJUNA)', 'kelas' => 'XII RPL 1', 'email' => 'ahmad@sijuna.sch.id', 'role' => 'student', 'status' => 'active'],
             ['id' => '2', 'nis' => '1234567891', 'nama' => 'Siti Rahma (SIJUNA)', 'kelas' => 'XII TKJ 2', 'email' => 'siti@sijuna.sch.id', 'role' => 'student', 'status' => 'active'],
             ['id' => '3', 'nis' => '1234567892', 'nama' => 'Budi Santoso (SIJUNA)', 'kelas' => 'XI RPL 2', 'email' => 'budi@sijuna.sch.id', 'role' => 'student', 'status' => 'active'],
+        ];
+    }
+
+    /**
+     * Fetch all teachers data from SIJUNA API (https://sijuna.com/api/guru)
+     */
+    public function getTeachers(): array
+    {
+        // Check direct URL https://sijuna.com/api/guru or relative /guru
+        $endpoint = str_contains($this->baseUrl, 'sijuna.com') ? 'https://sijuna.com/api/guru' : rtrim($this->baseUrl, '/').'/guru';
+        $allTeachers = [];
+        $page = 1;
+        $lastPage = 1;
+
+        try {
+            do {
+                $response = Http::withHeaders([
+                    'X-API-Token' => $this->apiToken,
+                    'Accept' => 'application/json',
+                ])
+                    ->connectTimeout(5)
+                    ->timeout($this->timeout)
+                    ->retry($this->retryTimes, $this->retrySleep, function (Exception $exception) {
+                        return $exception instanceof ConnectionException;
+                    })
+                    ->get($endpoint, ['page' => $page]);
+
+                if ($response->successful()) {
+                    $json = $response->json();
+
+                    $paginationData = $json['data'] ?? $json;
+                    $items = [];
+
+                    if (isset($paginationData['data']) && is_array($paginationData['data'])) {
+                        $items = $paginationData['data'];
+                        $lastPage = $paginationData['last_page'] ?? $json['meta']['last_page'] ?? $lastPage;
+                    } elseif (is_array($paginationData)) {
+                        $items = $paginationData;
+                        $lastPage = $json['last_page'] ?? $json['meta']['last_page'] ?? $lastPage;
+                    }
+
+                    if (empty($items)) {
+                        break;
+                    }
+
+                    $allTeachers = array_merge($allTeachers, $items);
+                    $page++;
+                } else {
+                    break;
+                }
+            } while ($page <= $lastPage);
+        } catch (Throwable $e) {
+            Log::info('SIJUNA external teacher URL unreachable, using fallback teachers: '.$e->getMessage());
+        }
+
+        return ! empty($allTeachers) ? $allTeachers : $this->getFallbackMockTeachers();
+    }
+
+    /**
+     * Get teacher details by external ID, NIP, or email with Redis Caching (teacher:{key})
+     */
+    public function getTeacherByExternalId(string $identifier): ?array
+    {
+        $searchKey = trim((string) $identifier);
+        $cacheKey = "teacher:{$searchKey}";
+
+        return Cache::remember($cacheKey, 3600, function () use ($searchKey) {
+            $teachers = $this->getTeachers();
+            foreach ($teachers as $teacher) {
+                $nip = isset($teacher['nip']) ? (string) $teacher['nip'] : null;
+                $extId = isset($teacher['external_id']) ? (string) $teacher['external_id'] : null;
+                $id = isset($teacher['id']) ? (string) $teacher['id'] : null;
+                $email = isset($teacher['email']) ? (string) $teacher['email'] : null;
+                $username = isset($teacher['username']) ? (string) $teacher['username'] : null;
+
+                if (
+                    ($email && strcasecmp($searchKey, $email) === 0) ||
+                    ($nip && $searchKey === $nip) ||
+                    ($extId && $searchKey === $extId) ||
+                    ($id && $searchKey === $id) ||
+                    ($username && strcasecmp($searchKey, $username) === 0)
+                ) {
+                    return $teacher;
+                }
+            }
+
+            return null;
+        });
+    }
+
+    /**
+     * Fallback mock teacher data when SIJUNA external API server is offline or unreachable
+     */
+    protected function getFallbackMockTeachers(): array
+    {
+        return [
+            ['id' => '101', 'nip' => '198501012010011001', 'nama' => 'Bambang S.Pd (SIJUNA)', 'email' => 'bambang@sijuna.sch.id', 'phone' => '081234567890', 'role' => 'teacher', 'status' => 'active'],
+            ['id' => '102', 'nip' => '199002022015022002', 'nama' => 'Siti Nurhaliza M.Pd (SIJUNA)', 'email' => 'siti.guru@sijuna.sch.id', 'phone' => '081234567891', 'role' => 'teacher', 'status' => 'active'],
+            ['id' => '103', 'nip' => '199203032018031003', 'nama' => 'Drs. Agus Wijaya (SIJUNA)', 'email' => 'agus.guru@sijuna.sch.id', 'phone' => '081234567892', 'role' => 'teacher', 'status' => 'active'],
         ];
     }
 }

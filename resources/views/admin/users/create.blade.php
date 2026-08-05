@@ -24,10 +24,9 @@
         <div>
             <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Peran / Role Utama</label>
             <select name="role" required class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 font-semibold text-sm focus:border-emerald-600 focus:bg-white focus:outline-none transition-all">
-                <option value="student" {{ old('role', old('user_type')) === 'student' ? 'selected' : '' }}>Siswa</option>
-                <option value="teacher" {{ old('role', old('user_type')) === 'teacher' ? 'selected' : '' }}>Guru / Pendidik</option>
-                <option value="dudi" {{ old('role', old('user_type')) === 'dudi' ? 'selected' : '' }}>Mitra DUDI</option>
-                <option value="admin" {{ old('role', old('user_type')) === 'admin' ? 'selected' : '' }}>Administrator Gateway</option>
+                <option value="teacher" {{ old('role', old('user_type')) === 'teacher' ? 'selected' : '' }}>Guru / Pendidik (NIP)</option>
+                <option value="dudi" {{ old('role', old('user_type')) === 'dudi' ? 'selected' : '' }}>Mitra DUDI (Kode DUDI)</option>
+                <option value="student" {{ old('role', old('user_type')) === 'student' ? 'selected' : '' }}>Siswa (NIS)</option>
             </select>
         </div>
 
