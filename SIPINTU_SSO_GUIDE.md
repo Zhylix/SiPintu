@@ -1,6 +1,49 @@
-# 🔐 Panduan Praktis Integrasi SSO & API SiPintu Gateway
+# 🔐 Panduan Praktis Integrasi SSO SiPintu Gateway
 
-Dokumen ini adalah panduan lengkap dan detail untuk mengintegrasikan aplikasi eksternal (Klien / Child App) dengan **SiPintu Identity & API Gateway**.
+Dokumen ini adalah panduan lengkap dan detail untuk mengintegrasikan aplikasi eksternal (Klien / Child App) dengan **SiPintu SSO Gateway**.
+
+---
+
+## 👤 Pemasangan & Pemetaan User Lokal (User Auto-Provisioning)
+
+Ketika pengguna berhasil melakukan login SSO melalui SiPintu Gateway, aplikasi klien akan menerima data akun dari endpoint `GET /api/v1/user`. Data ini digunakan untuk mendaftarkan atau menyinkronkan user ke database lokal aplikasi klien.
+
+### 1. Struktur JSON Data User dari SiPintu Gateway (`/api/v1/user`)
+
+```json
+{
+    "id": "15",
+    "external_id": "1234567890",
+    "name": "Ahmad Fauzi",
+    "email": "ahmad@sijuna.sch.id",
+    "role": "student",
+    "phone": "081234567890"
+}
+```
+
+### 2. Logika Pemasangan User di Database Lokal (Laravel)
+
+Gunakan `User::updateOrCreate()` pada `OAuthController` aplikasi klien agar akun user baru otomatis dibuat (*Auto-Provisioning*) dan akun lama selalu ter-update:
+
+```php
+// Ambil profil user dari SiPintu Gateway
+$sipintuUser = $userResponse->json('data') ?? $userResponse->json();
+
+// Pemasangan & Pemetaan User ke Database Lokal
+$user = User::updateOrCreate(
+    ['email' => $sipintuUser['email']], // Identifier utama
+    [
+        'name'              => $sipintuUser['name'],
+        'external_id'       => $sipintuUser['external_id'] ?? null,
+        'role'              => $sipintuUser['role'] ?? 'user',
+        'password'          => bcrypt(Str::random(24)), // Random password karena autentikasi dihandle penuh oleh SSO
+        'email_verified_at' => now(),
+    ]
+);
+
+// Loginkan user ke sesi lokal aplikasi klien
+Auth::login($user, true);
+```
 
 ---
 
@@ -21,22 +64,11 @@ php artisan sipintu:sso-client "Nama Aplikasi Anda" --redirect=http://localhost:
 Buka file `.env` pada aplikasi klien Anda (misal `TESApi`) dan tambahkan:
 
 ```env
-SIPINTU_BASE_URL=http://localhost:8000
-SIPINTU_CLIENT_ID=app_mecmvhpduc8e
-SIPINTU_CLIENT_SECRET=sec_uEr8wGucp1jda8Ls6qOBsW03HrYVj6UK
-SIPINTU_REDIRECT_URI=http://localhost:8001/oauth/callback
+minta ke SIR HELMY YUNAN NASUTION UNTUK CLIENT ID DAN CLIENT SECRET DAN BASE URL DAN REDIRECT URI
 ```
 
 ---
 
-### Langkah 3: Uji Kesehatan Sistem Gateway SSO
-Jalankan perintah ini di folder `SiPintu` untuk memastikan seluruh endpoint SSO dan proteksi CSRF bekerja sempurna:
-
-```bash
-php artisan sipintu:sso-health
-```
-
----
 
 ## 🛠️ Perintah Artisan SSO SiPintu Gateway
 
@@ -179,31 +211,6 @@ class OAuthController extends Controller
     }
 }
 ```
-
----
-
-## 🚀 Integrasi Direct API (Server-to-Server Tanpa Login User)
-
-Jika aplikasi Anda hanya perlu mengambil data backend SiPintu (seperti Data Siswa SIJUNA):
-
-```php
-use Illuminate\Support\Facades\Http;
-
-$baseUrl      = env('SIPINTU_BASE_URL', 'http://localhost:8000');
-$clientId     = env('SIPINTU_CLIENT_ID', 'app_mecmvhpduc8e');
-$clientSecret = env('SIPINTU_CLIENT_SECRET', 'sec_uEr8wGucp1jda8Ls6qOBsW03HrYVj6UK');
-
-$response = Http::withHeaders([
-    'X-Client-ID'     => $clientId,
-    'X-Client-Secret' => $clientSecret,
-    'Accept'          => 'application/json',
-])->get("{$baseUrl}/api/v1/sijuna/students");
-
-if ($response->successful()) {
-    $students = $response->json('data');
-}
-```
-
 ---
 
 ## ❓ Troubleshoot & Solusi Masalah
