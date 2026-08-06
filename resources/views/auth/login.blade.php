@@ -3,7 +3,7 @@
 @section('content')
 <div class="bg-white border border-emerald-100 rounded-3xl p-8 shadow-2xl shadow-emerald-900/10">
     <div class="mb-6 text-center">
-        <h2 class="text-xl font-black text-emerald-950">Portal Login Gateway Sekolah</h2>
+        <h2 class="text-xl font-black text-emerald-950">Portal Login</h2>
         <p class="text-xs text-slate-600 font-semibold mt-1">Layanan Akses SMKN 1 Bangsri</p>
     </div>
 
@@ -51,9 +51,9 @@
                 Nomor Induk Siswa (NIS)
             </label>
             <input type="text" id="nis" name="nis" :required="accountType === 'siswa'" :disabled="accountType !== 'siswa'"
-                value="{{ old('nis', old('identity')) }}" placeholder="Contoh NIS: 4439"
+                value="{{ old('nis', old('identity')) }}" placeholder="Contoh NIS: 1111"
                 class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-all text-sm font-semibold">
-            <p class="text-[11px] text-slate-600 mt-1 font-medium">Gunakan Nomor Induk Siswa (NIS) aktif terdaftar di SIJUNA.</p>
+            <p class="text-[11px] text-slate-600 mt-1 font-medium">Gunakan Nomor Induk Siswa.</p>
         </div>
 
         <!-- Group 2: Guru Field (NIP) -->
@@ -64,7 +64,7 @@
             <input type="text" id="nip" name="nip" :required="accountType === 'guru'" :disabled="accountType !== 'guru'"
                 value="{{ old('nip', old('identity')) }}" placeholder="NIP atau Email"
                 class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-all text-sm font-semibold">
-            <p class="text-[11px] text-slate-600 mt-1 font-medium">Gunakan NIP resmi atau email terdaftar pendidik di SIJUNA.</p>
+            <p class="text-[11px] text-slate-600 mt-1 font-medium">Gunakan NIP resmi atau email Guru.</p>
         </div>
 
         <!-- Group 3: DUDI Field (Kode DUDI) -->
@@ -75,7 +75,7 @@
             <input type="text" id="kode_dudi" name="kode_dudi" :required="accountType === 'dudi'" :disabled="accountType !== 'dudi'"
                 value="{{ old('kode_dudi', old('identity')) }}" placeholder="Contoh Kode: dudi atau Email"
                 class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-all text-sm font-semibold">
-            <p class="text-[11px] text-slate-600 mt-1 font-medium">Gunakan Kode Mitra DUDI atau Email resmi instansi/perusahaan.</p>
+            <p class="text-[11px] text-slate-600 mt-1 font-medium">Gunakan Email resmi instansi/perusahaan.</p>
         </div>
 
         <!-- Password Input with Toggle -->
@@ -108,12 +108,6 @@
             <span>Login ke Dashboard</span>
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
         </button>
-
-        <div class="mt-4 pt-3 border-t border-slate-100 text-center">
-            <p class="text-[11px] text-slate-500 font-medium">
-                <span class="font-bold text-slate-700">Catatan Admin:</span> Administrator dapat login melalui tab mana saja dengan Email/Username Admin.
-            </p>
-        </div>
     </form>
 </div>
 @endsection

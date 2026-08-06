@@ -61,7 +61,7 @@
         }
     }
 }">
-    <!-- Bright & Vibrant Header Hero Banner (Clean Light Theme) -->
+    <!-- Bright & Vibrant Header Hero Banner-->
     <div class="relative overflow-hidden bg-white border border-emerald-200 rounded-3xl p-6 sm:p-8 shadow-sm">
         <!-- Background Soft Accents -->
         <div class="absolute top-0 right-0 w-96 h-96 bg-emerald-100/50 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20"></div>
@@ -159,7 +159,7 @@
             </div>
             <p class="text-[11px] text-slate-600 font-medium">Inaktif > 15m atau belum terkoneksi</p>
         </div>
-
+        
         <!-- Metric 4: DB Latency -->
         <div class="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-3 relative overflow-hidden group hover:border-teal-300 transition-all">
             <div class="flex items-center justify-between">
