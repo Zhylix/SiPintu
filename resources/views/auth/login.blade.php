@@ -15,17 +15,17 @@
     @endif
 
     @if($errors->any())
-        <div class="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs space-y-1">
-            @foreach($errors->all() as $error)
+        <div class="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs space-y-1.5">
+            @foreach(array_unique($errors->all()) as $error)
                 <div class="flex items-center space-x-2">
-                    <svg class="w-4 h-4 text-rose-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                    <span>{{ $error }}</span>
+                    <svg class="w-4 h-4 text-rose-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                    <span class="font-medium">{{ $error }}</span>
                 </div>
             @endforeach
         </div>
     @endif
 
-    <form method="POST" action="{{ route('login') }}" x-data="{ accountType: '{{ old('account_type', 'siswa') }}', identity: '{{ old('identity') }}', password: '' }" class="space-y-5">
+    <form method="POST" action="{{ route('login') }}" x-data="{ accountType: '{{ old('account_type', 'siswa') }}', password: '', showPassword: false }" class="space-y-5">
         @csrf
         <input type="hidden" name="account_type" :value="accountType">
 
@@ -51,7 +51,7 @@
                 Nomor Induk Siswa (NIS)
             </label>
             <input type="text" id="nis" name="nis" :required="accountType === 'siswa'" :disabled="accountType !== 'siswa'"
-                value="{{ old('nis', old('identity')) }}" placeholder="Contoh NIS: 1234"
+                value="{{ old('nis', old('identity')) }}" placeholder="Contoh NIS: 4439"
                 class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-all text-sm font-semibold">
             <p class="text-[11px] text-slate-600 mt-1 font-medium">Gunakan Nomor Induk Siswa (NIS) aktif terdaftar di SIJUNA.</p>
         </div>
@@ -73,12 +73,12 @@
                 Kode Mitra DUDI / Email Perusahaan
             </label>
             <input type="text" id="kode_dudi" name="kode_dudi" :required="accountType === 'dudi'" :disabled="accountType !== 'dudi'"
-                value="{{ old('kode_dudi', old('identity')) }}" placeholder="Contoh Kode: DUDI-001 atau Email"
+                value="{{ old('kode_dudi', old('identity')) }}" placeholder="Contoh Kode: dudi atau Email"
                 class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-all text-sm font-semibold">
             <p class="text-[11px] text-slate-600 mt-1 font-medium">Gunakan Kode Mitra DUDI atau Email resmi instansi/perusahaan.</p>
         </div>
 
-        <!-- Password Input -->
+        <!-- Password Input with Toggle -->
         <div>
             <div class="flex items-center justify-between mb-1.5">
                 <label for="password" class="block text-xs font-bold text-slate-700">
@@ -86,9 +86,15 @@
                 </label>
                 <a href="{{ route('password.request') }}" class="text-xs font-bold text-emerald-600 hover:text-emerald-700 hover:underline">Lupa Password?</a>
             </div>
-            <input type="password" id="password" name="password" required x-model="password"
-                placeholder="••••••••"
-                class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-all text-sm font-semibold">
+            <div class="relative">
+                <input :type="showPassword ? 'text' : 'password'" id="password" name="password" required x-model="password"
+                    placeholder="••••••••"
+                    class="w-full px-4 py-3 pr-11 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-all text-sm font-semibold">
+                <button type="button" @click="showPassword = !showPassword" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600">
+                    <svg x-show="!showPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                    <svg x-show="showPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" x-cloak><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858-5.908a10.025 10.025 0 013.98-1.063c4.478 0 8.268 2.943 9.542 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21f-9.542-7-9.542-7M3 3l18 18"></path></svg>
+                </button>
+            </div>
         </div>
 
         <div class="flex items-center justify-between text-xs text-slate-600">
@@ -102,6 +108,12 @@
             <span>Login ke Dashboard</span>
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
         </button>
+
+        <div class="mt-4 pt-3 border-t border-slate-100 text-center">
+            <p class="text-[11px] text-slate-500 font-medium">
+                <span class="font-bold text-slate-700">Catatan Admin:</span> Administrator dapat login melalui tab mana saja dengan Email/Username Admin.
+            </p>
+        </div>
     </form>
 </div>
 @endsection

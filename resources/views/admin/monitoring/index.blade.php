@@ -1,4 +1,4 @@
-@extends('layouts.app', ['headerTitle' => 'Dashboard Visual Monitoring Gateway'])
+@extends('layouts.app', ['headerTitle' => 'Monitoring API Downstream'])
 
 @section('content')
 <div class="space-y-6" x-data="{

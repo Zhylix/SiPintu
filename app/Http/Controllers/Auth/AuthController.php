@@ -128,8 +128,8 @@ class AuthController extends Controller
                 ]);
 
                 return back()->withErrors([
-                    'identity' => "Akun Anda terdaftar sebagai {$userRoleName}. Silakan pilih tab login {$targetTab} untuk masuk.",
-                ])->onlyInput('identity', 'account_type');
+                    $identityFieldName => "Akun Anda terdaftar sebagai {$userRoleName}. Silakan pilih tab login {$targetTab} untuk masuk.",
+                ])->onlyInput('account_type', 'nis', 'nip', 'kode_dudi', 'identity');
             }
 
             // 3. Handle password verification for all users (Siswa, Guru, DUDI)
@@ -138,13 +138,15 @@ class AuthController extends Controller
 
                 return back()->withErrors([
                     'password' => 'Kata sandi yang Anda masukkan salah.',
-                ])->onlyInput('identity', 'account_type');
+                ])->onlyInput('account_type', 'nis', 'nip', 'kode_dudi', 'identity');
             }
 
             if ($user->status !== 'active') {
                 AuditLogger::log('login_failed_suspended', ['identity' => $identity]);
 
-                return back()->withErrors(['identity' => 'Akun Anda sedang dinonaktifkan atau ditangguhkan.'])->onlyInput('identity', 'account_type');
+                return back()->withErrors([
+                    $identityFieldName => 'Akun Anda sedang dinonaktifkan atau ditangguhkan.',
+                ])->onlyInput('account_type', 'nis', 'nip', 'kode_dudi', 'identity');
             }
 
             Auth::login($user, $request->boolean('remember'));
@@ -269,7 +271,6 @@ class AuthController extends Controller
 
         return back()->withErrors([
             $identityFieldName => $failedMessage,
-            'identity' => $failedMessage,
         ])->onlyInput('account_type', 'nis', 'nip', 'kode_dudi', 'identity');
     }
 
