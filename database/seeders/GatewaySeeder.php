@@ -89,6 +89,20 @@ class GatewaySeeder extends Seeder
         );
         $dudiUser->syncRoles(['dudi']);
 
+        // Default Siswa User (Static Fallback)
+        $siswaUser = User::firstOrCreate(
+            ['username' => '4439'],
+            [
+                'name' => 'AFRILLIA FIFA ANANTA',
+                'email' => '4439@smkn1bangsri.sch.id',
+                'external_id' => '4439',
+                'password' => Hash::make('password'),
+                'role' => 'student',
+                'status' => 'active',
+            ]
+        );
+        $siswaUser->syncRoles(['student']);
+
         // 4. Auto Sync Real Students from SIJUNA API
         try {
             SyncSijunaStudentsJob::dispatchSync();

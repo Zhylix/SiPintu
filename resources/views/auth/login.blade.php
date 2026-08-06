@@ -51,9 +51,9 @@
                 Nomor Induk Siswa (NIS)
             </label>
             <input type="text" id="nis" name="nis" :required="accountType === 'siswa'" :disabled="accountType !== 'siswa'"
-                value="{{ old('nis', old('identity')) }}" placeholder="Contoh NIS: 1111"
+                value="{{ old('nis', old('identity')) }}" placeholder="Contoh NIS: 4439"
                 class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-all text-sm font-semibold">
-            <p class="text-[11px] text-slate-600 mt-1 font-medium">Gunakan Nomor Induk Siswa.</p>
+            <p class="text-[11px] text-slate-600 mt-1 font-medium">Gunakan Nomor Induk Siswa (Contoh: NIS <span class="font-bold text-emerald-700">4439</span>, password: <span class="font-bold text-emerald-700">password</span>).</p>
         </div>
 
         <!-- Group 2: Guru Field (NIP) -->
