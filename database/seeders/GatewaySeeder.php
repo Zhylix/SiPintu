@@ -91,7 +91,7 @@ class GatewaySeeder extends Seeder
 
         // 4. Auto Sync Real Students from SIJUNA API
         try {
-            SyncSijunaStudentsJob::dispatch();
+            SyncSijunaStudentsJob::dispatchSync();
         } catch (\Throwable $e) {
             // Ignore if queue or network issue
         }
