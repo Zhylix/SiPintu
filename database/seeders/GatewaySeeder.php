@@ -51,7 +51,7 @@ class GatewaySeeder extends Seeder
         }
 
         // 3. Default Admin User
-        $adminUser = User::firstOrCreate(
+        $adminUser = User::updateOrCreate(
             ['email' => 'admin@gateway.sekolah.id'],
             [
                 'name' => 'Administrator Gateway',
@@ -64,7 +64,7 @@ class GatewaySeeder extends Seeder
         $adminUser->syncRoles(['admin']);
 
         // Default Guru User
-        $guruUser = User::firstOrCreate(
+        $guruUser = User::updateOrCreate(
             ['email' => 'guru@gateway.sekolah.id'],
             [
                 'name' => 'Bpk. Ahmad Fauzi, M.Kom',
@@ -77,7 +77,7 @@ class GatewaySeeder extends Seeder
         $guruUser->syncRoles(['teacher']);
 
         // Default DUDI User
-        $dudiUser = User::firstOrCreate(
+        $dudiUser = User::updateOrCreate(
             ['email' => 'dudi@gateway.sekolah.id'],
             [
                 'name' => 'PT Telkom Indonesia (Mitra DUDI)',
@@ -90,7 +90,7 @@ class GatewaySeeder extends Seeder
         $dudiUser->syncRoles(['dudi']);
 
         // Default Siswa User (Static Fallback)
-        $siswaUser = User::firstOrCreate(
+        $siswaUser = User::updateOrCreate(
             ['username' => '4439'],
             [
                 'name' => 'AFRILLIA FIFA ANANTA',
