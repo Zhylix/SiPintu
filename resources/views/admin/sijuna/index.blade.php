@@ -61,6 +61,7 @@
                 <thead class="bg-emerald-50 text-emerald-900 uppercase font-black text-[10px] border-b border-slate-200">
                     <tr>
                         <th class="px-4 py-3">ID Log</th>
+                        <th class="px-4 py-3">Tipe Sync</th>
                         <th class="px-4 py-3">Status</th>
                         <th class="px-4 py-3">Jumlah Data Diproses</th>
                         <th class="px-4 py-3">Waktu Mulai</th>
@@ -72,6 +73,11 @@
                     @forelse($syncLogs as $log)
                         <tr class="hover:bg-emerald-50/50">
                             <td class="px-4 py-3 font-bold text-slate-500">#{{ $log->id }}</td>
+                            <td class="px-4 py-3 font-sans">
+                                <span class="px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200 inline-flex items-center">
+                                    {{ $log->sync_type_label }}
+                                </span>
+                            </td>
                             <td class="px-4 py-3 font-sans">
                                 <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase
                                     {{ $log->status === 'success' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : '' }}
@@ -89,7 +95,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-4 py-6 text-center text-slate-500 font-sans font-medium">
+                            <td colspan="7" class="px-4 py-6 text-center text-slate-500 font-sans font-medium">
                                 Belum ada catatan riwayat sinkronisasi.
                             </td>
                         </tr>

@@ -48,12 +48,12 @@
         <!-- Group 1: Siswa Field (NIS) -->
         <div x-show="accountType === 'siswa'">
             <label for="nis" class="block text-xs font-bold text-slate-700 mb-1.5">
-                Nomor Induk Siswa (NIS)
+                NIS
             </label>
             <input type="text" id="nis" name="nis" :required="accountType === 'siswa'" :disabled="accountType !== 'siswa'"
-                value="{{ old('nis', old('identity')) }}" placeholder="Contoh NIS: 4439"
+                value="{{ old('nis', old('identity')) }}" placeholder="Contoh NIS: 3233"
                 class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-all text-sm font-semibold">
-            <p class="text-[11px] text-slate-600 mt-1 font-medium">Gunakan Nomor Induk Siswa (Contoh: NIS <span class="font-bold text-emerald-700">4439</span>, password: <span class="font-bold text-emerald-700">password</span>).</p>
+            <p class="text-[11px] text-slate-600 mt-1 font-medium">Login dengan NIS.</p>
         </div>
 
         <!-- Group 2: Guru Field (NIP) -->
@@ -75,7 +75,7 @@
             <input type="text" id="kode_dudi" name="kode_dudi" :required="accountType === 'dudi'" :disabled="accountType !== 'dudi'"
                 value="{{ old('kode_dudi', old('identity')) }}" placeholder="Contoh Kode: dudi atau Email"
                 class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-all text-sm font-semibold">
-            <p class="text-[11px] text-slate-600 mt-1 font-medium">Gunakan Email resmi instansi/perusahaan.</p>
+            <p class="text-[11px] text-slate-600 mt-1 font-medium">Gunakan Email resmi yang telah disediakan.</p>
         </div>
 
         <!-- Password Input with Toggle -->

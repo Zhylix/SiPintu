@@ -55,7 +55,9 @@
         }
         .animate-marquee {
             display: flex;
+            align-items: center;
             width: max-content;
+            will-change: transform;
             animation: marquee 25s linear infinite;
         }
         .animate-marquee:hover {
@@ -72,17 +74,17 @@
     <div class="max-w-md mx-auto min-h-screen bg-white shadow-xl flex flex-col relative border-x border-slate-200">
 
         <!-- 1. Top Institutional Marquee Bar (Centered & Non-wrapping Text) -->
-        <div class="bg-brand-dark text-white text-[10px] font-bold py-1.5 border-b-2 border-brand-primary overflow-hidden select-none whitespace-nowrap">
-            <div class="animate-marquee flex items-center justify-center">
+        <div class="bg-brand-dark text-white text-xs font-bold h-9 border-b-2 border-brand-primary overflow-hidden select-none whitespace-nowrap flex items-center shrink-0">
+            <div class="animate-marquee flex items-center">
                 <div class="flex items-center space-x-4 shrink-0 px-3 whitespace-nowrap">
-                    <img src="{{ asset('images/logo-smkn1bangsri.png') }}" class="w-3.5 h-3.5 object-contain shrink-0" alt="Logo">
+                    <img src="{{ asset('images/logo-smkn1bangsri.png') }}" class="w-4 h-4 object-contain shrink-0" alt="Logo">
                     <span class="whitespace-nowrap">PEMERINTAH PROVINSI JAWA TENGAH &bull; SMKN 1 BANGSRI</span>
                     <span class="text-emerald-400">&bull;</span>
                     <span class="text-emerald-200 whitespace-nowrap">SIPINTU MOBILE GATEWAY</span>
                     <span class="text-emerald-400">&bull;</span>
                 </div>
                 <div class="flex items-center space-x-4 shrink-0 px-3 whitespace-nowrap" aria-hidden="true">
-                    <img src="{{ asset('images/logo-smkn1bangsri.png') }}" class="w-3.5 h-3.5 object-contain shrink-0" alt="Logo">
+                    <img src="{{ asset('images/logo-smkn1bangsri.png') }}" class="w-4 h-4 object-contain shrink-0" alt="Logo">
                     <span class="whitespace-nowrap">PEMERINTAH PROVINSI JAWA TENGAH &bull; SMKN 1 BANGSRI</span>
                     <span class="text-emerald-400">&bull;</span>
                     <span class="text-emerald-200 whitespace-nowrap">SIPINTU MOBILE GATEWAY</span>

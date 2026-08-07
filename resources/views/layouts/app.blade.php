@@ -45,7 +45,9 @@
         }
         .animate-marquee {
             display: flex;
+            align-items: center;
             width: max-content;
+            will-change: transform;
             animation: marquee 25s linear infinite;
         }
         .animate-marquee:hover {
@@ -207,10 +209,10 @@
 
     <div class="min-h-full flex flex-col relative z-10">
         <!-- Top Institutional Ministry Bar -->
-        <div class="bg-emerald-800 text-white text-[11px] font-bold py-2 border-b-2 border-emerald-600 relative z-20 overflow-hidden select-none">
+        <div class="bg-emerald-800 text-white text-xs font-bold h-9 border-b-2 border-emerald-600 relative z-20 overflow-hidden select-none whitespace-nowrap flex items-center shrink-0">
             <div class="animate-marquee flex items-center">
-                <div class="flex items-center space-x-6 shrink-0 px-4">
-                    <img src="{{ asset('images/logo-smkn1bangsri.png') }}" class="w-4 h-4 object-contain" alt="Logo">
+                <div class="flex items-center space-x-6 shrink-0 px-4 whitespace-nowrap">
+                    <img src="{{ asset('images/logo-smkn1bangsri.png') }}" class="w-4 h-4 object-contain shrink-0" alt="Logo">
                     <span>PEMERINTAH PROVINSI JAWA TENGAH &bull; DINAS PENDIDIKAN DAN KEBUDAYAAN &bull; SMKN 1 BANGSRI</span>
                     <span class="text-emerald-400">&bull;</span>
                     <span class="text-emerald-200">GATEWAY RESMI SMKN 1 BANGSRI</span>
@@ -220,8 +222,8 @@
                     <span class="text-emerald-200">PORTAL AKSES TERPADU</span>
                     <span class="text-emerald-400">&bull;</span>
                 </div>
-                <div class="flex items-center space-x-6 shrink-0 px-4" aria-hidden="true">
-                    <img src="{{ asset('images/logo-smkn1bangsri.png') }}" class="w-4 h-4 object-contain" alt="Logo">
+                <div class="flex items-center space-x-6 shrink-0 px-4 whitespace-nowrap" aria-hidden="true">
+                    <img src="{{ asset('images/logo-smkn1bangsri.png') }}" class="w-4 h-4 object-contain shrink-0" alt="Logo">
                     <span>PEMERINTAH PROVINSI JAWA TENGAH &bull; DINAS PENDIDIKAN DAN KEBUDAYAAN &bull; SMKN 1 BANGSRI</span>
                     <span class="text-emerald-400">&bull;</span>
                     <span class="text-emerald-200">GATEWAY RESMI SMKN 1 BANGSRI</span>

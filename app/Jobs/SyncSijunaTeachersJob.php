@@ -30,6 +30,7 @@ class SyncSijunaTeachersJob implements ShouldQueue
     public function handle(SijunaApiService $sijunaApi): void
     {
         $syncLog = SyncLog::create([
+            'sync_type' => 'sijuna_teachers',
             'status' => 'in_progress',
             'records_processed' => 0,
             'started_at' => now(),
