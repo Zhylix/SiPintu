@@ -255,4 +255,4 @@ flowchart TD
 
 ---
 
-*Dokumen Flowchart User ini disusun secara mendalam untuk acuan pengembang, desainer sistem, maupun panduan pengguna SiPintu Identity Gateway.*
+*Dokumen Flowchart User ini disusun secara mendalam untuk acuan developer, Design System, maupun panduan pengguna SiPintu.*

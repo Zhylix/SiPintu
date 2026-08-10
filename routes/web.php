@@ -78,6 +78,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile/edit', [AuthController::class, 'showProfile'])->name('profile.edit');
     Route::put('/profile', [AuthController::class, 'updateProfile'])->name('profile.update');
     Route::put('/profile/password', [AuthController::class, 'updatePassword'])->name('profile.password');
+    Route::post('/profile/avatar', [AuthController::class, 'updateAvatar'])->name('profile.avatar.update');
+    Route::delete('/profile/avatar', [AuthController::class, 'deleteAvatar'])->name('profile.avatar.destroy');
+    Route::post('/profile/sync-sijuna', [AuthController::class, 'syncSijunaProfile'])->name('profile.sijuna-sync');
+    Route::put('/profile/notifications', [AuthController::class, 'updateNotificationSettings'])->name('profile.notifications.update');
+    Route::post('/profile/test-whatsapp', [AuthController::class, 'sendTestWhatsapp'])->name('profile.test-whatsapp');
 
     // Toggle favorite application for user
     Route::post('/applications/{application}/favorite', [UserApplicationFavoriteController::class, 'toggleFavorite'])->name('applications.favorite.toggle');

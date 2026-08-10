@@ -135,7 +135,9 @@ class WhatsAppService
      */
     public function dispatchAnnouncementToUsers(Announcement $announcement): array
     {
-        $query = User::query()->where('status', 'active');
+        $query = User::query()
+            ->where('status', 'active')
+            ->where('wa_notify', true);
 
         // Filter target users based on announcement target_role
         if ($announcement->target_role && $announcement->target_role !== 'all') {

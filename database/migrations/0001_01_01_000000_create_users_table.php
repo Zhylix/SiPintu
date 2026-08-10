@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('role')->default('student');
             $table->string('phone')->nullable();
             $table->string('avatar')->nullable();
+            $table->boolean('wa_notify')->default(true);
             $table->string('status')->default('active');
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
