@@ -17,13 +17,19 @@ class AdminUserController extends Controller
     {
         $query = User::with('roles');
 
-        if ($request->filled('type')) {
-            $query->where('role', $request->type);
-        } elseif ($request->filled('role')) {
-            $query->where('role', $request->role);
+        // Role Filter (ignore 'all' or empty)
+        $role = $request->input('role', $request->input('type'));
+        if ($role && $role !== 'all') {
+            $query->where('role', $role);
         }
 
-        if ($request->filled('phone_status')) {
+        // Account Status Filter (ignore 'all' or empty)
+        if ($request->filled('status') && $request->status !== 'all') {
+            $query->where('status', $request->status);
+        }
+
+        // Phone Status Filter (ignore 'all' or empty)
+        if ($request->filled('phone_status') && $request->phone_status !== 'all') {
             if ($request->phone_status === 'with_phone') {
                 $query->whereNotNull('phone')->where('phone', '!=', '')->where('phone', '!=', '0');
             } elseif ($request->phone_status === 'without_phone') {
@@ -33,8 +39,9 @@ class AdminUserController extends Controller
             }
         }
 
+        // Keyword Search Filter
         if ($request->filled('search')) {
-            $search = $request->search;
+            $search = trim($request->search);
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                     ->orWhere('email', 'like', "%{$search}%")
@@ -44,7 +51,10 @@ class AdminUserController extends Controller
             });
         }
 
-        $users = $query->orderByRaw("COALESCE(NULLIF(external_id, ''), NULLIF(username, ''), name) ASC")->paginate(15);
+        $users = $query->orderByRaw("COALESCE(NULLIF(external_id, ''), NULLIF(username, ''), name) ASC")
+                       ->paginate(15)
+                       ->withQueryString();
+
         $roles = Role::all();
 
         return view('admin.users.index', compact('users', 'roles'));
