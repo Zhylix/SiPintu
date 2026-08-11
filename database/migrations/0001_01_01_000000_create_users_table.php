@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->string('username')->nullable()->unique();
             $table->string('role')->default('student')->index();
+            $table->string('classroom')->nullable()->index();
             $table->string('phone')->nullable()->index();
             $table->string('avatar')->nullable();
             $table->boolean('wa_notify')->default(true);

@@ -80,6 +80,7 @@ class SyncSijunaStudentsJob implements ShouldQueue
                     'email' => $email,
                     'username' => $username,
                     'role' => $assignedRole,
+                    'classroom' => $classroom,
                     'phone' => $phone,
                     'status' => 'active',
                     'password' => $defaultPasswordHash,
@@ -105,7 +106,7 @@ class SyncSijunaStudentsJob implements ShouldQueue
                 User::upsert(
                     $chunk,
                     ['external_id'],
-                    ['name', 'email', 'username', 'phone', 'status', 'role', 'password', 'updated_at']
+                    ['name', 'email', 'username', 'classroom', 'phone', 'status', 'role', 'password', 'updated_at']
                 );
             }
 

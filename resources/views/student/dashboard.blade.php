@@ -14,11 +14,11 @@
                 </div>
                 <div>
                     <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300 mb-1.5">
-                        ● Siswa Aktif SMKN 1 Bangsri
+                        ● {{ auth()->user()->isAlumni() ? 'Alumni' : 'Siswa Aktif' }} {{ auth()->user()->classroom ? '• Kelas '.auth()->user()->classroom : '' }} SMKN 1 Bangsri
                     </span>
                     <h2 class="text-2xl font-black text-emerald-950 tracking-tight">Selamat Datang, {{ auth()->user()->name }}</h2>
                     <p class="text-xs text-slate-600 font-medium mt-1">
-                        Identifier :<span class="font-mono text-emerald-800 font-extrabold">{{ auth()->user()->external_id ?? auth()->user()->username ?? '-' }}</span> | Email: <span class="font-mono text-slate-700 font-semibold">{{ auth()->user()->email }}</span>
+                        Identifier :<span class="font-mono text-emerald-800 font-extrabold">{{ auth()->user()->external_id ?? auth()->user()->username ?? '-' }}</span> | Kelas: <span class="font-bold text-emerald-800">{{ auth()->user()->classroom ?? '-' }}</span> | Email: <span class="font-mono text-slate-700 font-semibold">{{ auth()->user()->email }}</span>
                     </p>
                 </div>
             </div>

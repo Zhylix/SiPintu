@@ -87,6 +87,9 @@
                         <div>
                             <div class="font-bold text-slate-900 text-sm">{{ $user->name }}</div>
                             <div class="text-slate-600 text-xs font-medium">{{ $user->email }}</div>
+                            @if($user->classroom)
+                                <div class="mt-0.5"><span class="font-extrabold text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 text-[10px]">Kelas {{ $user->classroom }}</span></div>
+                            @endif
                         </div>
                     </div>
                     <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase {{ $user->status === 'active' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-rose-100 text-rose-800 border border-rose-300' }}">
@@ -168,19 +171,29 @@
                                     </div>
                                     <div>
                                         <div class="font-bold text-slate-900 text-sm">{{ $user->name }}</div>
-                                        <div class="text-slate-600 text-xs font-medium">{{ $user->email }}</div>
+                                        <div class="text-slate-600 text-xs font-medium">
+                                            {{ $user->email }}
+                                            @if($user->classroom)
+                                                • <span class="font-extrabold text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 text-[10px]">Kelas {{ $user->classroom }}</span>
+                                            @endif
+                                        </div>
                                     </div>
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase
-                                    {{ $user->role === 'admin' ? 'bg-purple-100 text-purple-800 border border-purple-300' : '' }}
-                                    {{ $user->role === 'teacher' ? 'bg-blue-100 text-blue-800 border border-blue-300' : '' }}
-                                    {{ $user->role === 'dudi' ? 'bg-amber-100 text-amber-800 border border-amber-300' : '' }}
-                                    {{ $user->role === 'student' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : '' }}
-                                    {{ $user->role === 'alumni' ? 'bg-cyan-100 text-cyan-800 border border-cyan-300' : '' }}">
-                                    {{ $user->getUserTypeName() }}
-                                </span>
+                                <div class="flex flex-col gap-1 items-start">
+                                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase
+                                        {{ $user->role === 'admin' ? 'bg-purple-100 text-purple-800 border border-purple-300' : '' }}
+                                        {{ $user->role === 'teacher' ? 'bg-blue-100 text-blue-800 border border-blue-300' : '' }}
+                                        {{ $user->role === 'dudi' ? 'bg-amber-100 text-amber-800 border border-amber-300' : '' }}
+                                        {{ $user->role === 'student' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : '' }}
+                                        {{ $user->role === 'alumni' ? 'bg-cyan-100 text-cyan-800 border border-cyan-300' : '' }}">
+                                        {{ $user->getUserTypeName() }}
+                                    </span>
+                                    @if($user->classroom)
+                                        <span class="text-[10px] font-bold text-emerald-800 font-mono">Kelas: {{ $user->classroom }}</span>
+                                    @endif
+                                </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap font-mono font-bold text-emerald-800">
                                 {{ $user->external_id ?: ($user->username ?: '-') }}

@@ -86,7 +86,7 @@
 
                 <!-- Siswa / Guru / DUDI Badge -->
                 <div class="mt-2.5 inline-flex items-center px-3 py-1 rounded-full text-xs font-black uppercase bg-emerald-50 text-emerald-800 border border-emerald-200">
-                    {{ $user->getUserTypeName() }}
+                    {{ $user->getUserTypeName() }} {{ $user->classroom ? '• '.$user->classroom : '' }}
                 </div>
             </div>
 
@@ -227,6 +227,15 @@
                             <p class="text-xs text-rose-500 font-bold mt-1.5">{{ $message }}</p>
                         @enderror
                     </div>
+
+                    @if($user->isStudent() || $user->isAlumni() || $user->classroom)
+                    <div>
+                        <label class="block text-xs font-extrabold text-slate-700 mb-2">Kelas / Rombel Terdaftar</label>
+                        <input type="text" value="{{ $user->classroom ?? ($user->isAlumni() ? 'Alumni (Telah Lulus)' : 'Belum Ada Kelas') }}" readonly disabled
+                            class="w-full px-4 py-3 rounded-xl bg-slate-100 border border-slate-200 text-slate-700 text-sm font-bold cursor-not-allowed">
+                        <p class="text-[11px] text-slate-500 font-medium mt-1">Status kelas disinkronkan secara otomatis dari SIJUNA / Dapodik.</p>
+                    </div>
+                    @endif
 
                     <div class="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200 text-xs text-emerald-950 font-medium">
                         Nama lengkap jangan diganti
