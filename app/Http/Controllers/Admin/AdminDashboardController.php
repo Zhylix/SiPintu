@@ -42,11 +42,9 @@ class AdminDashboardController extends Controller
             ->where('status', 'active')
             ->get();
 
-        $categories = Cache::remember('active_app_categories', 300, function () {
-            return ApplicationCategory::where('is_active', true)
-                ->orderBy('display_order')
-                ->get();
-        });
+        $categories = ApplicationCategory::where('is_active', true)
+            ->orderBy('display_order')
+            ->get();
 
         $favoriteAppIds = $user ? $user->favoriteApplications()->pluck('applications.id')->toArray() : [];
         $favoriteApps = $applications->whereIn('id', $favoriteAppIds);
