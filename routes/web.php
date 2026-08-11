@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminAnalyticsController;
 use App\Http\Controllers\Admin\AdminAnnouncementController;
 use App\Http\Controllers\Admin\AdminApplicationCategoryController;
 use App\Http\Controllers\Admin\AdminApplicationController;
@@ -170,6 +171,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::post('/monitoring/health-checks', [AdminMonitoringController::class, 'runHealthChecks'])->name('monitoring.run-health-checks');
     Route::post('/monitoring/validate-gateway', [AdminMonitoringController::class, 'validateGateway'])->name('monitoring.validate-gateway');
     Route::post('/monitoring/validate-client', [AdminMonitoringController::class, 'validateClientApp'])->name('monitoring.validate-client');
+
+    // Analytics & Usage Reports
+    Route::get('/analytics', [AdminAnalyticsController::class, 'index'])->name('analytics.index');
 
     // Announcement Management
     Route::get('/announcements/bot-status', [AdminAnnouncementController::class, 'botStatus'])->name('announcements.bot-status');

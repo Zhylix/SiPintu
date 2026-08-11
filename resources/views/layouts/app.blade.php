@@ -143,6 +143,11 @@
                         <svg class="w-4 h-4 mr-2.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
                         Monitoring System
                     </a>
+
+                    <a href="{{ route('admin.analytics.index') }}" class="flex items-center px-3 py-2 text-xs font-bold rounded-xl transition-all {{ request()->routeIs('admin.analytics.*') ? 'bg-emerald-700 text-white shadow-md shadow-emerald-700/20' : 'text-slate-700 hover:text-emerald-800 hover:bg-emerald-50' }}">
+                        <svg class="w-4 h-4 mr-2.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        Analitik & Laporan
+                    </a>
                 @elseif(auth()->user()->isTeacher())
                     <div class="px-3 pb-2 text-[10px] font-extrabold text-emerald-900 uppercase tracking-wider">Portal Guru SMKN 1 Bangsri</div>
                     
