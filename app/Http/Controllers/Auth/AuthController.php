@@ -108,7 +108,7 @@ class AuthController extends Controller
 
             // 2. Strict Role Validation vs Selected Login Tab (Siswa, Guru, DUDI)
             $roleMismatch = false;
-            if ($accountType === 'siswa' && ! $user->isStudent()) {
+            if ($accountType === 'siswa' && ! ($user->isStudent() || $user->isAlumni())) {
                 $roleMismatch = true;
             } elseif ($accountType === 'guru' && ! $user->isTeacher()) {
                 $roleMismatch = true;
@@ -122,6 +122,7 @@ class AuthController extends Controller
                     'teacher' => 'Guru',
                     'dudi' => 'Mitra DUDI',
                     'student' => 'Siswa',
+                    'alumni' => 'Siswa',
                 ];
                 $targetTab = $tabMap[$user->role] ?? $userRoleName;
 

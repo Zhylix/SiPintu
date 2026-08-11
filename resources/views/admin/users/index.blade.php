@@ -46,6 +46,7 @@
             <select name="role" onchange="this.form.submit()" class="bg-slate-50 border border-slate-200 text-xs text-slate-900 font-semibold rounded-xl px-3 py-2 focus:outline-none focus:border-emerald-600">
                 <option value="all">Semua Role</option>
                 <option value="student" {{ request('role') === 'student' ? 'selected' : '' }}>Siswa</option>
+                <option value="alumni" {{ request('role') === 'alumni' ? 'selected' : '' }}>Alumni</option>
                 <option value="teacher" {{ request('role') === 'teacher' ? 'selected' : '' }}>Guru / Pendidik</option>
                 <option value="dudi" {{ request('role') === 'dudi' ? 'selected' : '' }}>Mitra DUDI</option>
                 <option value="admin" {{ request('role') === 'admin' ? 'selected' : '' }}>Administrator</option>
@@ -176,7 +177,8 @@
                                     {{ $user->role === 'admin' ? 'bg-purple-100 text-purple-800 border border-purple-300' : '' }}
                                     {{ $user->role === 'teacher' ? 'bg-blue-100 text-blue-800 border border-blue-300' : '' }}
                                     {{ $user->role === 'dudi' ? 'bg-amber-100 text-amber-800 border border-amber-300' : '' }}
-                                    {{ $user->role === 'student' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : '' }}">
+                                    {{ $user->role === 'student' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : '' }}
+                                    {{ $user->role === 'alumni' ? 'bg-cyan-100 text-cyan-800 border border-cyan-300' : '' }}">
                                     {{ $user->getUserTypeName() }}
                                 </span>
                             </td>

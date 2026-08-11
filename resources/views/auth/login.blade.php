@@ -25,7 +25,48 @@
         </div>
     @endif
 
-    <form method="POST" action="{{ route('login') }}" x-data="{ accountType: '{{ old('account_type', 'siswa') }}', password: '', showPassword: false }" class="space-y-5">
+    <form method="POST" action="{{ route('login') }}" x-data="{ 
+        accountType: '{{ old('account_type', 'siswa') }}', 
+        password: '', 
+        showPassword: false,
+        validTypes: ['siswa', 'guru', 'dudi'],
+        init() {
+            const serverType = '{{ old('account_type', '') }}';
+            const hashType = window.location.hash.replace('#', '');
+            const storedType = localStorage.getItem('sipintu_login_account_type');
+
+            if (serverType && this.validTypes.includes(serverType)) {
+                this.accountType = serverType;
+            } else if (hashType && this.validTypes.includes(hashType)) {
+                this.accountType = hashType;
+            } else if (storedType && this.validTypes.includes(storedType)) {
+                this.accountType = storedType;
+            } else {
+                this.accountType = 'siswa';
+            }
+
+            this.syncState(this.accountType);
+
+            this.$watch('accountType', (newType) => {
+                this.syncState(newType);
+            });
+
+            window.addEventListener('hashchange', () => {
+                const currentHash = window.location.hash.replace('#', '');
+                if (this.validTypes.includes(currentHash)) {
+                    this.accountType = currentHash;
+                }
+            });
+        },
+        syncState(type) {
+            if (this.validTypes.includes(type)) {
+                localStorage.setItem('sipintu_login_account_type', type);
+                if (window.history.replaceState) {
+                    window.history.replaceState(null, null, '#' + type);
+                }
+            }
+        }
+    }" class="space-y-5">
         @csrf
         <input type="hidden" name="account_type" :value="accountType">
 

@@ -1,10 +1,47 @@
 @extends('layouts.app', ['headerTitle' => 'Profil Pengguna'])
 
 @section('content')
-<div class="max-w-6xl mx-auto space-y-6" x-data="{ 
+<div class="w-full space-y-6" x-data="{ 
     activeSection: '{{ old('active_section', session('active_section', 'nama_lengkap')) }}',
     avatarModalOpen: false,
     avatarPreview: null,
+    validSections: ['nama_lengkap', 'email', 'whatsapp', 'ganti_password', 'perangkat_login', 'riwayat_login', 'aplikasi_lain'],
+    init() {
+        const serverSection = '{{ old('active_section', session('active_section', '')) }}';
+        const hashSection = window.location.hash.replace('#', '');
+        const storedSection = localStorage.getItem('sipintu_profile_active_section');
+
+        if (serverSection && this.validSections.includes(serverSection)) {
+            this.activeSection = serverSection;
+        } else if (hashSection && this.validSections.includes(hashSection)) {
+            this.activeSection = hashSection;
+        } else if (storedSection && this.validSections.includes(storedSection)) {
+            this.activeSection = storedSection;
+        } else {
+            this.activeSection = 'nama_lengkap';
+        }
+
+        this.syncState(this.activeSection);
+
+        this.$watch('activeSection', (newSec) => {
+            this.syncState(newSec);
+        });
+
+        window.addEventListener('hashchange', () => {
+            const currentHash = window.location.hash.replace('#', '');
+            if (this.validSections.includes(currentHash)) {
+                this.activeSection = currentHash;
+            }
+        });
+    },
+    syncState(section) {
+        if (this.validSections.includes(section)) {
+            localStorage.setItem('sipintu_profile_active_section', section);
+            if (window.history.replaceState) {
+                window.history.replaceState(null, null, '#' + section);
+            }
+        }
+    },
     handleFileChange(event) {
         const file = event.target.files[0];
         if (file) {
@@ -22,34 +59,33 @@
         <!-- ========================================== -->
         <div class="lg:col-span-4 space-y-4">
             
-            <!-- Card Header User Profile Header -->
-            <div class="p-6 rounded-3xl bg-gradient-to-br from-emerald-900 via-emerald-950 to-slate-900 text-white shadow-xl border border-emerald-800/40 text-center relative overflow-hidden">
-                <div class="absolute -right-8 -top-8 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none"></div>
+            <!-- Card Header User Profile Header (Clean Light Theme) -->
+            <div class="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm text-center relative overflow-hidden">
                 
                 <!-- [ FOTO ] Avatar Profile -->
                 <div class="relative inline-block mx-auto mb-3 group">
                     @if($user->avatar_url)
-                        <img src="{{ $user->avatar_url }}" alt="{{ $user->name }}" class="w-24 h-24 rounded-2xl object-cover ring-4 ring-white/20 shadow-2xl transition-transform duration-300 group-hover:scale-105">
+                        <img src="{{ $user->avatar_url }}" alt="{{ $user->name }}" class="w-24 h-24 rounded-2xl object-cover ring-4 ring-emerald-500/10 shadow-sm transition-transform duration-300 group-hover:scale-105">
                     @else
-                        <div class="w-24 h-24 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-400 text-white flex items-center justify-center font-black text-3xl shadow-2xl ring-4 ring-white/20">
+                        <div class="w-24 h-24 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-black text-3xl shadow-sm ring-4 ring-emerald-500/10">
                             {{ $user->initials() }}
                         </div>
                     @endif
-                    <button @click="avatarModalOpen = true" type="button" class="absolute -bottom-2 -right-2 p-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg border-2 border-emerald-950 transition-all hover:scale-110" title="Ubah Foto Profil">
+                    <button @click="avatarModalOpen = true" type="button" class="absolute -bottom-2 -right-2 p-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white shadow-md border-2 border-white transition-all hover:scale-110" title="Ubah Foto Profil">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                     </button>
                 </div>
 
-                <!-- Helmy Yunan -->
-                <h2 class="text-xl font-black text-white tracking-tight">{{ $user->name }}</h2>
+                <!-- Nama User -->
+                <h2 class="text-xl font-black text-emerald-950 tracking-tight">{{ $user->name }}</h2>
                 
-                <!-- @helmyyunan -->
-                <div class="text-xs text-emerald-300 font-bold font-mono mt-0.5">
+                <!-- Username / Identity -->
+                <div class="text-xs text-emerald-700 font-bold font-mono mt-0.5">
                     {{ $user->username ? '@'.$user->username : ($user->external_id ? 'ID: '.$user->external_id : $user->email) }}
                 </div>
 
                 <!-- Siswa / Guru / DUDI Badge -->
-                <div class="mt-2.5 inline-flex items-center px-3 py-1 rounded-full text-xs font-black uppercase bg-emerald-400/20 text-emerald-300 border border-emerald-400/30 backdrop-blur-sm">
+                <div class="mt-2.5 inline-flex items-center px-3 py-1 rounded-full text-xs font-black uppercase bg-emerald-50 text-emerald-800 border border-emerald-200">
                     {{ $user->getUserTypeName() }}
                 </div>
             </div>
@@ -130,23 +166,13 @@
                 <!-- GROUP 3: Aplikasi Terhubung -->
                 <div class="p-4 space-y-1">
                     <div class="px-3 py-1 text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">Aplikasi Terhubung</div>
-                    
-                    <button @click="activeSection = 'sijuna'" :class="activeSection === 'sijuna' ? 'bg-emerald-50 text-emerald-900 font-black' : 'text-slate-700 hover:bg-slate-50 font-bold'" class="w-full px-3.5 py-2.5 rounded-xl text-xs flex items-center justify-between transition-all group">
-                        <div class="flex items-center space-x-3">
-                            <div class="p-1.5 rounded-lg bg-emerald-100 text-emerald-800 shrink-0">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                            </div>
-                            <span>SIJUNA</span>
-                        </div>
-                        <svg class="w-4 h-4 text-slate-400 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                    </button>
 
                     <button @click="activeSection = 'aplikasi_lain'" :class="activeSection === 'aplikasi_lain' ? 'bg-emerald-50 text-emerald-900 font-black' : 'text-slate-700 hover:bg-slate-50 font-bold'" class="w-full px-3.5 py-2.5 rounded-xl text-xs flex items-center justify-between transition-all group">
                         <div class="flex items-center space-x-3">
                             <div class="p-1.5 rounded-lg bg-emerald-100 text-emerald-800 shrink-0">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
                             </div>
-                            <span>Aplikasi Lain</span>
+                            <span>Aplikasi Terdaftar</span>
                         </div>
                         <span class="px-2 py-0.5 text-[10px] font-black rounded-full bg-emerald-100 text-emerald-800">{{ count($accessibleApps ?? []) }}</span>
                     </button>
@@ -203,7 +229,7 @@
                     </div>
 
                     <div class="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200 text-xs text-emerald-950 font-medium">
-                        Nama lengkap ini akan ditampilkan pada sertifikat SSO, katalog aplikasi terpadu, dan portal layanan sekolah.
+                        Nama lengkap jangan diganti
                     </div>
 
                     <button type="submit" class="px-6 py-3 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-extrabold rounded-xl transition-all shadow-md shadow-emerald-700/20 flex items-center space-x-2">
@@ -235,7 +261,7 @@
 
                     <div>
                         <label class="block text-xs font-extrabold text-slate-700 mb-2">Alamat Email Terdaftar <span class="text-rose-500">*</span></label>
-                        <input type="email" name="email" value="{{ old('email', $user->email) }}" required
+                        <input type="email" name="email" value="{{ old('email', $user->email) }}" disabled
                             class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm font-bold focus:bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 focus:outline-none transition-all">
                         @error('email')
                             <p class="text-xs text-rose-500 font-bold mt-1.5">{{ $message }}</p>
@@ -298,20 +324,6 @@
                         </button>
                     </div>
                 </form>
-
-                <div class="pt-4 border-t border-slate-100 space-y-4">
-                    <h4 class="font-black text-sm text-emerald-950">Uji Coba Pengiriman Pesan WhatsApp</h4>
-                    <p class="text-xs text-slate-500">Kirim pesan pengujian instan ke nomor WhatsApp terdaftar Anda untuk memastikan layanan notifikasi berjalan normal.</p>
-
-                    <form method="POST" action="{{ route('profile.test-whatsapp') }}">
-                        @csrf
-                        <input type="hidden" name="active_section" value="whatsapp">
-                        <button type="submit" {{ empty($user->phone) ? 'disabled' : '' }} class="px-5 py-2.5 bg-slate-900 hover:bg-black disabled:opacity-50 text-white text-xs font-extrabold rounded-xl transition-all shadow-md flex items-center space-x-2">
-                            <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
-                            <span>Tes Kirim Pesan WA</span>
-                        </button>
-                    </form>
-                </div>
             </div>
 
             <!-- SECTION 4: Ganti Password -->
@@ -456,45 +468,7 @@
                 @endif
             </div>
 
-            <!-- SECTION 7: SIJUNA -->
-            <div x-show="activeSection === 'sijuna'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" class="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-6">
-                <div class="flex items-center justify-between pb-4 border-b border-slate-100">
-                    <div>
-                        <h3 class="text-lg font-black text-emerald-950 flex items-center space-x-2">
-                            <svg class="w-5 h-5 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                            <span>Integrasi Sistem SIJUNA</span>
-                        </h3>
-                        <p class="text-xs text-slate-500 mt-1 font-medium">Status keterhubungan akun SiPintu Anda dengan API SIJUNA Pusat.</p>
-                    </div>
-                    @if($user->external_id)
-                        <form action="{{ route('profile.sijuna-sync') }}" method="POST">
-                            @csrf
-                            <button type="submit" class="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-extrabold rounded-xl transition-all shadow-md flex items-center space-x-2">
-                                <svg class="w-4 h-4 animate-spin-slow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                                <span>Sync Realtime</span>
-                            </button>
-                        </form>
-                    @endif
-                </div>
 
-                <div class="p-5 rounded-2xl bg-slate-900 text-white space-y-4">
-                    <div class="flex items-center justify-between border-b border-slate-800 pb-3 text-xs">
-                        <span class="text-slate-400">External ID SIJUNA:</span>
-                        <code class="font-mono text-emerald-400 font-bold text-sm">{{ $user->external_id ?: 'Tidak Terhubung' }}</code>
-                    </div>
-
-                    <div class="flex items-center justify-between border-b border-slate-800 pb-3 text-xs">
-                        <span class="text-slate-400">Status Sinkronisasi Data:</span>
-                        <span class="px-2.5 py-0.5 rounded text-[10px] font-black uppercase {{ $user->external_id ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-slate-800 text-slate-400' }}">
-                            {{ $user->external_id ? 'Tersinkron' : 'Lokal' }}
-                        </span>
-                    </div>
-
-                    <p class="text-xs text-slate-400 leading-relaxed font-medium">
-                        SIJUNA merupakan platform sumber identitas (*Identity Source*) resmi SMKN 1 Bangsri. Integrasi ini memastikan sinkronisasi data profil dan perizinan akses Single Sign-On (SSO).
-                    </p>
-                </div>
-            </div>
 
             <!-- SECTION 8: Aplikasi Lain -->
             <div x-show="activeSection === 'aplikasi_lain'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" class="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-6">
@@ -605,7 +579,7 @@
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="w-full px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-extrabold rounded-xl transition-all border border-rose-200">
-                            Hapus Foto & Gunakan Inisial Nama
+                            Hapus Foto
                         </button>
                     </form>
                 @endif

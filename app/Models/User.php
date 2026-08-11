@@ -78,6 +78,11 @@ class User extends Authenticatable
         return in_array($this->role, ['admin', 'administrator']) || $this->hasRole(['admin', 'administrator']);
     }
 
+    public function isAlumni(): bool
+    {
+        return in_array($this->role, ['alumni']) || $this->hasRole(['alumni']);
+    }
+
     public function getUserTypeName(): string
     {
         if ($this->isAdmin()) {
@@ -88,6 +93,9 @@ class User extends Authenticatable
         }
         if ($this->isDudi()) {
             return 'Mitra DUDI';
+        }
+        if ($this->isAlumni()) {
+            return 'Alumni';
         }
         if ($this->isStudent()) {
             return 'Siswa';

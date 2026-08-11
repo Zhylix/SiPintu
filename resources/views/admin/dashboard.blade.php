@@ -91,7 +91,16 @@
     </div>
 
     <!-- Registered Applications SSO Connection Status & Benchmark List Widget -->
-    <div class="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 space-y-6 shadow-sm" x-data="{ filter: 'connected' }">
+    <div class="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 space-y-6 shadow-sm" x-data="{ 
+        filter: 'connected',
+        init() {
+            const stored = localStorage.getItem('sipintu_admin_dashboard_filter');
+            if (stored && ['connected', 'disconnected', 'all'].includes(stored)) {
+                this.filter = stored;
+            }
+            this.$watch('filter', val => localStorage.setItem('sipintu_admin_dashboard_filter', val));
+        }
+    }">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
             <div>
                 <div class="flex items-center gap-2">

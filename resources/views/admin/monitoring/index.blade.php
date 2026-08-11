@@ -11,6 +11,44 @@
     searchQuery: '',
     clients: @js($gatewayDiagnostics['downstream_clients']['clients'] ?? []),
     summary: @js($gatewayDiagnostics['summary'] ?? []),
+    init() {
+        const validTabs = ['all', 'connected', 'disconnected'];
+        const hash = window.location.hash.replace('#', '');
+        const storedTab = localStorage.getItem('sipintu_monitoring_active_tab');
+
+        if (validTabs.includes(hash)) {
+            this.activeTab = hash;
+        } else if (storedTab && validTabs.includes(storedTab)) {
+            this.activeTab = storedTab;
+        }
+
+        const storedViewMode = localStorage.getItem('sipintu_monitoring_view_mode');
+        if (storedViewMode && ['grid', 'table'].includes(storedViewMode)) {
+            this.viewMode = storedViewMode;
+        }
+
+        this.$watch('activeTab', (val) => {
+            if (validTabs.includes(val)) {
+                localStorage.setItem('sipintu_monitoring_active_tab', val);
+                if (window.history.replaceState) {
+                    window.history.replaceState(null, null, '#' + val);
+                }
+            }
+        });
+
+        this.$watch('viewMode', (val) => {
+            if (['grid', 'table'].includes(val)) {
+                localStorage.setItem('sipintu_monitoring_view_mode', val);
+            }
+        });
+
+        window.addEventListener('hashchange', () => {
+            const currentHash = window.location.hash.replace('#', '');
+            if (validTabs.includes(currentHash)) {
+                this.activeTab = currentHash;
+            }
+        });
+    },
     get filteredClients() {
         return this.clients.filter(c => {
             const matchesTab = this.activeTab === 'all' || c.connection_status === this.activeTab;

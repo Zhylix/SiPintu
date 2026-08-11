@@ -1,4 +1,14 @@
-<div class="space-y-6" x-data="{ selectedCategory: 'all', searchQuery: '' }">
+<div class="space-y-6" x-data="{ 
+    selectedCategory: 'all', 
+    searchQuery: '',
+    init() {
+        const storedCat = localStorage.getItem('sipintu_catalog_category');
+        if (storedCat) {
+            this.selectedCategory = storedCat;
+        }
+        this.$watch('selectedCategory', val => localStorage.setItem('sipintu_catalog_category', val));
+    }
+}">
     <!-- Search Bar & Category Filter Pills (Rata Tengah & Tanpa Text Break) -->
     <div class="flex flex-col lg:flex-row items-center justify-between gap-4 bg-white border border-slate-200 rounded-2xl p-4 shadow-sm text-center">
         <!-- Category Pills Navigation (Centered & No Text Wrap) -->

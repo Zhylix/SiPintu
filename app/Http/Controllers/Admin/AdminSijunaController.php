@@ -26,10 +26,11 @@ class AdminSijunaController extends Controller
 
         $syncLogs = SyncLog::latest()->paginate(15);
         $syncedStudentsCount = User::where('role', 'student')->count();
+        $syncedAlumniCount = User::where('role', 'alumni')->count();
         $syncedTeachersCount = User::where('role', 'teacher')->count();
         $latestSync = SyncLog::latest()->first();
 
-        return view('admin.sijuna.index', compact('config', 'syncLogs', 'syncedStudentsCount', 'syncedTeachersCount', 'latestSync'));
+        return view('admin.sijuna.index', compact('config', 'syncLogs', 'syncedStudentsCount', 'syncedAlumniCount', 'syncedTeachersCount', 'latestSync'));
     }
 
     public function triggerSync(Request $request): RedirectResponse
