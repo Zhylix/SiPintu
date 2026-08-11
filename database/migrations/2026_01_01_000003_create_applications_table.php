@@ -24,9 +24,11 @@ return new class extends Migration
             $table->text('redirect_uri');
             $table->text('logout_uri')->nullable();
             $table->string('scopes')->default('openid profile email');
-            $table->string('status')->default('active')->comment('active, maintenance, inactive');
+            $table->string('status')->default('active')->index()->comment('active, maintenance, inactive');
             $table->string('health_check_url')->nullable();
-            $table->string('last_health_status')->nullable()->comment('online, offline, warning');
+            $table->string('last_health_status')->nullable()->index()->comment('online, offline, warning');
+            $table->integer('last_health_latency_ms')->nullable();
+            $table->text('last_health_message')->nullable();
             $table->timestamp('last_health_check_at')->nullable();
             $table->timestamps();
         });

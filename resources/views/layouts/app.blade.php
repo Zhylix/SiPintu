@@ -425,28 +425,37 @@
 
                     @auth
                         @php
+                            $userRole = auth()->user()->role;
                             $userAnnouncements = \App\Models\Announcement::active()
                                 ->forWeb()
-                                ->forRole(auth()->user()->role)
+                                ->forRole($userRole)
                                 ->latest()
                                 ->take(3)
                                 ->get();
                         @endphp
 
                         @foreach($userAnnouncements as $ann)
-                            <div class="p-4 mb-4 rounded-2xl border flex items-start justify-between shadow-xs bg-emerald-50 border-emerald-200 text-emerald-900">
-                                <div class="flex items-start space-x-3">
-                                    <img src="{{ asset('images/logo-smkn1bangsri.png') }}" class="w-7 h-7 object-contain mt-0.5 shrink-0" alt="Logo">
-                                    <div>
-                                        <div class="font-black text-sm text-emerald-950 flex flex-wrap items-center gap-2">
-                                            <span>{{ $ann->title }}</span>
-                                            <span class="px-2 py-0.5 rounded text-[9px] font-extrabold uppercase bg-white border border-emerald-300 text-emerald-800 whitespace-nowrap">PENGUMUMAN SEKOLAH</span>
+                            @php
+                                $title = is_object($ann) ? ($ann->title ?? '') : (is_array($ann) ? ($ann['title'] ?? '') : '');
+                                $content = is_object($ann) ? ($ann->content ?? '') : (is_array($ann) ? ($ann['content'] ?? '') : '');
+                                $pubAt = is_object($ann) ? ($ann->published_at ?? null) : null;
+                                $diffTime = $pubAt instanceof \Carbon\Carbon ? $pubAt->diffForHumans() : 'Baru saja';
+                            @endphp
+                            @if(!empty($title))
+                                <div class="p-4 mb-4 rounded-2xl border flex items-start justify-between shadow-xs bg-emerald-50 border-emerald-200 text-emerald-900">
+                                    <div class="flex items-start space-x-3">
+                                        <img src="{{ asset('images/logo-smkn1bangsri.png') }}" class="w-7 h-7 object-contain mt-0.5 shrink-0" alt="Logo">
+                                        <div>
+                                            <div class="font-black text-sm text-emerald-950 flex flex-wrap items-center gap-2">
+                                                <span>{{ $title }}</span>
+                                                <span class="px-2 py-0.5 rounded text-[9px] font-extrabold uppercase bg-white border border-emerald-300 text-emerald-800 whitespace-nowrap">PENGUMUMAN SEKOLAH</span>
+                                            </div>
+                                            <div class="text-xs mt-1 text-slate-700 leading-relaxed font-medium">{{ $content }}</div>
+                                            <div class="text-[10px] mt-1.5 text-slate-500 font-semibold">{{ $diffTime }}</div>
                                         </div>
-                                        <div class="text-xs mt-1 text-slate-700 leading-relaxed font-medium">{{ $ann->content }}</div>
-                                        <div class="text-[10px] mt-1.5 text-slate-500 font-semibold">{{ $ann->published_at?->diffForHumans() }}</div>
                                     </div>
                                 </div>
-                            </div>
+                            @endif
                         @endforeach
                     @endauth
                 </div>

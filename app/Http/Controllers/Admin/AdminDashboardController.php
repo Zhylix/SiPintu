@@ -10,6 +10,7 @@ use App\Models\OAuthAccessToken;
 use App\Models\SyncLog;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 
 class AdminDashboardController extends Controller
 {
@@ -17,16 +18,18 @@ class AdminDashboardController extends Controller
     {
         $user = Auth::user();
 
-        $stats = [
-            'total_users' => User::count(),
-            'students_count' => User::where('role', 'student')->count(),
-            'teachers_count' => User::where('role', 'teacher')->count(),
-            'dudi_count' => User::where('role', 'dudi')->count(),
-            'admin_count' => User::where('role', 'admin')->count(),
-            'applications_count' => Application::count(),
-            'active_apps_count' => Application::where('status', 'active')->count(),
-            'sso_tokens_count' => OAuthAccessToken::where('revoked', false)->count(),
-        ];
+        $stats = Cache::remember('admin_dashboard_stats', 30, function () {
+            return [
+                'total_users' => User::count(),
+                'students_count' => User::where('role', 'student')->count(),
+                'teachers_count' => User::where('role', 'teacher')->count(),
+                'dudi_count' => User::where('role', 'dudi')->count(),
+                'admin_count' => User::where('role', 'admin')->count(),
+                'applications_count' => Application::count(),
+                'active_apps_count' => Application::where('status', 'active')->count(),
+                'sso_tokens_count' => OAuthAccessToken::where('revoked', false)->count(),
+            ];
+        });
 
         $latestAuditLogs = AuditLog::with('user')->latest()->limit(10)->get();
         $latestSync = SyncLog::latest()->first();
@@ -39,9 +42,11 @@ class AdminDashboardController extends Controller
             ->where('status', 'active')
             ->get();
 
-        $categories = ApplicationCategory::where('is_active', true)
-            ->orderBy('display_order')
-            ->get();
+        $categories = Cache::remember('active_app_categories', 300, function () {
+            return ApplicationCategory::where('is_active', true)
+                ->orderBy('display_order')
+                ->get();
+        });
 
         $favoriteAppIds = $user ? $user->favoriteApplications()->pluck('applications.id')->toArray() : [];
         $favoriteApps = $applications->whereIn('id', $favoriteAppIds);

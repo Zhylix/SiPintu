@@ -16,10 +16,11 @@ return new class extends Migration
             $table->string('title');
             $table->text('content');
             $table->string('type')->default('info')->comment('info, warning, danger, success');
-            $table->string('target_role')->default('all')->comment('all, student, teacher, dudi');
-            $table->boolean('is_active')->default(true);
+            $table->string('target_role')->default('all')->index()->comment('all, student, teacher, dudi');
+            $table->string('channel')->default('web')->index()->comment('web, wa, all');
+            $table->boolean('is_active')->default(true)->index();
             $table->foreignId('created_by')->constrained('users')->onDelete('cascade');
-            $table->timestamp('published_at')->nullable();
+            $table->timestamp('published_at')->nullable()->index();
             $table->timestamps();
         });
     }

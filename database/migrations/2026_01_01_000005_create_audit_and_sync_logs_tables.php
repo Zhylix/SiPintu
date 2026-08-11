@@ -14,19 +14,22 @@ return new class extends Migration
         Schema::create('audit_logs', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->nullable()->constrained()->onDelete('set null');
-            $table->string('activity');
+            $table->string('activity')->index();
             $table->string('ip_address')->nullable();
             $table->text('user_agent')->nullable();
             $table->json('metadata')->nullable();
             $table->timestamps();
+
+            $table->index('created_at');
         });
 
         Schema::create('sync_logs', function (Blueprint $table) {
             $table->id();
-            $table->string('status')->default('in_progress')->comment('success, failed, in_progress');
+            $table->string('sync_type')->default('student')->index()->comment('student, teacher, all');
+            $table->string('status')->default('in_progress')->index()->comment('success, failed, in_progress');
             $table->integer('records_processed')->default(0);
             $table->text('error_message')->nullable();
-            $table->timestamp('started_at')->nullable();
+            $table->timestamp('started_at')->nullable()->index();
             $table->timestamp('completed_at')->nullable();
             $table->timestamps();
         });
