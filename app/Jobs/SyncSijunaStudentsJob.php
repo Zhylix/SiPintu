@@ -43,6 +43,9 @@ class SyncSijunaStudentsJob implements ShouldQueue
             $studentRole = Role::firstOrCreate(
                 ['name' => 'student', 'guard_name' => 'web']
             );
+            $alumniRole = Role::firstOrCreate(
+                ['name' => 'alumni', 'guard_name' => 'web']
+            );
 
             $userRows = [];
             $now = now()->toDateTimeString();
@@ -60,12 +63,23 @@ class SyncSijunaStudentsJob implements ShouldQueue
                 $phone = $student['hp'] ?? $student['phone'] ?? null;
                 $username = $nis ?? ($student['user']['name'] ?? $externalId);
 
+                // Classroom null/empty means Alumni, classroom filled means active Student
+                $rawClassroom = $student['classroom'] ?? $student['kelas'] ?? $student['classroom_name'] ?? $student['class'] ?? null;
+                if (is_array($rawClassroom)) {
+                    $classroom = $rawClassroom['name'] ?? $rawClassroom['nama'] ?? $rawClassroom['title'] ?? null;
+                } else {
+                    $classroom = $rawClassroom;
+                }
+
+                $isAlumni = is_null($classroom) || trim((string) $classroom) === '' || strtolower(trim((string) $classroom)) === 'null';
+                $assignedRole = $isAlumni ? 'alumni' : 'student';
+
                 $userRows[] = [
                     'external_id' => $externalId,
                     'name' => $name,
                     'email' => $email,
                     'username' => $username,
-                    'role' => 'student',
+                    'role' => $assignedRole,
                     'phone' => $phone,
                     'status' => 'active',
                     'password' => $defaultPasswordHash,
@@ -77,7 +91,8 @@ class SyncSijunaStudentsJob implements ShouldQueue
                     'external_id' => $externalId,
                     'name' => $name,
                     'email' => $email,
-                    'role' => 'student',
+                    'role' => $assignedRole,
+                    'classroom' => $classroom,
                     'phone' => $phone,
                     'synced_at' => $now,
                 ], 86400);
@@ -94,13 +109,17 @@ class SyncSijunaStudentsJob implements ShouldQueue
                 );
             }
 
-            // Attach student role to all synced users in bulk using Spatie model_has_roles
-            $studentUserIds = User::where('role', 'student')->pluck('id')->toArray();
-            $pivotData = array_map(fn ($userId) => [
-                'role_id' => $studentRole->id,
-                'model_type' => User::class,
-                'model_id' => $userId,
-            ], $studentUserIds);
+            // Attach student & alumni roles in bulk using Spatie model_has_roles
+            $syncedUsers = User::whereIn('role', ['student', 'alumni'])->get(['id', 'role']);
+            $pivotData = [];
+            foreach ($syncedUsers as $u) {
+                $rId = ($u->role === 'alumni') ? $alumniRole->id : $studentRole->id;
+                $pivotData[] = [
+                    'role_id' => $rId,
+                    'model_type' => User::class,
+                    'model_id' => $u->id,
+                ];
+            }
 
             foreach (array_chunk($pivotData, 500) as $chunk) {
                 DB::table('model_has_roles')->insertOrIgnore($chunk);

@@ -118,11 +118,11 @@ class SijunaApiService
     protected function getFallbackMockStudents(): array
     {
         return [
-            ['id' => '1', 'nis' => '1234567890', 'nama' => 'Ahmad Fauzi (SIJUNA)', 'kelas' => 'XII PPLG 1', 'email' => 'ahmad@sijuna.sch.id', 'role' => 'student', 'status' => 'active'],
-            ['id' => '2', 'nis' => '1234567891', 'nama' => 'Siti Rahma (SIJUNA)', 'kelas' => 'XII MPLB 2', 'email' => 'siti@sijuna.sch.id', 'role' => 'student', 'status' => 'active'],
-            ['id' => '3', 'nis' => '1234567892', 'nama' => 'Budi Santoso (SIJUNA)', 'kelas' => 'XI AKL 2', 'email' => 'budi@sijuna.sch.id', 'role' => 'student', 'status' => 'active'],
-            ['id' => '4', 'nis' => '1234567893', 'nama' => 'Rian Ardianto (Alumni RPL)', 'kelas' => 'XII RPL 1', 'email' => 'rian.alumni@sijuna.sch.id', 'role' => 'student', 'status' => 'active'],
-            ['id' => '5', 'nis' => '1234567894', 'nama' => 'Dwi Handayani (Alumni TKJ)', 'kelas' => 'XII TKJ 2', 'email' => 'dwi.alumni@sijuna.sch.id', 'role' => 'student', 'status' => 'active'],
+            ['id' => '1', 'nis' => '1234567890', 'nama' => 'Ahmad Fauzi (SIJUNA)', 'classroom' => 'XII PPLG 1', 'kelas' => 'XII PPLG 1', 'email' => 'ahmad@sijuna.sch.id', 'status' => 'active'],
+            ['id' => '2', 'nis' => '1234567891', 'nama' => 'Siti Rahma (SIJUNA)', 'classroom' => 'XII MPLB 2', 'kelas' => 'XII MPLB 2', 'email' => 'siti@sijuna.sch.id', 'status' => 'active'],
+            ['id' => '3', 'nis' => '1234567892', 'nama' => 'Budi Santoso (SIJUNA)', 'classroom' => 'XI AKL 2', 'kelas' => 'XI AKL 2', 'email' => 'budi@sijuna.sch.id', 'status' => 'active'],
+            ['id' => '4', 'nis' => '1234567893', 'nama' => 'Rian Ardianto (Alumni RPL)', 'classroom' => null, 'kelas' => null, 'email' => 'rian.alumni@sijuna.sch.id', 'status' => 'active'],
+            ['id' => '5', 'nis' => '1234567894', 'nama' => 'Dwi Handayani (Alumni TKJ)', 'classroom' => null, 'kelas' => null, 'email' => 'dwi.alumni@sijuna.sch.id', 'status' => 'active'],
         ];
     }
 
