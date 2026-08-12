@@ -14,7 +14,7 @@ class GatewaySeeder extends Seeder
     public function run(): void
     {
         // 1. Roles Definition
-        $rolesData = ['admin', 'teacher', 'dudi', 'student'];
+        $rolesData = ['admin', 'teacher', 'dudi', 'student', 'alumni'];
 
         $rolesMap = [];
         foreach ($rolesData as $roleName) {

@@ -24,6 +24,7 @@
             @else
                 <select name="role" required class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 font-semibold text-sm focus:border-emerald-600 focus:bg-white focus:outline-none transition-all">
                     <option value="student" {{ old('role', $user->role) === 'student' ? 'selected' : '' }}>Siswa</option>
+                    <option value="alumni" {{ old('role', $user->role) === 'alumni' ? 'selected' : '' }}>Alumni</option>
                     <option value="teacher" {{ old('role', $user->role) === 'teacher' ? 'selected' : '' }}>Guru / Pendidik</option>
                     <option value="dudi" {{ old('role', $user->role) === 'dudi' ? 'selected' : '' }}>Mitra DUDI</option>
                     <option value="admin" {{ old('role', $user->role) === 'admin' ? 'selected' : '' }}>Administrator Gateway</option>

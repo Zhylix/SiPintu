@@ -27,6 +27,7 @@
                 <option value="teacher" {{ old('role', old('user_type')) === 'teacher' ? 'selected' : '' }}>Guru / Pendidik (NIP)</option>
                 <option value="dudi" {{ old('role', old('user_type')) === 'dudi' ? 'selected' : '' }}>Mitra DUDI (Kode DUDI)</option>
                 <option value="student" {{ old('role', old('user_type')) === 'student' ? 'selected' : '' }}>Siswa (NIS)</option>
+                <option value="alumni" {{ old('role', old('user_type')) === 'alumni' ? 'selected' : '' }}>Alumni</option>
             </select>
         </div>
 

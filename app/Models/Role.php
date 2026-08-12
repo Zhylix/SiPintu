@@ -21,6 +21,7 @@ class Role extends SpatieRole
     {
         return match (strtolower($this->name)) {
             'student', 'siswa' => 'Siswa',
+            'alumni' => 'Alumni',
             'teacher', 'guru' => 'Guru',
             'dudi', 'mitra' => 'Mitra DUDI',
             'admin', 'administrator' => 'Administrator',
@@ -35,6 +36,7 @@ class Role extends SpatieRole
             'teacher', 'guru' => 'Guru dan Tenaga Pendidik SMKN 1 Bangsri yang dapat mengakses portal guru dan aplikasi terintegrasi.',
             'dudi', 'mitra' => 'Mitra Dunia Usaha & Dunia Industri yang bekerjasama dengan sekolah untuk program PKL dan sistem terintegrasi.',
             'student', 'siswa' => 'Siswa SMKN 1 Bangsri yang disinkronkan secara otomatis dari sistem SIJUNA.',
+            'alumni' => 'Alumni SMKN 1 Bangsri yang disinkronkan secara otomatis dari sistem SIJUNA.',
             default => 'Peran pengguna dalam gateway sekolah.',
         };
     }

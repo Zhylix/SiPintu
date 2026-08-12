@@ -34,8 +34,9 @@
                 <label for="target_role" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Target Pengguna (Role)</label>
                 <select name="target_role" id="target_role" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 font-semibold focus:outline-none focus:border-emerald-600 focus:bg-white transition-all">
                     <option value="all" {{ old('target_role') === 'all' ? 'selected' : '' }}>Semua Pengguna (Termasuk Admin)</option>
-                    <option value="user" {{ old('target_role') === 'user' ? 'selected' : '' }}>Pengguna Biasa / User (Siswa, Guru, DUDI)</option>
+                    <option value="user" {{ old('target_role') === 'user' ? 'selected' : '' }}>Pengguna Biasa / User (Siswa, Alumni, Guru, DUDI)</option>
                     <option value="student" {{ old('target_role') === 'student' ? 'selected' : '' }}>Siswa Saja</option>
+                    <option value="alumni" {{ old('target_role') === 'alumni' ? 'selected' : '' }}>Alumni Saja</option>
                     <option value="teacher" {{ old('target_role') === 'teacher' ? 'selected' : '' }}>Guru Saja</option>
                     <option value="dudi" {{ old('target_role') === 'dudi' ? 'selected' : '' }}>Mitra DUDI Saja</option>
                 </select>

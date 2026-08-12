@@ -112,37 +112,6 @@ Setiap request HTTP wajib menyertakan header berikut:
   * `nip` (string) — Filter berdasarkan NIP / Email guru (misal: `?nip=198501012010011001`)
   * `search` (string) — Pencarian berdasarkan nama guru
 
-#### Contoh Implementasi JavaScript (Node.js / Browser Fetch):
-```javascript
-const SIPINTU_BASE_URL = process.env.SIPINTU_API_URL || 'http://localhost:8000';
-
-async function fetchStudents(nis = null) {
-  const url = new URL(`${SIPINTU_BASE_URL}/api/v1/sijuna/students`);
-  if (nis) url.searchParams.append('nis', nis);
-
-  try {
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-        'X-Client-ID': 'app_sijuna_dev',
-        'X-Client-Secret': 'sec_xyz1234567890'
-      }
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP Error! Status: ${response.status}`);
-    }
-
-    const result = await response.json();
-    console.log('Data Siswa:', result);
-    return result;
-  } catch (error) {
-    console.error('Gagal mengambil data siswa:', error);
-  }
-}
-```
-
 #### Contoh Implementasi PHP (Laravel / Guzzle HTTP):
 ```php
 use Illuminate\Support\Facades\Http;

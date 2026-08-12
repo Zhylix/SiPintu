@@ -24,7 +24,7 @@ class Permission extends SpatiePermission
             'manage-roles' => 'Kelola Role & Hak Akses',
             'sync-sijuna' => 'Sinkronisasi Data Siswa SIJUNA',
             'view-audit-logs' => 'Lihat Audit Log & Aktivitas',
-            'access-external-apps' => 'Akses Aplikasi Terintegrasi (SSO)',
+            'access-external-apps' => 'Akses Aplikasi',
             default => ucwords(str_replace(['-', '_'], ' ', $this->name)),
         };
     }

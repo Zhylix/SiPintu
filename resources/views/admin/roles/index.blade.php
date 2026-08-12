@@ -4,7 +4,7 @@
 <div class="space-y-6">
     <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
         <h2 class="text-xl font-black text-emerald-950">Manajemen Role & Hak Akses (Permissions)</h2>
-        <p class="text-xs text-slate-600 font-medium mt-1">Konfigurasikan hak akses internal Gateway untuk setiap peran pengguna (Siswa, Guru, Mitra DUDI, Administrator)</p>
+        <p class="text-xs text-slate-600 font-medium mt-1">Konfigurasikan hak akses internal Gateway untuk setiap peran pengguna (Siswa, Alumni, Guru, Mitra DUDI, Administrator)</p>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">

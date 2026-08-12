@@ -319,6 +319,10 @@ class AuthController extends Controller
     {
         $user = Auth::user();
 
+        if (! $request->filled('name')) {
+            $request->merge(['name' => $user->name]);
+        }
+
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email,'.$user->id],

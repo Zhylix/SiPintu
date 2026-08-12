@@ -129,12 +129,12 @@
 
                     <div class="pt-3 px-3 pb-1.5 text-[10px] font-extrabold text-emerald-900 uppercase tracking-wider">Integrasi & Keamanan</div>
 
-                    <a href="{{ route('admin.sijuna.index') }}" class="flex items-center px-3 py-2 text-xs font-bold rounded-xl transition-all {{ request()->routeIs('admin.sijuna.*') ? 'bg-emerald-700 text-white shadow-md shadow-emerald-700/20' : 'text-slate-700 hover:text-emerald-800 hover:bg-emerald-50' }}">
+                    <a href="{{ route('admin.sijuna.index') }}" class="flex items-center px-3 py-2 text-xs font-bold rounded-xl transition-all {{ request()->routeIs('admin.sijuna.*') ? 'bg-slate-700 text-white shadow-md shadow-slate-700/20' : 'text-slate-700 hover:text-slate-800 hover:bg-slate-50' }}">
                         <svg class="w-4 h-4 mr-2.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                         Integrasi SIJUNA API
                     </a>
 
-                    <a href="{{ route('admin.audit-logs.index') }}" class="flex items-center px-3 py-2 text-xs font-bold rounded-xl transition-all {{ request()->routeIs('admin.audit-logs.*') ? 'bg-emerald-700 text-white shadow-md shadow-emerald-700/20' : 'text-slate-700 hover:text-emerald-800 hover:bg-emerald-50' }}">
+                    <a href="{{ route('admin.audit-logs.index') }}" class="flex items-center px-3 py-2 text-xs font-bold rounded-xl transition-all {{ request()->routeIs('admin.audit-logs.*') ? 'bg-slate-700 text-white shadow-md shadow-slate-700/20' : 'text-slate-700 hover:text-slate-800 hover:bg-slate-50' }}">
                         <svg class="w-4 h-4 mr-2.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
                         Audit Log Aktivitas
                     </a>
@@ -268,7 +268,7 @@
                         </a>
 
                         <a href="{{ route('admin.apps') }}" class="flex items-center px-3 py-2.5 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('admin.apps') ? 'bg-emerald-700 text-white shadow-md shadow-emerald-700/20' : 'text-slate-700 hover:text-emerald-800 hover:bg-emerald-50' }}">
-                            <svg class="w-5 h-5 mr-3 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
                             Katalog Aplikasi
                         </a>
 
@@ -288,14 +288,14 @@
                         </a>
 
                         <a href="{{ route('admin.announcements.index') }}" class="flex items-center px-3 py-2.5 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('admin.announcements.*') ? 'bg-emerald-700 text-white shadow-md shadow-emerald-700/20' : 'text-slate-700 hover:text-emerald-800 hover:bg-emerald-50' }}">
-                            <svg class="w-5 h-5 mr-3 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path></svg>
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path></svg>
                             Pengumuman Sekolah
                         </a>
 
                         <div class="pt-4 px-3 pb-2 text-[11px] font-extrabold text-emerald-900 uppercase tracking-wider">Integrasi & Keamanan</div>
 
                         <a href="{{ route('admin.sijuna.index') }}" class="flex items-center px-3 py-2.5 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('admin.sijuna.*') ? 'bg-emerald-700 text-white shadow-md shadow-emerald-700/20' : 'text-slate-700 hover:text-emerald-800 hover:bg-emerald-50' }}">
-                            <svg class="w-5 h-5 mr-3 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                             Integrasi SIJUNA API
                         </a>
 
@@ -390,7 +390,7 @@
                     <div class="flex items-center space-x-3 sm:space-x-4">
                         <span class="hidden sm:inline-flex items-center px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300">
                             <span class="w-2 h-2 rounded-full bg-emerald-600 mr-2 animate-pulse"></span>
-                            Layanan Aktif
+                            Aktif
                         </span>
 
                         <a href="{{ route('profile') }}" class="text-xs font-bold text-slate-700 hover:text-emerald-800 transition-colors whitespace-nowrap">

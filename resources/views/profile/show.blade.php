@@ -221,7 +221,7 @@
 
                     <div>
                         <label class="block text-xs font-extrabold text-slate-700 mb-2">Nama Lengkap Resmi <span class="text-rose-500">*</span></label>
-                        <input type="text" name="name" value="{{ old('name', $user->name) }}" required
+                        <input type="text" name="name" value="{{ old('name', $user->name) }}" disabled
                             class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm font-bold focus:bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 focus:outline-none transition-all">
                         @error('name')
                             <p class="text-xs text-rose-500 font-bold mt-1.5">{{ $message }}</p>
@@ -236,11 +236,6 @@
                         <p class="text-[11px] text-slate-500 font-medium mt-1">Status kelas disinkronkan secara otomatis dari SIJUNA / Dapodik.</p>
                     </div>
                     @endif
-
-                    <div class="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200 text-xs text-emerald-950 font-medium">
-                        Nama lengkap jangan diganti
-                    </div>
-
                     <button type="submit" class="px-6 py-3 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-extrabold rounded-xl transition-all shadow-md shadow-emerald-700/20 flex items-center space-x-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                         <span>Simpan</span>
@@ -417,7 +412,7 @@
                             </div>
                         </div>
                         <span class="px-3 py-1 rounded-full text-xs font-black uppercase bg-emerald-100 text-emerald-800 border border-emerald-300">
-                            Aktif Sekarang
+                            Aktif
                         </span>
                     </div>
 
@@ -428,7 +423,7 @@
                         </div>
                         <div>
                             <span class="text-slate-400 font-medium block">Status Keamanan:</span>
-                            <span class="font-extrabold text-emerald-700">TERAUTENTIKASI SSO</span>
+                            <span class="font-extrabold text-emerald-700">TERAUTENTIKASI</span>
                         </div>
                     </div>
                 </div>

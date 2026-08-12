@@ -56,7 +56,7 @@ class AdminAnnouncementController extends Controller
             'title' => 'required|string|max:255',
             'content' => 'required|string',
             'type' => 'required|string|in:info,warning,danger,success',
-            'target_role' => 'required|string|in:all,user,student,teacher,dudi',
+            'target_role' => 'required|string|in:all,user,student,alumni,teacher,dudi',
             'channel' => 'required|string|in:web,whatsapp,both',
             'is_active' => 'nullable|boolean',
             'send_whatsapp' => 'nullable|boolean',
@@ -106,7 +106,7 @@ class AdminAnnouncementController extends Controller
             'title' => 'required|string|max:255',
             'content' => 'required|string',
             'type' => 'required|string|in:info,warning,danger,success',
-            'target_role' => 'required|string|in:all,user,student,teacher,dudi',
+            'target_role' => 'required|string|in:all,user,student,alumni,teacher,dudi',
             'channel' => 'required|string|in:web,whatsapp,both',
             'is_active' => 'nullable|boolean',
         ]);

@@ -77,7 +77,7 @@ class AdminUserController extends Controller
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'username' => ['nullable', 'string', 'max:100', 'unique:users,username'],
             'password' => ['required', 'string', 'min:8'],
-            'role' => ['required', Rule::in(['teacher', 'dudi', 'student'])],
+            'role' => ['required', Rule::in(['teacher', 'dudi', 'student', 'alumni'])],
             'phone' => ['nullable', 'string', 'max:30'],
             'status' => ['required', Rule::in(['active', 'inactive', 'suspended'])],
         ], [
@@ -125,7 +125,7 @@ class AdminUserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
             'username' => ['nullable', 'string', 'max:100', Rule::unique('users')->ignore($user->id)],
-            'role' => ['required', Rule::in(['teacher', 'dudi', 'admin', 'student'])],
+            'role' => ['required', Rule::in(['teacher', 'dudi', 'admin', 'student', 'alumni'])],
             'phone' => ['nullable', 'string', 'max:30'],
             'status' => ['required', Rule::in(['active', 'inactive', 'suspended'])],
             'password' => ['nullable', 'string', 'min:8'],
