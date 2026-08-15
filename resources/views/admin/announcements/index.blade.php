@@ -217,10 +217,10 @@
     </div>
 
     <!-- Filter & Search Bar -->
-    <div class="p-4 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-4 justify-between items-center">
-        <form method="GET" action="{{ route('admin.announcements.index') }}" class="flex flex-col sm:flex-row gap-3 w-full">
-            <!-- Search -->
-            <div class="relative flex-1 flex items-center gap-2">
+    <div class="p-4 bg-white rounded-2xl border border-slate-200 shadow-sm">
+        <form method="GET" action="{{ route('admin.announcements.index') }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 w-full">
+            <!-- Search (Spans 2 columns on lg screens) -->
+            <div class="sm:col-span-2 relative flex items-center gap-2">
                 <div class="relative flex-1">
                     <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari judul, isi, atau pembuat pengumuman..." 
                            class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 font-semibold placeholder-slate-400 focus:outline-none focus:border-emerald-600 focus:bg-white transition-all">
@@ -232,7 +232,7 @@
             </div>
 
             <!-- Channel Filter -->
-            <select name="channel" onchange="this.form.submit()" class="bg-slate-50 border border-slate-200 text-xs text-slate-900 font-semibold rounded-xl px-3 py-2 focus:outline-none focus:border-emerald-600">
+            <select name="channel" onchange="this.form.submit()" class="w-full bg-slate-50 border border-slate-200 text-xs text-slate-900 font-semibold rounded-xl px-3 py-2 focus:outline-none focus:border-emerald-600">
                 <option value="all_channels">Semua Saluran</option>
                 <option value="both" {{ request('channel') === 'both' ? 'selected' : '' }}>Keduanya (Web & WA)</option>
                 <option value="web" {{ request('channel') === 'web' ? 'selected' : '' }}>Web Saja</option>
@@ -240,7 +240,7 @@
             </select>
 
             <!-- Role Filter -->
-            <select name="target_role" onchange="this.form.submit()" class="bg-slate-50 border border-slate-200 text-xs text-slate-900 font-semibold rounded-xl px-3 py-2 focus:outline-none focus:border-emerald-600">
+            <select name="target_role" onchange="this.form.submit()" class="w-full bg-slate-50 border border-slate-200 text-xs text-slate-900 font-semibold rounded-xl px-3 py-2 focus:outline-none focus:border-emerald-600">
                 <option value="all_roles">Semua Sasaran Role</option>
                 <option value="all" {{ request('target_role') === 'all' ? 'selected' : '' }}>Semua Pengguna (All)</option>
                 <option value="user" {{ request('target_role') === 'user' ? 'selected' : '' }}>Pengguna Biasa (User)</option>
@@ -249,20 +249,22 @@
                 <option value="dudi" {{ request('target_role') === 'dudi' ? 'selected' : '' }}>DUDI Saja</option>
             </select>
 
-            <!-- Type Filter -->
-            <select name="type" onchange="this.form.submit()" class="bg-slate-50 border border-slate-200 text-xs text-slate-900 font-semibold rounded-xl px-3 py-2 focus:outline-none focus:border-emerald-600">
-                <option value="">Semua Tipe Alert</option>
-                <option value="info" {{ request('type') === 'info' ? 'selected' : '' }}>Info (Biru)</option>
-                <option value="warning" {{ request('type') === 'warning' ? 'selected' : '' }}>Peringatan (Kuning)</option>
-                <option value="danger" {{ request('type') === 'danger' ? 'selected' : '' }}>Bahaya / Penting (Merah)</option>
-                <option value="success" {{ request('type') === 'success' ? 'selected' : '' }}>Sukses (Hijau)</option>
-            </select>
+            <!-- Type Filter & Reset Button -->
+            <div class="flex items-center gap-2">
+                <select name="type" onchange="this.form.submit()" class="w-full bg-slate-50 border border-slate-200 text-xs text-slate-900 font-semibold rounded-xl px-3 py-2 focus:outline-none focus:border-emerald-600">
+                    <option value="">Semua Tipe Alert</option>
+                    <option value="info" {{ request('type') === 'info' ? 'selected' : '' }}>Info (Biru)</option>
+                    <option value="warning" {{ request('type') === 'warning' ? 'selected' : '' }}>Peringatan (Kuning)</option>
+                    <option value="danger" {{ request('type') === 'danger' ? 'selected' : '' }}>Bahaya / Penting (Merah)</option>
+                    <option value="success" {{ request('type') === 'success' ? 'selected' : '' }}>Sukses (Hijau)</option>
+                </select>
 
-            @if(request()->anyFilled(['search', 'target_role', 'channel', 'type']))
-                <a href="{{ route('admin.announcements.index') }}" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl border border-slate-200 flex items-center justify-center">
-                    Reset
-                </a>
-            @endif
+                @if(request()->anyFilled(['search', 'target_role', 'channel', 'type']))
+                    <a href="{{ route('admin.announcements.index') }}" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl border border-slate-200 flex items-center justify-center shrink-0">
+                        Reset
+                    </a>
+                @endif
+            </div>
         </form>
     </div>
 

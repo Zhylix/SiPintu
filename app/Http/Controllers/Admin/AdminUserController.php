@@ -52,8 +52,8 @@ class AdminUserController extends Controller
         }
 
         $users = $query->orderByRaw("COALESCE(NULLIF(external_id, ''), NULLIF(username, ''), name) ASC")
-                       ->paginate(15)
-                       ->withQueryString();
+            ->paginate(15)
+            ->withQueryString();
 
         $roles = Role::all();
 

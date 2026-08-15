@@ -221,7 +221,7 @@
 
                     <div>
                         <label class="block text-xs font-extrabold text-slate-700 mb-2">Nama Lengkap Resmi <span class="text-rose-500">*</span></label>
-                        <input type="text" name="name" value="{{ old('name', $user->name) }}" disabled
+                        <input type="text" name="name" value="{{ old('name', $user->name) }}" required
                             class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm font-bold focus:bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 focus:outline-none transition-all">
                         @error('name')
                             <p class="text-xs text-rose-500 font-bold mt-1.5">{{ $message }}</p>
@@ -265,7 +265,7 @@
 
                     <div>
                         <label class="block text-xs font-extrabold text-slate-700 mb-2">Alamat Email Terdaftar <span class="text-rose-500">*</span></label>
-                        <input type="email" name="email" value="{{ old('email', $user->email) }}" disabled
+                        <input type="email" name="email" value="{{ old('email', $user->email) }}" required
                             class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm font-bold focus:bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 focus:outline-none transition-all">
                         @error('email')
                             <p class="text-xs text-rose-500 font-bold mt-1.5">{{ $message }}</p>

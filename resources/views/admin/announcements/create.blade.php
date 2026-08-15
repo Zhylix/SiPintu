@@ -45,7 +45,7 @@
                 @enderror
             </div>
 
-            <!-- Saluran Pengumuman (Channel) -->
+            <!-- Saluran Pengumuman -->
             <div>
                 <label for="channel" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Saluran Pengumuman</label>
                 <select name="channel" id="channel" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 font-semibold focus:outline-none focus:border-emerald-600 focus:bg-white transition-all">

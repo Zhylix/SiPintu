@@ -113,7 +113,7 @@
             </div>
 
             <!-- Interactive Connection Status Filter Tabs -->
-            <div class="flex items-center space-x-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-bold shrink-0">
+            <div class="flex items-center space-x-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-bold shrink-0 overflow-x-auto max-w-full no-scrollbar">
                 <button type="button" @click="filter = 'connected'" :class="filter === 'connected' ? 'bg-emerald-700 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'" class="px-3 py-1.5 rounded-lg transition-all flex items-center space-x-1.5">
                     <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
                     <span>Terkoneksi (Berhasil)</span>

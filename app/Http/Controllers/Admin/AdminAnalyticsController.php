@@ -23,6 +23,7 @@ class AdminAnalyticsController extends Controller
         // 1. User Role Distribution
         $userDistribution = Cache::remember("analytics_user_dist_{$range}", 60, function () {
             $total = User::count();
+
             return [
                 'total' => $total,
                 'students' => [
@@ -83,7 +84,7 @@ class AdminAnalyticsController extends Controller
         });
 
         // 5. SIJUNA Sync Health Metrics
-        $syncMetrics = Cache::remember("analytics_sync_metrics", 60, function () {
+        $syncMetrics = Cache::remember('analytics_sync_metrics', 60, function () {
             $totalSyncs = SyncLog::count();
             $successfulSyncs = SyncLog::where('status', 'success')->count();
 
