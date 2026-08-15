@@ -29,15 +29,16 @@
                 <span class="font-mono text-emerald-800 font-bold block truncate">{{ $config['url'] }}</span>
             </div>
 
-            <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+            <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 overflow-hidden">
                 <span class="text-slate-600 font-semibold block mb-1">SIJUNA API Token</span>
-                <span class="font-mono text-emerald-800 font-bold block">{{ $config['token_masked'] }}</span>
+                <span class="font-mono text-emerald-800 font-bold block truncate max-w-full overflow-hidden" title="{{ $config['token_masked'] }}">{{ $config['token_masked'] }}</span>
                 <span class="text-[10px] text-amber-700 font-bold block mt-1">Terlindungi (Header Only)</span>
             </div>
 
             <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
                 <span class="text-slate-600 font-semibold block mb-1">Timeout & Retries</span>
                 <span class="font-bold text-slate-900 block">{{ $config['timeout'] }}s / {{ $config['retry_times'] }} Retries</span>
+                <span class="text-[10px] text-emerald-700 font-bold block mt-1">Jadwal: Per 3 Hari (00:00)</span>
             </div>
 
             <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200">

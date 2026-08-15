@@ -12,11 +12,20 @@ use Illuminate\Validation\Rule;
 
 class AdminApplicationCategoryController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $categories = ApplicationCategory::withCount('applications')
-            ->orderBy('display_order', 'asc')
-            ->get();
+        $query = ApplicationCategory::withCount('applications');
+
+        if ($request->filled('search')) {
+            $search = trim($request->search);
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhere('slug', 'like', "%{$search}%");
+            });
+        }
+
+        $categories = $query->orderBy('display_order', 'asc')->get();
 
         return view('admin.categories.index', compact('categories'));
     }

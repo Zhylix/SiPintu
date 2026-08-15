@@ -68,7 +68,45 @@
                 <span class="text-emerald-700 font-extrabold block text-[11px] uppercase">Target Response Time</span>
                 <p class="text-slate-600 mt-1 text-[11px] leading-relaxed">Latency ideal < 200 ms untuk autentikasi SSO seamless.</p>
             </div>
-        </div>
+    <!-- Filter & Search Bar -->
+    <div class="p-4 bg-white rounded-2xl border border-slate-200 shadow-sm">
+        <form method="GET" action="{{ route('admin.applications.index') }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 w-full">
+            <!-- Search -->
+            <div class="sm:col-span-2 relative flex items-center gap-2">
+                <div class="relative flex-1">
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama aplikasi, client ID, URL..." 
+                           class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 font-semibold placeholder-slate-400 focus:outline-none focus:border-emerald-600 focus:bg-white transition-all">
+                    <svg class="w-4 h-4 text-slate-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                </div>
+                <button type="submit" class="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-extrabold rounded-xl transition-all shadow-md shadow-emerald-700/20 shrink-0 flex items-center gap-1">
+                    <span>Cari</span>
+                </button>
+            </div>
+
+            <!-- Category Filter -->
+            <select name="category_id" onchange="this.form.submit()" class="w-full bg-slate-50 border border-slate-200 text-xs text-slate-900 font-semibold rounded-xl px-3 py-2 focus:outline-none focus:border-emerald-600">
+                <option value="all">Semua Kategori</option>
+                @foreach($categories as $cat)
+                    <option value="{{ $cat->id }}" {{ request('category_id') == $cat->id ? 'selected' : '' }}>{{ $cat->name }}</option>
+                @endforeach
+            </select>
+
+            <!-- Status Filter & Reset -->
+            <div class="flex items-center gap-2">
+                <select name="status" onchange="this.form.submit()" class="w-full bg-slate-50 border border-slate-200 text-xs text-slate-900 font-semibold rounded-xl px-3 py-2 focus:outline-none focus:border-emerald-600">
+                    <option value="all">Semua Status</option>
+                    <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Active</option>
+                    <option value="maintenance" {{ request('status') === 'maintenance' ? 'selected' : '' }}>Maintenance</option>
+                    <option value="inactive" {{ request('status') === 'inactive' ? 'selected' : '' }}>Inactive</option>
+                </select>
+
+                @if(request()->anyFilled(['search', 'category_id', 'status']))
+                    <a href="{{ route('admin.applications.index') }}" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl border border-slate-200 flex items-center justify-center shrink-0">
+                        Reset
+                    </a>
+                @endif
+            </div>
+        </form>
     </div>
 
     <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">

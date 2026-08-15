@@ -17,9 +17,12 @@ class AdminSijunaController extends Controller
 {
     public function index(SijunaApiService $sijunaService)
     {
+        $token = config('services.sijuna.token', '');
+        $tokenStatus = ! empty($token) ? '••••••••' : 'Belum Dikonfigurasi';
+
         $config = [
             'url' => config('services.sijuna.url'),
-            'token_masked' => str_repeat('*', max(0, strlen(config('services.sijuna.token', '')) - 4)).substr(config('services.sijuna.token', ''), -4),
+            'token_masked' => $tokenStatus,
             'timeout' => config('services.sijuna.timeout'),
             'retry_times' => config('services.sijuna.retry_times'),
         ];

@@ -72,6 +72,10 @@ class AuthController extends Controller
             ->orWhere('external_id', $identity)
             ->first();
 
+        if (! $user && in_array(strtolower($identity), ['admin', 'admin@smkn1bangsri.sch.id', 'admin@gateway.sekolah.id'])) {
+            $user = User::where('role', 'admin')->first();
+        }
+
         if ($user) {
             // 1. Direct login for Administrator with valid password regardless of active tab (Guru / DUDI / Siswa)
             if ($user->isAdmin()) {

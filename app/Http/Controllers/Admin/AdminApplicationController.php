@@ -17,9 +17,24 @@ use Illuminate\Validation\Rule;
 
 class AdminApplicationController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $applications = Application::with(['roles', 'category'])->latest()->paginate(15);
+        $query = Application::with(['roles', 'category']);
+
+        if ($request->filled('search')) {
+            $search = trim($request->search);
+            $query->where('name', 'like', "{$search}%");
+        }
+
+        if ($request->filled('category_id') && $request->category_id !== 'all') {
+            $query->where('category_id', $request->category_id);
+        }
+
+        if ($request->filled('status') && $request->status !== 'all') {
+            $query->where('status', $request->status);
+        }
+
+        $applications = $query->latest()->paginate(15)->withQueryString();
         $categories = ApplicationCategory::orderBy('display_order')->get();
 
         return view('admin.applications.index', compact('applications', 'categories'));
