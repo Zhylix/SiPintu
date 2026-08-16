@@ -27,6 +27,19 @@ class UserApplicationFavoriteController extends Controller
                 'success' => true,
                 'is_favorited' => $isFavorited,
                 'message' => $message,
+                'application' => [
+                    'id' => $application->id,
+                    'name' => $application->name,
+                    'description' => $application->description ?? 'Aplikasi terintegrasi dengan Gateway SiPintu.',
+                    'category_name' => $application->category ? $application->category->name : 'Umum',
+                    'favorite_toggle_url' => route('applications.favorite.toggle', $application),
+                    'authorize_url' => route('oauth.authorize', [
+                        'client_id' => $application->client_id,
+                        'redirect_uri' => $application->redirect_uri,
+                        'response_type' => 'code',
+                        'scope' => 'openid profile email',
+                    ]),
+                ],
             ]);
         }
 

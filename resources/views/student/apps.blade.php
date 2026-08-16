@@ -1,4 +1,4 @@
-@extends('layouts.app', ['headerTitle' => 'Katalog Aplikasi'])
+@extends('layouts.app', ['headerTitle' => auth()->user()->isAlumni() ? 'Katalog Aplikasi Alumni' : 'Katalog Aplikasi'])
 
 @section('content')
 <div class="space-y-6">

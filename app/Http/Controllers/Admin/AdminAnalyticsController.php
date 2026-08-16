@@ -17,40 +17,53 @@ class AdminAnalyticsController extends Controller
     {
         $range = $request->query('range', '30'); // 7, 30, all
         $days = (int) $range > 0 ? (int) $range : 30;
-
-        $startDate = now()->subDays($days);
+        $startDate = $range === 'all' ? null : now()->subDays($days);
 
         // 1. User Role Distribution
         $userDistribution = Cache::remember("analytics_user_dist_{$range}", 60, function () {
             $total = User::count();
+            $studentsCount = User::where('role', 'student')->count();
+            $alumniCount = User::where('role', 'alumni')->count();
+            $teachersCount = User::where('role', 'teacher')->count();
+            $dudiCount = User::where('role', 'dudi')->count();
+            $adminCount = User::where('role', 'admin')->count();
 
             return [
                 'total' => $total,
                 'students' => [
-                    'count' => User::where('role', 'student')->count(),
-                    'percentage' => $total > 0 ? round((User::where('role', 'student')->count() / $total) * 100, 1) : 0,
+                    'count' => $studentsCount,
+                    'percentage' => $total > 0 ? round(($studentsCount / $total) * 100, 1) : 0,
+                ],
+                'alumni' => [
+                    'count' => $alumniCount,
+                    'percentage' => $total > 0 ? round(($alumniCount / $total) * 100, 1) : 0,
                 ],
                 'teachers' => [
-                    'count' => User::where('role', 'teacher')->count(),
-                    'percentage' => $total > 0 ? round((User::where('role', 'teacher')->count() / $total) * 100, 1) : 0,
+                    'count' => $teachersCount,
+                    'percentage' => $total > 0 ? round(($teachersCount / $total) * 100, 1) : 0,
                 ],
                 'dudi' => [
-                    'count' => User::where('role', 'dudi')->count(),
-                    'percentage' => $total > 0 ? round((User::where('role', 'dudi')->count() / $total) * 100, 1) : 0,
+                    'count' => $dudiCount,
+                    'percentage' => $total > 0 ? round(($dudiCount / $total) * 100, 1) : 0,
                 ],
                 'admin' => [
-                    'count' => User::where('role', 'admin')->count(),
-                    'percentage' => $total > 0 ? round((User::where('role', 'admin')->count() / $total) * 100, 1) : 0,
+                    'count' => $adminCount,
+                    'percentage' => $total > 0 ? round(($adminCount / $total) * 100, 1) : 0,
                 ],
             ];
         });
 
         // 2. SSO Token & Access Analytics
         $ssoMetrics = Cache::remember("analytics_sso_metrics_{$range}", 60, function () use ($startDate) {
+            $recentTokensQuery = OAuthAccessToken::query();
+            if ($startDate) {
+                $recentTokensQuery->where('created_at', '>=', $startDate);
+            }
+
             return [
                 'total_issued_tokens' => OAuthAccessToken::count(),
                 'active_tokens' => OAuthAccessToken::where('revoked', false)->where('expires_at', '>', now())->count(),
-                'recent_tokens' => OAuthAccessToken::where('created_at', '>=', $startDate)->count(),
+                'recent_tokens' => $recentTokensQuery->count(),
             ];
         });
 
@@ -60,26 +73,50 @@ class AdminAnalyticsController extends Controller
                 ->with('category')
                 ->orderBy('access_tokens_count', 'desc')
                 ->limit(6)
-                ->get();
+                ->get()
+                ->map(function ($app) {
+                    return [
+                        'id' => $app->id,
+                        'name' => $app->name,
+                        'category_name' => $app->category?->name ?? 'Umum',
+                        'status' => $app->status,
+                        'access_tokens_count' => (int) $app->access_tokens_count,
+                    ];
+                })
+                ->all();
         });
 
         // 4. Activity Logs Metrics
         $logMetrics = Cache::remember("analytics_logs_{$range}", 60, function () use ($startDate) {
-            $logins = AuditLog::whereIn('activity', ['user_login', 'sso_authorize_granted', 'sso_access_denied'])
-                ->where('created_at', '>=', $startDate)
-                ->count();
+            $baseQuery = AuditLog::query();
+            if ($startDate) {
+                $baseQuery->where('created_at', '>=', $startDate);
+            }
 
-            $failedLogins = AuditLog::whereIn('activity', ['user_login_failed', 'token_exchange_invalid_secret', 'token_exchange_invalid_code'])
-                ->where('created_at', '>=', $startDate)
-                ->count();
+            $successfulLogins = (clone $baseQuery)->where(function ($q) {
+                $q->where('activity', 'like', 'login_success%')
+                  ->orWhere('activity', 'user_login')
+                  ->orWhere('activity', 'sso_authorize_granted');
+            })->count();
 
-            $totalActivity = AuditLog::where('created_at', '>=', $startDate)->count();
+            $failedLogins = (clone $baseQuery)->where(function ($q) {
+                $q->where('activity', 'like', 'login_failed%')
+                  ->orWhere('activity', 'like', '%invalid%');
+            })->count();
+
+            $totalActivity = (clone $baseQuery)->count();
+
+            $securityEvents = (clone $baseQuery)->where(function ($q) {
+                $q->where('activity', 'like', '%blocked%')
+                  ->orWhere('activity', 'like', '%failed%')
+                  ->orWhere('activity', 'like', '%invalid%');
+            })->count();
 
             return [
                 'total_activity' => $totalActivity,
-                'successful_logins' => $logins,
+                'successful_logins' => $successfulLogins,
                 'failed_logins' => $failedLogins,
-                'security_events' => AuditLog::where('activity', 'like', '%blocked%')->orWhere('activity', 'like', '%invalid%')->count(),
+                'security_events' => $securityEvents,
             ];
         });
 
@@ -87,12 +124,16 @@ class AdminAnalyticsController extends Controller
         $syncMetrics = Cache::remember('analytics_sync_metrics', 60, function () {
             $totalSyncs = SyncLog::count();
             $successfulSyncs = SyncLog::where('status', 'success')->count();
+            $latestSync = SyncLog::latest()->first();
 
             return [
                 'total_syncs' => $totalSyncs,
                 'successful_syncs' => $successfulSyncs,
                 'success_rate' => $totalSyncs > 0 ? round(($successfulSyncs / $totalSyncs) * 100, 1) : 100,
-                'latest_sync' => SyncLog::latest()->first(),
+                'has_latest' => $latestSync !== null,
+                'latest_sync_status' => $latestSync?->status,
+                'latest_sync_records' => $latestSync?->records_processed ?? 0,
+                'latest_sync_time' => $latestSync?->created_at?->diffForHumans() ?? 'Belum ada sync',
             ];
         });
 

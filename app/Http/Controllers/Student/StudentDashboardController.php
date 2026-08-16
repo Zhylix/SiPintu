@@ -13,10 +13,12 @@ class StudentDashboardController extends Controller
     {
         $user = Auth::user();
 
+        $allowedRoles = $user->isAlumni() ? ['alumni', 'student', 'siswa'] : ['student', 'siswa'];
+
         $applications = Application::with('category')
             ->where('status', 'active')
-            ->whereHas('roles', function ($query) {
-                $query->whereIn('name', ['student', 'siswa']);
+            ->whereHas('roles', function ($query) use ($allowedRoles) {
+                $query->whereIn('name', $allowedRoles);
             })
             ->get();
 
@@ -33,10 +35,13 @@ class StudentDashboardController extends Controller
     public function apps()
     {
         $user = Auth::user();
+
+        $allowedRoles = $user->isAlumni() ? ['alumni', 'student', 'siswa'] : ['student', 'siswa'];
+
         $applications = Application::with('category')
             ->where('status', 'active')
-            ->whereHas('roles', function ($query) {
-                $query->whereIn('name', ['student', 'siswa']);
+            ->whereHas('roles', function ($query) use ($allowedRoles) {
+                $query->whereIn('name', $allowedRoles);
             })
             ->get();
 

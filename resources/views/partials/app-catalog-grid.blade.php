@@ -28,12 +28,20 @@
                 } else {
                     this.favoriteIds = this.favoriteIds.filter(id => id !== appId);
                 }
+                window.dispatchEvent(new CustomEvent('favorite-updated', { detail: { appId, is_favorited: data.is_favorited, message: data.message, application: data.application } }));
             }
         } catch (e) {
             console.error('Gagal memperbarui status favorit:', e);
         }
     }
-}">
+}"
+x-on:favorite-updated.window="
+    if ($event.detail.is_favorited) {
+        if (!favoriteIds.includes($event.detail.appId)) favoriteIds.push($event.detail.appId);
+    } else {
+        favoriteIds = favoriteIds.filter(id => id !== $event.detail.appId);
+    }
+">
     <!-- Search Bar & Category Filter Pills (Rata Kiri Profesional) -->
     <div class="flex flex-col lg:flex-row items-center justify-between gap-4 bg-white border border-slate-200 rounded-2xl p-4 shadow-sm text-left">
         <!-- Category Pills Navigation (Scrollable & Rata Kiri) -->
@@ -88,19 +96,19 @@
             @php
                 $catId = $app->category_id ? 'cat-' . $app->category_id : 'unassigned';
             @endphp
-            <div x-show="(selectedCategory === 'all' || (selectedCategory === 'favorites' && favoriteIds.includes({{ $app->id }})) || selectedCategory === '{{ $catId }}') && (searchQuery.trim() === '' || @js(strtolower($app->name)).startsWith(searchQuery.trim().toLowerCase()))"
+            <div x-show="(selectedCategory === 'all' || (selectedCategory === 'favorites' && favoriteIds.includes({{ $app->id }})) || selectedCategory === '{{ $catId }}') && (searchQuery.trim() === '' || @js(strtolower($app->name)).includes(searchQuery.trim().toLowerCase()))"
                  x-transition
-                 class="group relative bg-white border border-slate-200 hover:border-emerald-500 rounded-2xl p-5 transition-all duration-300 hover:shadow-xl hover:shadow-emerald-900/5 flex flex-col justify-between space-y-4 text-left items-start">
+                 class="group relative bg-white border border-slate-200 hover:border-emerald-500 rounded-2xl p-5 transition-all duration-300 hover:shadow-xl hover:shadow-emerald-900/5 flex flex-col justify-between space-y-4 text-left items-start overflow-hidden">
                 
-                <div class="w-full space-y-3 flex flex-col items-start">
+                <div class="w-full space-y-3 flex flex-col items-start min-w-0">
                     <!-- Card Top Header (Rata Kiri) -->
-                    <div class="flex items-center justify-between w-full">
-                        <div class="flex items-center space-x-3 text-left">
+                    <div class="flex items-start justify-between w-full gap-3">
+                        <div class="flex items-center space-x-3 text-left min-w-0 flex-1">
                             <div class="w-10 h-10 rounded-xl bg-emerald-100 border border-emerald-300 flex items-center justify-center text-emerald-800 font-black text-sm group-hover:scale-105 transition-transform shrink-0">
                                 {{ strtoupper(substr($app->name, 0, 2)) }}
                             </div>
-                            <div class="min-w-0">
-                                <h4 class="text-sm font-black text-emerald-950 group-hover:text-emerald-700 transition-colors whitespace-nowrap truncate">{{ $app->name }}</h4>
+                            <div class="min-w-0 flex-1">
+                                <h4 class="text-sm font-black text-emerald-950 group-hover:text-emerald-700 transition-colors line-clamp-1 leading-snug break-words" title="{{ $app->name }}">{{ $app->name }}</h4>
                                 @if($app->category)
                                     <span class="inline-flex items-center text-[10px] font-extrabold text-emerald-700 whitespace-nowrap">
                                         {{ $app->category->name }}
@@ -125,7 +133,7 @@
                         </button>
                     </div>
 
-                    <p class="text-xs text-slate-600 leading-relaxed font-medium text-left line-clamp-2">
+                    <p class="text-xs text-slate-600 leading-relaxed font-medium text-left line-clamp-2 break-words">
                         {{ $app->description ?? 'Aplikasi terintegrasi dengan Gateway SiPintu.' }}
                     </p>
                 </div>
@@ -138,7 +146,7 @@
 
                     <a href="{{ route('oauth.authorize', ['client_id' => $app->client_id, 'redirect_uri' => $app->redirect_uri, 'response_type' => 'code', 'scope' => 'openid profile email']) }}"
                        class="w-full sm:w-auto inline-flex items-center justify-center space-x-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl transition-all shadow-md shadow-emerald-600/20 whitespace-nowrap shrink-0">
-                        <span class="whitespace-nowrap">Masuk Akses Terpadu</span>
+                        <span>Masuk Akses Terpadu</span>
                         <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
                         </svg>

@@ -42,7 +42,10 @@ class RoleMiddleware
             if ($role === 'dudi' && $user->isDudi()) {
                 return $next($request);
             }
-            if ($role === 'student' && $user->isStudent()) {
+            if ($role === 'student' && ($user->isStudent() || $user->isAlumni())) {
+                return $next($request);
+            }
+            if ($role === 'alumni' && $user->isAlumni()) {
                 return $next($request);
             }
             if ($user->hasRole($role)) {

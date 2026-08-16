@@ -37,7 +37,7 @@ Route::get('/', function () {
         if ($user->isDudi()) {
             return redirect()->route('dudi.dashboard');
         }
-        if ($user->isStudent()) {
+        if ($user->isStudent() || $user->isAlumni()) {
             return redirect()->route('student.dashboard');
         }
 
@@ -68,7 +68,7 @@ Route::middleware('auth')->group(function () {
         if ($user->isDudi()) {
             return redirect()->route('dudi.dashboard');
         }
-        if ($user->isStudent()) {
+        if ($user->isStudent() || $user->isAlumni()) {
             return redirect()->route('student.dashboard');
         }
 
@@ -109,7 +109,7 @@ Route::get('/oauth/jwks.json', [OAuthController::class, 'jwks'])->name('oauth.jw
 | Portal Siswa Routes (Protected by auth and role:student middleware)
 |--------------------------------------------------------------------------
 */
-Route::prefix('siswa')->name('student.')->middleware(['auth', 'role:student'])->group(function () {
+Route::prefix('siswa')->name('student.')->middleware(['auth', 'role:student,alumni'])->group(function () {
     Route::get('/dashboard', [StudentDashboardController::class, 'index'])->name('dashboard');
     Route::get('/apps', [StudentDashboardController::class, 'apps'])->name('apps');
 });

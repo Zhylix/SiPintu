@@ -176,12 +176,12 @@
                         <svg class="w-4 h-4 mr-2.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
                         Aplikasi Terpadu DUDI
                     </a>
-                @elseif(auth()->user()->isStudent())
-                    <div class="px-3 pb-2 text-[10px] font-extrabold text-emerald-900 uppercase tracking-wider">Portal Siswa SMKN 1 Bangsri</div>
+                @elseif(auth()->user()->isStudent() || auth()->user()->isAlumni())
+                    <div class="px-3 pb-2 text-[10px] font-extrabold text-emerald-900 uppercase tracking-wider">{{ auth()->user()->isAlumni() ? 'Portal Alumni SMKN 1 Bangsri' : 'Portal Siswa SMKN 1 Bangsri' }}</div>
                     
                     <a href="{{ route('student.dashboard') }}" class="flex items-center px-3 py-2 text-xs font-bold rounded-xl transition-all {{ request()->routeIs('student.dashboard') ? 'bg-emerald-700 text-white shadow-md shadow-emerald-700/20' : 'text-slate-700 hover:text-emerald-800 hover:bg-emerald-50' }}">
                         <svg class="w-4 h-4 mr-2.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
-                        Dashboard Siswa
+                        {{ auth()->user()->isAlumni() ? 'Dashboard Alumni' : 'Dashboard Siswa' }}
                     </a>
 
                     <div class="pt-3 px-3 pb-1.5 text-[10px] font-extrabold text-emerald-900 uppercase tracking-wider">Layanan Akses Terpadu</div>
@@ -336,12 +336,12 @@
                             <svg class="w-5 h-5 mr-3 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
                             Aplikasi Terpadu DUDI
                         </a>
-                    @elseif(auth()->user()->isStudent())
-                        <div class="px-3 pb-2 text-[11px] font-extrabold text-emerald-900 uppercase tracking-wider">Portal Siswa SMKN 1 Bangsri</div>
+                    @elseif(auth()->user()->isStudent() || auth()->user()->isAlumni())
+                        <div class="px-3 pb-2 text-[11px] font-extrabold text-emerald-900 uppercase tracking-wider">{{ auth()->user()->isAlumni() ? 'Portal Alumni SMKN 1 Bangsri' : 'Portal Siswa SMKN 1 Bangsri' }}</div>
                         
                         <a href="{{ route('student.dashboard') }}" class="flex items-center px-3 py-2.5 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('student.dashboard') ? 'bg-emerald-700 text-white shadow-md shadow-emerald-700/20' : 'text-slate-700 hover:text-emerald-800 hover:bg-emerald-50' }}">
                             <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
-                            Dashboard Siswa
+                            {{ auth()->user()->isAlumni() ? 'Dashboard Alumni' : 'Dashboard Siswa' }}
                         </a>
 
                         <div class="pt-4 px-3 pb-2 text-[11px] font-extrabold text-emerald-900 uppercase tracking-wider">Layanan Akses Terpadu</div>
@@ -374,7 +374,7 @@
             <!-- Main Content Body -->
             <main class="flex-1 flex flex-col min-w-0 bg-slate-50/80">
                 <!-- Top Header Bar -->
-                <header class="h-16 bg-white border-b border-slate-200 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-10 shadow-xs">
+                <header class="h-16 bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-30 shadow-xs">
                     <div class="flex items-center space-x-3">
                         <!-- Mobile Hamburger Button (Only visible on mobile) -->
                         <button @click="mobileMenuOpen = !mobileMenuOpen" class="p-2 rounded-xl text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 md:hidden border border-slate-200 transition-colors" title="Buka Menu">
@@ -479,5 +479,8 @@
             </main>
         </div>
     </div>
+
+    <!-- Popup Notifikasi Toast -->
+    @include('partials.toast-notification')
 </body>
 </html>
