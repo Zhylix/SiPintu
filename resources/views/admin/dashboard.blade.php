@@ -199,15 +199,20 @@
 
                     <!-- Right: Connection Badge & Action Button -->
                     <div class="flex items-center justify-between lg:justify-end space-x-3 shrink-0 pt-2 lg:pt-0 border-t lg:border-t-0 border-slate-100">
-                        @if($isConnected)
-                            <span class="px-3 py-1 rounded-full text-[11px] font-black uppercase bg-emerald-100 text-emerald-800 border border-emerald-300 inline-flex items-center gap-1.5 shadow-2xs">
-                                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                                <span>BERHASIL TERKONEKSI</span>
+                        @if($app->status === 'maintenance')
+                            <span class="px-3.5 py-1.5 rounded-xl text-xs font-black uppercase bg-amber-100 text-amber-900 border-2 border-amber-300 inline-flex items-center gap-2 shadow-sm whitespace-nowrap">
+                                <span class="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0"></span>
+                                <span>MAINTENANCE</span>
+                            </span>
+                        @elseif($isConnected)
+                            <span class="px-3.5 py-1.5 rounded-xl text-xs font-black uppercase bg-emerald-100 text-emerald-900 border-2 border-emerald-300 inline-flex items-center gap-2 shadow-sm whitespace-nowrap">
+                                <span class="w-2.5 h-2.5 rounded-full bg-emerald-600 animate-pulse shrink-0"></span>
+                                <span>TERKONEKSI</span>
                             </span>
                         @else
-                            <span class="px-3 py-1 rounded-full text-[11px] font-black uppercase bg-rose-100 text-rose-800 border border-rose-300 inline-flex items-center gap-1.5">
-                                <span class="w-2 h-2 rounded-full bg-rose-600"></span>
-                                <span>TERPUTUS / PROBLEM</span>
+                            <span class="px-3.5 py-1.5 rounded-xl text-xs font-black uppercase bg-rose-100 text-rose-900 border-2 border-rose-300 inline-flex items-center gap-2 shadow-sm whitespace-nowrap">
+                                <span class="w-2.5 h-2.5 rounded-full bg-rose-600 shrink-0"></span>
+                                <span>TERPUTUS</span>
                             </span>
                         @endif
 

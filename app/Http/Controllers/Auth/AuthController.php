@@ -84,13 +84,13 @@ class AuthController extends Controller
 
                     return back()->withErrors([
                         'password' => 'Kata sandi yang Anda masukkan salah.',
-                    ])->onlyInput('identity', 'account_type');
+                    ])->onlyInput('account_type', 'nis', 'nip', 'kode_dudi', 'identity');
                 }
 
                 if ($user->status !== 'active') {
                     AuditLogger::log('login_failed_suspended', ['identity' => $identity]);
 
-                    return back()->withErrors(['identity' => 'Akun Anda sedang dinonaktifkan atau ditangguhkan.'])->onlyInput('identity', 'account_type');
+                    return back()->withErrors(['identity' => 'Akun Anda sedang dinonaktifkan atau ditangguhkan.'])->onlyInput('account_type', 'nis', 'nip', 'kode_dudi', 'identity');
                 }
 
                 Auth::login($user, $request->boolean('remember'));

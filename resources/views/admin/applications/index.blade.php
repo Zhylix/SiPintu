@@ -53,11 +53,11 @@
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
             <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs">
-                <span class="text-emerald-700 font-extrabold block text-[11px] uppercase">Terkoneksi</span>
+                <span class="px-2.5 py-0.5 rounded-md text-[11px] font-black uppercase bg-emerald-100 text-emerald-900 border border-emerald-300 inline-block mb-1">TERKONEKSI</span>
                 <p class="text-slate-600 mt-1 text-[11px] leading-relaxed">Aplikasi `ACTIVE`, Client ID terverifikasi, & Health Check HTTP 200 merespons.</p>
             </div>
             <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs">
-                <span class="text-rose-600 font-extrabold block text-[11px] uppercase">Terputus</span>
+                <span class="px-2.5 py-0.5 rounded-md text-[11px] font-black uppercase bg-rose-100 text-rose-900 border border-rose-300 inline-block mb-1">TERPUTUS</span>
                 <p class="text-slate-600 mt-1 text-[11px] leading-relaxed">Aplikasi `INACTIVE` atau URL Health Check tidak merespons (Offline).</p>
             </div>
             <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs">
@@ -68,6 +68,9 @@
                 <span class="text-emerald-700 font-extrabold block text-[11px] uppercase">Target Response Time</span>
                 <p class="text-slate-600 mt-1 text-[11px] leading-relaxed">Latency ideal < 200 ms untuk autentikasi SSO seamless.</p>
             </div>
+        </div>
+    </div>
+
     <!-- Filter & Search Bar -->
     <div class="p-4 bg-white rounded-2xl border border-slate-200 shadow-sm">
         <form method="GET" action="{{ route('admin.applications.index') }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 w-full">
@@ -161,21 +164,28 @@
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                @if($isConnected)
-                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase bg-emerald-100 text-emerald-800 border border-emerald-300 inline-flex items-center gap-1.5 shadow-2xs">
-                                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-                                        <span>BERHASIL TERKONEKSI</span>
+                                @if($app->status === 'maintenance')
+                                    <span class="px-3.5 py-1.5 rounded-xl text-xs font-black uppercase bg-amber-100 text-amber-900 border-2 border-amber-300 inline-flex items-center gap-2 shadow-sm whitespace-nowrap">
+                                        <span class="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0"></span>
+                                        <span>MAINTENANCE</span>
+                                    </span>
+                                @elseif($isConnected)
+                                    <span class="px-3.5 py-1.5 rounded-xl text-xs font-black uppercase bg-emerald-100 text-emerald-900 border-2 border-emerald-300 inline-flex items-center gap-2 shadow-sm whitespace-nowrap">
+                                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-600 animate-pulse shrink-0"></span>
+                                        <span>TERKONEKSI</span>
                                     </span>
                                 @else
-                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase bg-rose-100 text-rose-800 border border-rose-300 inline-flex items-center gap-1">
-                                        <span class="w-2 h-2 rounded-full bg-rose-600"></span>
-                                        <span>TERPUTUS / PROBLEM</span>
+                                    <span class="px-3.5 py-1.5 rounded-xl text-xs font-black uppercase bg-rose-100 text-rose-900 border-2 border-rose-300 inline-flex items-center gap-2 shadow-sm whitespace-nowrap">
+                                        <span class="w-2.5 h-2.5 rounded-full bg-rose-600 shrink-0"></span>
+                                        <span>TERPUTUS</span>
                                     </span>
                                 @endif
                                 
                                 @if($app->last_health_status)
-                                    <div class="mt-1 text-[10px] text-slate-500 font-semibold">
-                                        Health: <span class="font-bold uppercase {{ $app->last_health_status === 'online' ? 'text-emerald-700' : 'text-rose-600' }}">{{ $app->last_health_status }}</span>
+                                    <div class="mt-1.5">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-[11px] font-extrabold uppercase {{ $app->last_health_status === 'online' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-rose-50 text-rose-800 border border-rose-200' }}">
+                                            Health: {{ $app->last_health_status }}
+                                        </span>
                                     </div>
                                 @endif
                             </td>

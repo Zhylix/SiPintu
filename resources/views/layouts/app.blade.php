@@ -308,6 +308,11 @@
                             <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
                             Monitoring System
                         </a>
+
+                        <a href="{{ route('admin.analytics.index') }}" class="flex items-center px-3 py-2.5 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('admin.analytics.*') ? 'bg-emerald-700 text-white shadow-md shadow-emerald-700/20' : 'text-slate-700 hover:text-emerald-800 hover:bg-emerald-50' }}">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                            Analitik & Laporan
+                        </a>
                     @elseif(auth()->user()->isTeacher())
                         <div class="px-3 pb-2 text-[11px] font-extrabold text-emerald-900 uppercase tracking-wider">Portal Guru SMKN 1 Bangsri</div>
                         
@@ -374,7 +379,7 @@
             <!-- Main Content Body -->
             <main class="flex-1 flex flex-col min-w-0 bg-slate-50/80">
                 <!-- Top Header Bar -->
-                <header class="h-16 bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-30 shadow-xs">
+                <header class="h-16 bg-white border-b border-slate-200 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-30 shadow-xs">
                     <div class="flex items-center space-x-3">
                         <!-- Mobile Hamburger Button (Only visible on mobile) -->
                         <button @click="mobileMenuOpen = !mobileMenuOpen" class="p-2 rounded-xl text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 md:hidden border border-slate-200 transition-colors" title="Buka Menu">
