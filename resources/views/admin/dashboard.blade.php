@@ -60,7 +60,7 @@
         <div class="p-5 rounded-2xl bg-white border border-slate-200 shadow-md relative overflow-hidden group hover:border-amber-500 transition-all">
             <div class="flex items-center justify-between">
                 <div>
-                    <span class="text-xs font-extrabold text-slate-500 uppercase tracking-wider">Token SSO Aktif</span>
+                    <span class="text-xs font-extrabold text-slate-500 uppercase tracking-wider">Token SiPintu Aktif</span>
                     <div class="text-3xl font-black text-emerald-950 mt-1">{{ number_format($stats['sso_tokens_count']) }}</div>
                 </div>
                 <div class="w-12 h-12 rounded-xl bg-amber-100 border border-amber-300 text-amber-800 flex items-center justify-center font-bold">

@@ -13,7 +13,7 @@
     }"
     x-on:show-toast.window="addToast($event.detail.message, $event.detail.isSuccess ?? true)"
     x-on:favorite-updated.window="if ($event.detail.message) addToast($event.detail.message, $event.detail.is_favorited)"
-    class="fixed top-5 right-5 z-50 flex flex-col space-y-3 max-w-sm w-full pointer-events-none px-4 sm:px-0">
+    class="fixed top-5 left-1/2 -translate-x-1/2 sm:left-auto sm:right-5 sm:translate-x-0 z-50 flex flex-col space-y-3 max-w-sm w-[calc(100%-2rem)] sm:w-full pointer-events-none">
     
     <template x-for="toast in toasts" :key="toast.id">
         <div x-show="true"
@@ -23,12 +23,12 @@
              x-transition:leave="transition ease-in duration-200 transform"
              x-transition:leave-start="opacity-100 scale-100"
              x-transition:leave-end="opacity-0 scale-95"
-             class="pointer-events-auto flex items-center justify-between p-4 rounded-2xl shadow-xl border backdrop-blur-md transition-all duration-300"
+             class="pointer-events-auto flex items-center justify-between p-4 rounded-2xl shadow-xl border backdrop-blur-md transition-all duration-300 w-full"
              :class="toast.isSuccess 
                 ? 'bg-white/95 text-slate-900 border-emerald-200 shadow-emerald-950/10' 
                 : 'bg-white/95 text-slate-900 border-slate-200 shadow-slate-950/10'">
             
-            <div class="flex items-center space-x-3 min-w-0">
+            <div class="flex items-center space-x-3 min-w-0 flex-1 text-left">
                 <div class="p-2 rounded-xl shrink-0"
                      :class="toast.isSuccess ? 'bg-amber-100 text-amber-600 border border-amber-200' : 'bg-slate-100 text-slate-500 border border-slate-200'">
                     <template x-if="toast.isSuccess">

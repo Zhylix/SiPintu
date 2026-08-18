@@ -189,7 +189,7 @@
                                     <img src="{{ asset('images/logo-smkn1bangsri.png') }}" class="w-10 h-10 object-contain" alt="Logo">
                                     <div>
                                         <div class="text-sm font-black text-emerald-950">Status Gateway Active</div>
-                                        <div class="text-xs text-emerald-800 font-bold">SMKN 1 BANGSRI SSO System</div>
+                                        <div class="text-xs text-emerald-800 font-bold">SiPintu SMKN 1 BANGSRI</div>
                                     </div>
                                 </div>
                                 <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase bg-emerald-100 text-emerald-800 border border-emerald-300">
@@ -292,7 +292,7 @@
                             </div>
                             <h3 class="text-xl font-black text-emerald-950 group-hover:text-emerald-700 transition-colors">Portal Guru & Pengajar</h3>
                             <p class="text-xs text-slate-600 leading-relaxed font-medium">
-                                Akses Single Sign-On (SSO) ke aplikasi-aplikasi internal pendidik, jurnal mengajar, dan katalog terpadu.
+                                Akses Single Sign-On ke aplikasi-aplikasi internal pendidik, jurnal mengajar, dan katalog terpadu.
                             </p>
                         </div>
                         <div class="pt-6 border-t border-slate-100 mt-6">
@@ -311,7 +311,7 @@
                             </div>
                             <h3 class="text-xl font-black text-emerald-950 group-hover:text-emerald-700 transition-colors">Portal Mitra DUDI</h3>
                             <p class="text-xs text-slate-600 leading-relaxed font-medium">
-                                Akses Single Sign-On (SSO) untuk perusahaan mitra industri dalam mengakses layanan dan sistem integrasi sekolah.
+                                Akses untuk perusahaan mitra industri dalam mengakses layanan dan sistem integrasi sekolah.
                             </p>
                         </div>
                         <div class="pt-6 border-t border-slate-100 mt-6">
@@ -345,7 +345,7 @@
                         <ul class="space-y-1.5 text-xs text-slate-600 font-semibold">
                             <li><a href="{{ route('login') }}" class="hover:text-emerald-700 transition-colors">Portal Login</a></li>
                             <li><a href="#portal" class="hover:text-emerald-700 transition-colors">Peran & Akses</a></li>
-                            <li><a href="#layanan" class="hover:text-emerald-700 transition-colors">Layanan SSO</a></li>
+                            <li><a href="#layanan" class="hover:text-emerald-700 transition-colors">Layanan SiPintu</a></li>
                         </ul>
                     </div>
 
@@ -360,7 +360,7 @@
 
                 <div class="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 font-medium">
                     <div>© {{ date('Y') }} SMK Negeri 1 Bangsri. Hak Cipta Dilindungi.</div>
-                    <div class="mt-2 sm:mt-0 font-mono text-[11px] text-emerald-800 font-bold">SiPintu Identity & SSO Gateway v2.0</div>
+                    <div class="mt-2 sm:mt-0 font-mono text-[11px] text-emerald-800 font-bold">SiPintu SMKN 1 BANGSRI</div>
                 </div>
             </div>
         </footer>

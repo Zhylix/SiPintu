@@ -150,5 +150,7 @@
             </a>
         </nav>
     </div>
+    <!-- Popup Notifikasi Toast -->
+    @include('partials.toast-notification')
 </body>
 </html>

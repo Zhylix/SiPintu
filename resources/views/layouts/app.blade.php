@@ -479,7 +479,7 @@
                 <!-- Official Footer -->
                 <footer class="bg-white border-t border-slate-200 py-3 px-4 sm:px-6 text-center md:text-left text-xs text-slate-500 font-medium flex flex-col md:flex-row items-center justify-between">
                     <div>&copy; {{ date('Y') }} SMK Negeri 1 Bangsri. Hak Cipta Dilindungi Undang-Undang.</div>
-                    <div class="text-emerald-800 font-bold mt-1 md:mt-0 font-mono text-[11px]">Identity & SSO Gateway v2.0</div>
+                    <div class="text-emerald-800 font-bold mt-1 md:mt-0 font-mono text-[11px]">SiPintu SMKN 1 BANGSRI</div>
                 </footer>
             </main>
         </div>

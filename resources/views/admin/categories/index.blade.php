@@ -125,8 +125,8 @@
 </div>
 
 <!-- Modal Create Category -->
-<div id="modal-create-category" class="hidden fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5">
+<div id="modal-create-category" class="hidden fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5 my-auto mx-auto relative z-10">
         <div class="flex items-center justify-between border-b border-slate-100 pb-3">
             <h3 class="text-base font-black text-emerald-950">Tambah Kategori Baru</h3>
             <button onclick="document.getElementById('modal-create-category').classList.add('hidden')" class="text-slate-400 hover:text-slate-700 font-bold">&times;</button>
@@ -175,8 +175,8 @@
 </div>
 
 <!-- Modal Edit Category -->
-<div id="modal-edit-category" class="hidden fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5">
+<div id="modal-edit-category" class="hidden fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5 my-auto mx-auto relative z-10">
         <div class="flex items-center justify-between border-b border-slate-100 pb-3">
             <h3 class="text-base font-black text-emerald-950">Edit Kategori</h3>
             <button onclick="document.getElementById('modal-edit-category').classList.add('hidden')" class="text-slate-400 hover:text-slate-700 font-bold">&times;</button>
