@@ -91,26 +91,6 @@
             </div>
 
             <div class="flex flex-wrap items-center gap-2">
-                <!-- Toggle Power ON/OFF Button -->
-                <template x-if="online">
-                    <form action="{{ route('admin.announcements.toggle-bot-power') }}" method="POST">
-                        @csrf
-                        <button type="submit" 
-                                :class="botEnabled ? 'bg-amber-50 hover:bg-amber-100 text-amber-800 border-amber-300' : 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600'" 
-                                class="px-4 py-2 border text-xs font-black rounded-xl transition-all shadow-sm flex items-center space-x-1.5"
-                                :title="botEnabled ? 'Non-aktifkan fitur kirim bot tanpa logout' : 'Aktifkan kembali fitur pengiriman bot'">
-                            <span x-text="botEnabled ? 'Matikan Bot' : 'Aktifkan Bot'"></span>
-                        </button>
-                    </form>
-                </template>
-
-                <template x-if="!online || connection !== 'open'">
-                    <button type="button" @click="qrModalOpen = true" class="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-extrabold rounded-xl transition-all shadow-md shadow-emerald-700/20 flex items-center space-x-1.5">
-                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m0 14v1m8-8h-1M5 12H4m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z"></path></svg>
-                        <span>QR Code</span>
-                    </button>
-                </template>
-
                 <template x-if="online && connection === 'open'">
                     <form action="{{ route('admin.announcements.logout-bot') }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin MENGGANTI NOMOR WHATSAPP BOT?\n\nSesi WhatsApp bot yang sedang terhubung akan di-logout dan QR Code baru akan dibuat untuk di-scan dengan nomor lain.')">
                         @csrf
