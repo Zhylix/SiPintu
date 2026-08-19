@@ -10,7 +10,7 @@
         </div>
         <a href="{{ route('admin.users.create') }}" class="inline-flex items-center justify-center px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-extrabold rounded-xl transition-all shadow-md shadow-emerald-700/20">
             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-            + Tambah Pengguna Baru
+            Tambah Pengguna Baru
         </a>
     </div>
 
@@ -50,21 +50,6 @@
                 <option value="teacher" {{ request('role') === 'teacher' ? 'selected' : '' }}>Guru / Pendidik</option>
                 <option value="dudi" {{ request('role') === 'dudi' ? 'selected' : '' }}>Mitra DUDI</option>
                 <option value="admin" {{ request('role') === 'admin' ? 'selected' : '' }}>Administrator</option>
-            </select>
-
-            <!-- Phone Status Filter -->
-            <select name="phone_status" onchange="this.form.submit()" class="bg-slate-50 border border-slate-200 text-xs text-slate-900 font-semibold rounded-xl px-3 py-2 focus:outline-none focus:border-emerald-600">
-                <option value="all">Semua Status Nomor</option>
-                <option value="with_phone" {{ request('phone_status') === 'with_phone' ? 'selected' : '' }}>✓ Ada No. WA</option>
-                <option value="without_phone" {{ request('phone_status') === 'without_phone' ? 'selected' : '' }}>⚠️ Belum Ada No. WA</option>
-            </select>
-
-            <!-- Status Filter -->
-            <select name="status" onchange="this.form.submit()" class="bg-slate-50 border border-slate-200 text-xs text-slate-900 font-semibold rounded-xl px-3 py-2 focus:outline-none focus:border-emerald-600">
-                <option value="">Semua Status Akun</option>
-                <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Aktif</option>
-                <option value="inactive" {{ request('status') === 'inactive' ? 'selected' : '' }}>Non-Aktif</option>
-                <option value="suspended" {{ request('status') === 'suspended' ? 'selected' : '' }}>Ditangguhkan</option>
             </select>
 
             @if(request()->anyFilled(['search', 'role', 'phone_status', 'status']))

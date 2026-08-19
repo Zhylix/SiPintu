@@ -50,9 +50,9 @@
             <div>
                 <label for="channel" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Saluran Pengumuman</label>
                 <select name="channel" id="channel" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 font-semibold focus:outline-none focus:border-emerald-600 focus:bg-white transition-all">
-                    <option value="both" {{ old('channel', $announcement->channel) === 'both' ? 'selected' : '' }}>Keduanya (Web & WhatsApp)</option>
-                    <option value="web" {{ old('channel', $announcement->channel) === 'web' ? 'selected' : '' }}>Web Saja (Tampil di Web)</option>
-                    <option value="whatsapp" {{ old('channel', $announcement->channel) === 'whatsapp' ? 'selected' : '' }}>WhatsApp Saja (Kirim Pesan WA)</option>
+                    <option value="both" {{ old('channel', $announcement->channel) === 'both' ? 'selected' : '' }}>Keduanya</option>
+                    <option value="web" {{ old('channel', $announcement->channel) === 'web' ? 'selected' : '' }}>Web</option>
+                    <option value="whatsapp" {{ old('channel', $announcement->channel) === 'whatsapp' ? 'selected' : '' }}>WhatsApp</option>
                 </select>
                 @error('channel')
                     <p class="text-xs text-rose-600 font-bold mt-1">{{ $message }}</p>

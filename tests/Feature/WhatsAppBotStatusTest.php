@@ -42,4 +42,38 @@ class WhatsAppBotStatusTest extends TestCase
         $logoutResponse->assertRedirect();
         $logoutResponse->assertSessionHas('success');
     }
+
+    public function test_admin_views_active_qr_code_when_disconnected(): void
+    {
+        Http::fake([
+            'http://127.0.0.1:3000/status' => Http::response([
+                'status' => 'success',
+                'connection' => 'close',
+                'bot_phone' => null,
+                'qr_code' => 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+                'bot_enabled' => true,
+            ], 200),
+        ]);
+
+        $adminRole = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+        $admin = User::factory()->create(['role' => 'admin', 'status' => 'active']);
+        $admin->assignRole($adminRole);
+
+        $response = $this->actingAs($admin)->get(route('admin.announcements.index'));
+        $response->assertStatus(200);
+        $response->assertSee('Status Server Bot WhatsApp Sending');
+        $response->assertSee('Belum Terhubung');
+        $response->assertSee('Scan QR Code');
+
+        $statusResponse = $this->actingAs($admin)->get(route('admin.announcements.bot-status'));
+        $statusResponse->assertStatus(200);
+        $statusResponse->assertJson([
+            'online' => true,
+            'data' => [
+                'connection' => 'close',
+                'bot_phone' => null,
+                'qr_code' => 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+            ],
+        ]);
+    }
 }

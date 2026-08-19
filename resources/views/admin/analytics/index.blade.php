@@ -229,8 +229,12 @@
                             </span>
                         </div>
                         <div class="flex items-center justify-between text-xs">
-                            <span class="text-slate-600 font-semibold">Data Diproses</span>
-                            <span class="font-bold text-slate-900 font-mono">{{ number_format($syncMetrics['latest_sync_records']) }} Siswa</span>
+                            <span class="text-slate-600 font-semibold">Data Diproses (Terakhir)</span>
+                            <span class="font-bold text-slate-900 font-mono">{{ number_format($syncMetrics['latest_sync_records']) }} Record</span>
+                        </div>
+                        <div class="flex items-center justify-between text-xs">
+                            <span class="text-slate-600 font-semibold">Total Data Diproses</span>
+                            <span class="font-bold text-emerald-700 font-mono">{{ number_format($syncMetrics['total_records_processed'] ?? $syncMetrics['latest_sync_records']) }} Record</span>
                         </div>
                         <div class="flex items-center justify-between text-xs">
                             <span class="text-slate-600 font-semibold">Waktu Jalur</span>
@@ -252,7 +256,7 @@
                 </form>
             </div>
 
-            <!-- Fast Action Launcher (Bright Vibrant Emerald/Teal Container) -->
+            <!-- Fast Action Launcher -->
             <div class="bg-gradient-to-br from-emerald-50 via-teal-50 to-emerald-100/60 border border-emerald-200/80 rounded-3xl p-6 shadow-sm space-y-4">
                 <div class="flex items-center space-x-2 text-emerald-900">
                     <svg class="w-5 h-5 text-emerald-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>

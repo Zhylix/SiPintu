@@ -125,6 +125,7 @@ class AdminAnalyticsController extends Controller
             $totalSyncs = SyncLog::count();
             $successfulSyncs = SyncLog::where('status', 'success')->count();
             $latestSync = SyncLog::latest()->first();
+            $totalRecordsProcessed = SyncLog::where('status', 'success')->sum('records_processed');
 
             return [
                 'total_syncs' => $totalSyncs,
@@ -133,6 +134,7 @@ class AdminAnalyticsController extends Controller
                 'has_latest' => $latestSync !== null,
                 'latest_sync_status' => $latestSync?->status,
                 'latest_sync_records' => $latestSync?->records_processed ?? 0,
+                'total_records_processed' => (int) $totalRecordsProcessed,
                 'latest_sync_time' => $latestSync?->created_at?->diffForHumans() ?? 'Belum ada sync',
             ];
         });

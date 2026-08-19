@@ -10,7 +10,7 @@
         </div>
         <a href="{{ route('admin.announcements.create') }}" class="inline-flex items-center justify-center px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-extrabold rounded-xl transition-all shadow-md shadow-emerald-700/20">
             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-            Buat Pengumuman Baru
+            Tambah Pengumuman Baru
         </a>
     </div>
 
@@ -63,17 +63,17 @@
                         <span>Status Server Bot WhatsApp Sending</span>
                         <template x-if="online && connection === 'open'">
                             <span :class="botEnabled ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-amber-100 text-amber-800 border-amber-300'" class="px-2.5 py-0.5 rounded-full text-[10px] font-black border uppercase">
-                                <span x-text="botEnabled ? '🟢 Terhubung (ON)' : '⏸️ Terhubung (OFF)'"></span>
+                                <span x-text="botEnabled ? 'Terhubung (ON)' : 'Terhubung (OFF)'"></span>
                             </span>
                         </template>
                         <template x-if="online && connection === 'connecting'">
                             <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-800 border border-amber-300 uppercase">
-                                🟡 Menghubungkan...
+                                Menghubungkan...
                             </span>
                         </template>
                         <template x-if="!online || connection === 'close'">
                             <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-800 border border-rose-300 uppercase">
-                                🔴 Belum Terhubung
+                                Belum Terhubung
                             </span>
                         </template>
                     </h3>
@@ -107,7 +107,7 @@
                 <template x-if="!online || connection !== 'open'">
                     <button type="button" @click="qrModalOpen = true" class="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-extrabold rounded-xl transition-all shadow-md shadow-emerald-700/20 flex items-center space-x-1.5">
                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m0 14v1m8-8h-1M5 12H4m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z"></path></svg>
-                        <span>QR Code Modal</span>
+                        <span>QR Code</span>
                     </button>
                 </template>
 
@@ -205,7 +205,7 @@
 
                         <div class="pt-3 border-t border-slate-100 flex justify-end">
                             <button type="button" @click="qrModalOpen = false" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-extrabold rounded-xl transition-all border border-slate-200">
-                                Tutup Modal
+                                Tutup
                             </button>
                         </div>
                     </div>
@@ -240,11 +240,10 @@
             <!-- Role Filter -->
             <select name="target_role" onchange="this.form.submit()" class="w-full bg-slate-50 border border-slate-200 text-xs text-slate-900 font-semibold rounded-xl px-3 py-2 focus:outline-none focus:border-emerald-600">
                 <option value="all_roles">Semua Sasaran Role</option>
-                <option value="all" {{ request('target_role') === 'all' ? 'selected' : '' }}>Semua Pengguna (All)</option>
-                <option value="user" {{ request('target_role') === 'user' ? 'selected' : '' }}>Pengguna Biasa (User)</option>
-                <option value="student" {{ request('target_role') === 'student' ? 'selected' : '' }}>Siswa Saja</option>
-                <option value="teacher" {{ request('target_role') === 'teacher' ? 'selected' : '' }}>Guru Saja</option>
-                <option value="dudi" {{ request('target_role') === 'dudi' ? 'selected' : '' }}>DUDI Saja</option>
+                <option value="all" {{ request('target_role') === 'all' ? 'selected' : '' }}>All</option>
+                <option value="student" {{ request('target_role') === 'student' ? 'selected' : '' }}>Siswa</option>
+                <option value="teacher" {{ request('target_role') === 'teacher' ? 'selected' : '' }}>Guru</option>
+                <option value="dudi" {{ request('target_role') === 'dudi' ? 'selected' : '' }}>DUDI</option>
             </select>
 
             <!-- Type Filter & Reset Button -->

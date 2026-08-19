@@ -12,7 +12,7 @@
                 <div class="space-y-1.5 w-full min-w-0">
                     <div class="flex flex-wrap items-center gap-2">
                         <span class="inline-flex items-center px-3 py-0.5 rounded-full text-[11px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300">
-                            ● Guru
+                            Guru
                         </span>
                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-medium text-slate-600 bg-slate-100 border border-slate-200">
                             SMKN 1 Bangsri
@@ -53,7 +53,7 @@
         </div>
     </div>
 
-    <!-- Teacher SSO Applications Section -->
+    <!-- Teacher Section -->
     <div class="space-y-4">
         <div class="flex items-center justify-between">
             <div>
