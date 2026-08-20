@@ -136,13 +136,13 @@
             </label>
             <p class="text-xs text-slate-600 font-medium">Pilih role mana saja yang diperbolehkan oleh Gateway untuk mengakses aplikasi eksternal ini:</p>
 
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
                 @foreach($roles as $role)
-                    <label class="flex items-center space-x-2.5 p-3 rounded-xl bg-white border border-slate-200 cursor-pointer hover:border-emerald-500 transition-all">
-                        <input type="checkbox" name="roles[]" value="{{ $role->id }}" checked class="rounded border-slate-300 text-emerald-700 focus:ring-emerald-600">
-                        <div>
-                            <span class="block text-xs font-bold text-slate-900 uppercase">{{ $role->getDisplayName() }}</span>
-                            <span class="block text-[10px] text-slate-500 truncate font-semibold">{{ $role->name }}</span>
+                    <label class="flex items-center space-x-2.5 p-3 rounded-xl bg-white border border-slate-200 cursor-pointer hover:border-emerald-500 transition-all min-w-0">
+                        <input type="checkbox" name="roles[]" value="{{ $role->id }}" checked class="rounded border-slate-300 text-emerald-700 focus:ring-emerald-600 shrink-0">
+                        <div class="min-w-0 flex-1">
+                            <span class="block text-xs font-bold text-slate-900 uppercase truncate" title="{{ $role->getDisplayName() }}">{{ $role->getDisplayName() }}</span>
+                            <span class="block text-[10px] text-slate-500 truncate font-semibold" title="{{ $role->name }}">{{ $role->name }}</span>
                         </div>
                     </label>
                 @endforeach

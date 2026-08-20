@@ -51,30 +51,30 @@
     <!-- Category Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         @forelse($categories as $category)
-            <div class="bg-white border border-slate-200 rounded-2xl p-5 hover:border-emerald-500 transition-all flex flex-col justify-between space-y-4 shadow-sm">
-                <div>
-                    <div class="flex items-center justify-between mb-3">
-                        <div class="flex items-center space-x-3">
-                            <div class="w-10 h-10 rounded-xl bg-emerald-100 border border-emerald-300 flex items-center justify-center text-emerald-800 font-extrabold">
+            <div class="bg-white border border-slate-200 rounded-2xl p-5 hover:border-emerald-500 transition-all flex flex-col justify-between space-y-4 shadow-sm min-w-0 overflow-hidden">
+                <div class="min-w-0">
+                    <div class="flex items-center justify-between mb-3 gap-2">
+                        <div class="flex items-center space-x-3 min-w-0 flex-1">
+                            <div class="w-10 h-10 rounded-xl bg-emerald-100 border border-emerald-300 flex items-center justify-center text-emerald-800 font-extrabold shrink-0">
                                 {{ strtoupper(substr($category->name, 0, 2)) }}
                             </div>
-                            <div>
-                                <h3 class="text-sm font-bold text-slate-900">{{ $category->name }}</h3>
-                                <p class="text-[10px] text-emerald-800 font-mono font-bold mt-0.5">/{{ $category->slug }}</p>
+                            <div class="min-w-0 flex-1">
+                                <h3 class="text-sm font-bold text-slate-900 truncate" title="{{ $category->name }}">{{ $category->name }}</h3>
+                                <p class="text-[10px] text-emerald-800 font-mono font-bold mt-0.5 truncate">/{{ $category->slug }}</p>
                             </div>
                         </div>
-                        <span class="px-2.5 py-1 bg-slate-100 rounded-lg text-[10px] font-bold text-slate-600 border border-slate-200">
+                        <span class="px-2.5 py-1 bg-slate-100 rounded-lg text-[10px] font-bold text-slate-600 border border-slate-200 shrink-0">
                             Urutan: {{ $category->display_order }}
                         </span>
                     </div>
 
-                    <p class="text-xs text-slate-600 font-medium line-clamp-2 min-h-[32px]">
+                    <p class="text-xs text-slate-600 font-medium line-clamp-2 min-h-[32px] break-words">
                         {{ $category->description ?? 'Tidak ada deskripsi.' }}
                     </p>
                 </div>
 
-                <div class="pt-4 border-t border-slate-100 flex items-center justify-between">
-                    <div class="flex items-center space-x-2">
+                <div class="pt-4 border-t border-slate-100 flex items-center justify-between gap-2">
+                    <div class="flex items-center space-x-1.5 flex-wrap gap-y-1">
                         <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300">
                             {{ $category->applications_count }} Aplikasi
                         </span>
@@ -89,7 +89,7 @@
                         @endif
                     </div>
 
-                    <div class="flex items-center space-x-2">
+                    <div class="flex items-center space-x-2 shrink-0">
                         <button onclick="openEditModal({{ json_encode($category) }})"
                                 class="p-2 text-emerald-800 hover:bg-emerald-50 rounded-lg transition-all border border-slate-200"
                                 title="Edit Kategori">
@@ -126,7 +126,7 @@
 
 <!-- Modal Create Category -->
 <div id="modal-create-category" class="hidden fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-    <div class="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5 my-auto mx-auto relative z-10">
+    <div class="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5 my-auto mx-auto relative z-10 max-h-[90vh] overflow-y-auto">
         <div class="flex items-center justify-between border-b border-slate-100 pb-3">
             <h3 class="text-base font-black text-emerald-950">Tambah Kategori Baru</h3>
             <button onclick="document.getElementById('modal-create-category').classList.add('hidden')" class="text-slate-400 hover:text-slate-700 font-bold">&times;</button>
@@ -176,7 +176,7 @@
 
 <!-- Modal Edit Category -->
 <div id="modal-edit-category" class="hidden fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-    <div class="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5 my-auto mx-auto relative z-10">
+    <div class="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5 my-auto mx-auto relative z-10 max-h-[90vh] overflow-y-auto">
         <div class="flex items-center justify-between border-b border-slate-100 pb-3">
             <h3 class="text-base font-black text-emerald-950">Edit Kategori</h3>
             <button onclick="document.getElementById('modal-edit-category').classList.add('hidden')" class="text-slate-400 hover:text-slate-700 font-bold">&times;</button>

@@ -143,8 +143,8 @@ x-on:favorite-updated.window="
                 </div>
 
                 <!-- Footer Launch Button -->
-                <div class="pt-3 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-2 w-full">
-                    <span class="inline-flex items-center justify-center text-[10px] font-extrabold text-emerald-800 bg-emerald-100 px-2.5 py-0.5 rounded-full border border-emerald-300 whitespace-nowrap shrink-0">
+                <div class="pt-3 border-t border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 w-full text-left">
+                    <span class="inline-flex items-center text-[10px] font-extrabold text-emerald-800 bg-emerald-100 px-2.5 py-0.5 rounded-full border border-emerald-300 whitespace-nowrap shrink-0 self-start">
                         ● Terintegrasi
                     </span>
 

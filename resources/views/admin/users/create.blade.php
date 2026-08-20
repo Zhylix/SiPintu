@@ -7,7 +7,7 @@
             <h2 class="text-xl font-black text-emerald-950">Tambah Akun Guru / DUDI / Admin</h2>
             <p class="text-xs text-slate-600 font-medium mt-1">Akun ini akan disimpan di database Gateway dan menggunakan Password Hash</p>
         </div>
-        <a href="{{ route('admin.users.index') }}" class="text-xs text-slate-600 hover:text-slate-900 font-bold">&larr; Batal & Kembali</a>
+        <a href="{{ route('admin.users.index') }}" class="text-xs text-slate-600 hover:text-slate-900 font-bold">&larr; Kembali</a>
     </div>
 
     @if($errors->any())

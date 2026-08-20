@@ -471,7 +471,7 @@
                 </div>
 
                 <!-- Page Content -->
-                <div class="p-4 sm:p-6 flex-1">
+                <div class="p-4 sm:p-6 flex-1 min-w-0 max-w-full">
                     {{ $slot ?? '' }}
                     @yield('content')
                 </div>
