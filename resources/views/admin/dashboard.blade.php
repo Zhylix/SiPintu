@@ -169,9 +169,13 @@
                     
                     <!-- Left: App Identity & Client ID -->
                     <div class="flex items-start space-x-3.5 min-w-0">
-                        <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 font-extrabold text-sm {{ $isConnected ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-rose-100 text-rose-800 border border-rose-300' }}">
-                            {{ strtoupper(substr($app->name, 0, 2)) }}
-                        </div>
+                        @if($app->logo_url)
+                            <img src="{{ $app->logo_url }}" alt="{{ $app->name }}" class="w-10 h-10 rounded-xl object-cover border border-slate-200 shadow-2xs shrink-0">
+                        @else
+                            <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 font-extrabold text-sm {{ $isConnected ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-rose-100 text-rose-800 border border-rose-300' }}">
+                                {{ strtoupper(substr($app->name, 0, 2)) }}
+                            </div>
+                        @endif
                         <div class="min-w-0">
                             <div class="flex items-center space-x-2">
                                 <h4 class="text-sm font-black text-slate-900 truncate">{{ $app->name }}</h4>

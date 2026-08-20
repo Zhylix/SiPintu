@@ -154,6 +154,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::resource('applications', AdminApplicationController::class);
     Route::post('/applications/{application}/regenerate-secret', [AdminApplicationController::class, 'regenerateSecret'])->name('applications.regenerate-secret');
     Route::post('/applications/{application}/test-health', [AdminApplicationController::class, 'testHealth'])->name('applications.test-health');
+    Route::delete('/applications/{application}/logo', [AdminApplicationController::class, 'destroyLogo'])->name('applications.destroy-logo');
 
     // Role & Permission Management
     Route::get('/roles', [AdminRoleController::class, 'index'])->name('roles.index');

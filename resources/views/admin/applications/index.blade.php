@@ -133,8 +133,19 @@
                         @endphp
                         <tr class="hover:bg-emerald-50/50 transition-colors {{ $isConnected ? '' : 'bg-rose-50/30' }}">
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="font-bold text-slate-900 text-sm">{{ $app->name }}</div>
-                                <div class="text-slate-600 text-xs truncate max-w-xs font-medium">{{ $app->description }}</div>
+                                <div class="flex items-center space-x-3">
+                                    @if($app->logo_url)
+                                        <img src="{{ $app->logo_url }}" alt="{{ $app->name }}" class="w-10 h-10 rounded-xl object-cover border border-slate-200 shadow-2xs shrink-0">
+                                    @else
+                                        <div class="w-10 h-10 rounded-xl bg-emerald-100 border border-emerald-300 flex items-center justify-center text-emerald-800 font-black text-sm shrink-0">
+                                            {{ strtoupper(substr($app->name, 0, 2)) }}
+                                        </div>
+                                    @endif
+                                    <div>
+                                        <div class="font-bold text-slate-900 text-sm">{{ $app->name }}</div>
+                                        <div class="text-slate-600 text-xs truncate max-w-xs font-medium">{{ $app->description }}</div>
+                                    </div>
+                                </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 @if($app->category)

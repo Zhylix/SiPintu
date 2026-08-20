@@ -14,7 +14,7 @@
         </a>
     </div>
 
-    <!-- Alert Success / Info -->
+    <!-- Alert Success Info -->
     @if(session('success'))
         <div class="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl text-xs font-bold flex items-center justify-between shadow-sm">
             <span>{{ session('success') }}</span>

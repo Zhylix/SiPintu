@@ -19,6 +19,7 @@ class Application extends Model
         'description',
         'base_url',
         'icon',
+        'logo',
         'client_id',
         'client_secret',
         'redirect_uri',
@@ -43,6 +44,26 @@ class Application extends Model
         'last_connected_at' => 'datetime',
         'total_api_requests' => 'integer',
     ];
+
+    /**
+     * Get accessible URL for the application logo
+     */
+    public function getLogoUrlAttribute(): ?string
+    {
+        if (!$this->logo) {
+            return null;
+        }
+
+        if (str_starts_with($this->logo, 'http://') || str_starts_with($this->logo, 'https://') || str_starts_with($this->logo, 'data:')) {
+            return $this->logo;
+        }
+
+        if (\Illuminate\Support\Facades\Storage::disk('public')->exists($this->logo)) {
+            return \Illuminate\Support\Facades\Storage::disk('public')->url($this->logo);
+        }
+
+        return null;
+    }
 
     /**
      * Record API connection event from downstream application

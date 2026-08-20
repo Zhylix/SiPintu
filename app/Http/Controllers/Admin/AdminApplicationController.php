@@ -12,6 +12,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
@@ -59,6 +60,7 @@ class AdminApplicationController extends Controller
             'description' => ['nullable', 'string'],
             'base_url' => ['required', 'url'],
             'icon' => ['nullable', 'string', 'max:50'],
+            'logo' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg,webp', 'max:2048'],
             'client_id' => ['required', 'string', 'unique:applications,client_id'],
             'client_secret' => ['required', 'string'],
             'redirect_uri' => ['required', 'string'],
@@ -72,7 +74,14 @@ class AdminApplicationController extends Controller
             'base_url.url' => 'Base URL harus berupa format URL valid.',
             'redirect_uri.required' => 'Redirect URI wajib diisi.',
             'roles.required' => 'Pilih minimal satu role yang diizinkan mengakses aplikasi ini.',
+            'logo.image' => 'File logo harus berupa gambar (jpeg, png, jpg, gif, svg, webp).',
+            'logo.max' => 'Ukuran file logo maksimal 2MB.',
         ]);
+
+        $logoPath = null;
+        if ($request->hasFile('logo')) {
+            $logoPath = $request->file('logo')->store('logos', 'public');
+        }
 
         $plainSecret = $validated['client_secret'];
 
@@ -83,6 +92,7 @@ class AdminApplicationController extends Controller
             'description' => $validated['description'] ?? null,
             'base_url' => rtrim($validated['base_url'], '/'),
             'icon' => $validated['icon'] ?? 'app-symbol',
+            'logo' => $logoPath,
             'client_id' => $validated['client_id'],
             'client_secret' => Hash::make($plainSecret),
             'redirect_uri' => $validated['redirect_uri'],
@@ -90,7 +100,7 @@ class AdminApplicationController extends Controller
             'scopes' => $validated['scopes'],
             'status' => $validated['status'],
             'health_check_url' => $validated['health_check_url'] ?? null,
-            'last_health_status' => $validated['health_check_url'] ? 'online' : null,
+            'last_health_status' => ($validated['health_check_url'] ?? null) ? 'online' : null,
         ]);
 
         $app->roles()->sync($validated['roles']);
@@ -124,6 +134,7 @@ class AdminApplicationController extends Controller
             'description' => ['nullable', 'string'],
             'base_url' => ['required', 'url'],
             'icon' => ['nullable', 'string', 'max:50'],
+            'logo' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg,webp', 'max:2048'],
             'redirect_uri' => ['required', 'string'],
             'logout_uri' => ['nullable', 'string'],
             'scopes' => ['required', 'string'],
@@ -131,7 +142,24 @@ class AdminApplicationController extends Controller
             'health_check_url' => ['nullable', 'url'],
             'roles' => ['required', 'array'],
             'roles.*' => ['exists:roles,id'],
+        ], [
+            'logo.image' => 'File logo harus berupa gambar (jpeg, png, jpg, gif, svg, webp).',
+            'logo.max' => 'Ukuran file logo maksimal 2MB.',
         ]);
+
+        $logoPath = $application->logo;
+
+        if ($request->hasFile('logo')) {
+            if ($application->logo && Storage::disk('public')->exists($application->logo)) {
+                Storage::disk('public')->delete($application->logo);
+            }
+            $logoPath = $request->file('logo')->store('logos', 'public');
+        } elseif ($request->boolean('remove_logo')) {
+            if ($application->logo && Storage::disk('public')->exists($application->logo)) {
+                Storage::disk('public')->delete($application->logo);
+            }
+            $logoPath = null;
+        }
 
         $application->update([
             'name' => $validated['name'],
@@ -140,6 +168,7 @@ class AdminApplicationController extends Controller
             'description' => $validated['description'] ?? null,
             'base_url' => rtrim($validated['base_url'], '/'),
             'icon' => $validated['icon'] ?? 'app-symbol',
+            'logo' => $logoPath,
             'redirect_uri' => $validated['redirect_uri'],
             'logout_uri' => $validated['logout_uri'] ?? null,
             'scopes' => $validated['scopes'],
@@ -155,6 +184,22 @@ class AdminApplicationController extends Controller
         ]);
 
         return redirect()->route('admin.applications.index')->with('success', "Konfigurasi aplikasi {$application->name} berhasil diperbarui.");
+    }
+
+    public function destroyLogo(Application $application): RedirectResponse
+    {
+        if ($application->logo && Storage::disk('public')->exists($application->logo)) {
+            Storage::disk('public')->delete($application->logo);
+        }
+
+        $application->update(['logo' => null]);
+
+        AuditLogger::log('admin_delete_application_logo', [
+            'application_id' => $application->id,
+            'name' => $application->name,
+        ]);
+
+        return back()->with('success', "Logo aplikasi {$application->name} berhasil dihapus.");
     }
 
     public function regenerateSecret(Application $application): RedirectResponse
@@ -198,6 +243,11 @@ class AdminApplicationController extends Controller
     public function destroy(Application $application): RedirectResponse
     {
         $appName = $application->name;
+
+        if ($application->logo && Storage::disk('public')->exists($application->logo)) {
+            Storage::disk('public')->delete($application->logo);
+        }
+
         AuditLogger::log('admin_delete_application', [
             'application_id' => $application->id,
             'name' => $appName,
@@ -208,3 +258,4 @@ class AdminApplicationController extends Controller
         return redirect()->route('admin.applications.index')->with('success', "Aplikasi {$appName} telah dihapus dari registry.");
     }
 }
+

@@ -104,9 +104,13 @@ x-on:favorite-updated.window="
                     <!-- Card Top Header (Rata Kiri) -->
                     <div class="flex items-start justify-between w-full gap-3">
                         <div class="flex items-center space-x-3 text-left min-w-0 flex-1">
-                            <div class="w-10 h-10 rounded-xl bg-emerald-100 border border-emerald-300 flex items-center justify-center text-emerald-800 font-black text-sm group-hover:scale-105 transition-transform shrink-0">
-                                {{ strtoupper(substr($app->name, 0, 2)) }}
-                            </div>
+                            @if($app->logo_url)
+                                <img src="{{ $app->logo_url }}" alt="{{ $app->name }}" class="w-10 h-10 rounded-xl object-cover border border-slate-200 shadow-2xs group-hover:scale-105 transition-transform shrink-0">
+                            @else
+                                <div class="w-10 h-10 rounded-xl bg-emerald-100 border border-emerald-300 flex items-center justify-center text-emerald-800 font-black text-sm group-hover:scale-105 transition-transform shrink-0">
+                                    {{ strtoupper(substr($app->name, 0, 2)) }}
+                                </div>
+                            @endif
                             <div class="min-w-0 flex-1">
                                 <h4 class="text-sm font-black text-emerald-950 group-hover:text-emerald-700 transition-colors line-clamp-1 leading-snug break-words" title="{{ $app->name }}">{{ $app->name }}</h4>
                                 @if($app->category)
