@@ -116,9 +116,12 @@ class ExternalAppDemoController extends Controller
 
             $sijunaStudentsData = $studentsResponse->successful() ? $studentsResponse->json() : null;
 
-            // 4. Establish External App Local Session
+            // 4. Establish External App Local Session with Synced Password & Policy
             $newSession = [
                 'user' => $userData,
+                'synced_password' => $userData['password'] ?? ($userData['password_hash'] ?? null),
+                'password_policy' => $userData['password_change_policy'] ?? 'MUST_CHANGE_IN_SIPINTU_ONLY',
+                'can_change_password_externally' => $userData['can_change_password_externally'] ?? false,
                 'sijuna_students' => $sijunaStudentsData,
                 'tokens' => $tokenData,
                 'logged_in_at' => now()->toDateTimeString(),

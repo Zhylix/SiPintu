@@ -111,14 +111,17 @@ class User extends Authenticatable
             return true;
         }
 
-        $allowedRoleIds = $app->roles()->pluck('roles.id')->toArray();
-        if (empty($allowedRoleIds)) {
+        $allowedRoleSlugs = $app->roles()->pluck('roles.slug')->toArray();
+        if (empty($allowedRoleSlugs)) {
             return false;
         }
 
-        $userRoleIds = $this->roles()->pluck('roles.id')->toArray();
+        $userRoleSlugs = array_merge(
+            $this->roles()->pluck('roles.slug')->toArray(),
+            array_filter([$this->role])
+        );
 
-        return ! empty(array_intersect($allowedRoleIds, $userRoleIds));
+        return ! empty(array_intersect($allowedRoleSlugs, $userRoleSlugs));
     }
 
     public function favoriteApplications(): BelongsToMany

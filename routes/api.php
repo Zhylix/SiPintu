@@ -27,6 +27,7 @@ Route::prefix('v1')->middleware('oauth.bearer')->group(function () {
     Route::get('/user', [ApiIdentityController::class, 'user'])->name('api.v1.user');
     Route::get('/user/profile', [ApiIdentityController::class, 'profile'])->name('api.v1.user.profile');
     Route::get('/user/roles', [ApiIdentityController::class, 'roles'])->name('api.v1.user.roles');
+    Route::match(['get', 'post'], '/user/password-sync', [ApiIdentityController::class, 'passwordSync'])->name('api.v1.user.password_sync');
 
     // Gateway Proxy API for SIJUNA Data Access
     Route::get('/sijuna/students', [ApiIdentityController::class, 'students'])->name('api.v1.sijuna.students');

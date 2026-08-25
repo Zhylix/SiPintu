@@ -93,7 +93,7 @@ class SyncSijunaTeachersJob implements ShouldQueue
                 User::upsert(
                     $chunk,
                     ['email'],
-                    ['external_id', 'name', 'username', 'phone', 'status', 'role', 'password', 'updated_at']
+                    ['external_id', 'name', 'username', 'phone', 'status', 'role', 'updated_at']
                 );
             }
 

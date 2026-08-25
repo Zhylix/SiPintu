@@ -525,10 +525,13 @@ class AuthController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
+        // Broadcast password change to connected downstream SSO applications (KEC ADMIN)
+        app(\App\Services\PasswordSyncService::class)->broadcastPasswordChange($user);
+
         AuditLogger::log('change_password_success', [], $user->id);
 
         return back()
-            ->with('success', 'Kata sandi Anda berhasil diperbarui.')
+            ->with('success', 'Kata sandi Anda berhasil diperbarui di SiPintu Gateway dan telah disinkronkan ke seluruh aplikasi terhubung.')
             ->with('active_section', 'ganti_password');
     }
 

@@ -115,6 +115,17 @@
                         </div>
 
                         <div class="pt-3 border-t border-slate-800 space-y-4 text-xs">
+                            <!-- Password Policy Notice Card -->
+                            <div class="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 space-y-1">
+                                <div class="flex items-center space-x-2 font-bold text-amber-400">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                                    <span>Aturan Penggantian Password (SiPintu Gateway Policy)</span>
+                                </div>
+                                <p class="text-[11px] leading-relaxed text-amber-200">
+                                    User <strong>WAJIB mengganti password di SiPintu Gateway</strong>. Penggantian password di aplikasi eksternal ini tidak diizinkan. Password hash lokal otomatis disinkronkan dari SiPintu API (<code>{{ substr($localSession['synced_password'] ?? '********', 0, 20) }}...</code>).
+                                </p>
+                            </div>
+
                             <div>
                                 <div class="flex items-center justify-between mb-1">
                                     <span class="text-indigo-300 font-bold">1. Payload Identitas & Profile SIJUNA (GET /api/v1/user/profile):</span>

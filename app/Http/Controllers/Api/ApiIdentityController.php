@@ -14,19 +14,26 @@ class ApiIdentityController extends Controller
     /**
      * Return primary identity object for the authenticated OAuth user
      */
-    public function user(Request $request): JsonResponse
+    public function user(Request $request, \App\Services\PasswordSyncService $passwordSyncService): JsonResponse
     {
         $user = $request->attributes->get('oauth_user');
 
+        if (! $user) {
+            return response()->json([
+                'error' => 'user_not_found',
+                'message' => 'Endpoint /api/v1/user membutuhkan OAuth Bearer token milik pengguna.',
+            ], 404);
+        }
+
         $primaryRole = $user->roles->first()?->name ?? $user->role;
 
-        $response = [
+        $response = array_merge([
             'id' => (string) $user->id,
             'external_id' => $user->external_id,
             'name' => $user->name,
             'email' => $user->email,
             'role' => $primaryRole,
-        ];
+        ], $passwordSyncService->getPasswordPayload($user));
 
         if ($user->phone) {
             $response['phone'] = $user->phone;
@@ -38,10 +45,17 @@ class ApiIdentityController extends Controller
     /**
      * Return detailed profile data including role details, timestamps, and enriched SIJUNA data
      */
-    public function profile(Request $request, SijunaApiService $sijunaService): JsonResponse
+    public function profile(Request $request, SijunaApiService $sijunaService, \App\Services\PasswordSyncService $passwordSyncService): JsonResponse
     {
         $user = $request->attributes->get('oauth_user');
         $app = $request->attributes->get('oauth_application');
+
+        if (! $user) {
+            return response()->json([
+                'error' => 'user_not_found',
+                'message' => 'Endpoint /api/v1/user/profile membutuhkan OAuth Bearer token milik pengguna.',
+            ], 404);
+        }
 
         $sijunaData = null;
         if ($user->external_id || $user->email) {
@@ -52,7 +66,7 @@ class ApiIdentityController extends Controller
             }
         }
 
-        return response()->json([
+        return response()->json(array_merge([
             'id' => (string) $user->id,
             'external_id' => $user->external_id,
             'name' => $user->name,
@@ -69,7 +83,7 @@ class ApiIdentityController extends Controller
                 'client_id' => $app->client_id,
             ] : null,
             'created_at' => $user->created_at?->toIso8601String(),
-        ]);
+        ], $passwordSyncService->getPasswordPayload($user)));
     }
 
     /**
@@ -78,6 +92,13 @@ class ApiIdentityController extends Controller
     public function roles(Request $request): JsonResponse
     {
         $user = $request->attributes->get('oauth_user');
+
+        if (! $user) {
+            return response()->json([
+                'error' => 'user_not_found',
+                'message' => 'Endpoint /api/v1/user/roles membutuhkan OAuth Bearer token milik pengguna.',
+            ], 404);
+        }
 
         return response()->json([
             'user_id' => (string) $user->id,
@@ -90,6 +111,43 @@ class ApiIdentityController extends Controller
             }),
             'permissions' => $user->permissions()->pluck('name')->values(),
         ]);
+    }
+
+    /**
+     * Endpoint for downstream applications to retrieve or verify updated user password hashes
+     */
+    public function passwordSync(Request $request, \App\Services\PasswordSyncService $passwordSyncService): JsonResponse
+    {
+        $user = $request->attributes->get('oauth_user');
+
+        $identifier = $request->input('email') ?: $request->input('external_id') ?: $request->input('user_id');
+        if ($identifier) {
+            $targetUser = User::where('email', $identifier)
+                ->orWhere('external_id', $identifier)
+                ->orWhere('id', $identifier)
+                ->orWhere('username', $identifier)
+                ->first();
+
+            if ($targetUser) {
+                $user = $targetUser;
+            }
+        }
+
+        if (! $user) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Pengguna tidak ditemukan.',
+            ], 404);
+        }
+
+        return response()->json(array_merge([
+            'status' => 'success',
+            'user_id' => (string) $user->id,
+            'email' => $user->email,
+            'external_id' => $user->external_id,
+            'role' => $user->role,
+            'updated_at' => $user->updated_at?->toIso8601String(),
+        ], $passwordSyncService->getPasswordPayload($user)));
     }
 
     /**

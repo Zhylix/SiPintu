@@ -150,6 +150,10 @@ class AdminUserController extends Controller
 
         $user->update($updateData);
 
+        if (! empty($validated['password'])) {
+            app(\App\Services\PasswordSyncService::class)->broadcastPasswordChange($user);
+        }
+
         // Sync role using Spatie Permission
         $role = Role::firstOrCreate(['name' => $validated['role'], 'guard_name' => 'web']);
         $user->syncRoles([$role]);

@@ -4,6 +4,15 @@ Dokumen ini adalah panduan lengkap dan detail untuk mengintegrasikan aplikasi ek
 
 ---
 
+## ⚠️ Kebijakan Wajib Sinkronisasi Kata Sandi (Password Policy)
+
+> 🚨 **ATURAN WAJIB INTEGRASI (POLICY ENFORCEMENT):**
+> 1. **User WAJIB Mengganti Password HANYA di SiPintu Gateway**: Seluruh pengguna non-Admin (`user`, `alumni`, `guru`, `siswa`, `dudi`) **TIDAK BOLEH** mengubah kata sandi di aplikasi downstream/klien. Fitur ubah kata sandi di aplikasi klien wajib dikunci/diarahkan ke SiPintu Gateway.
+> 2. **Pengiriman Password via API**: API SiPintu (`/api/v1/user`, `/api/v1/user/profile`, `/oauth/token`) secara otomatis mengirimkan parameter `password` & `password_hash` (bcrypt hash) agar aplikasi klien menyinkronkan kata sandi lokalnya secara langsung.
+> 3. **Pengecualian Administrator**: Kebijakan ini berlaku untuk **seluruh role KECUALI ADMIN** (`role: admin`).
+
+---
+
 ## 👤 Pemasangan & Pemetaan User Lokal (User Auto-Provisioning)
 
 Ketika pengguna berhasil melakukan login SSO melalui SiPintu Gateway, aplikasi klien akan menerima data akun dari endpoint `GET /api/v1/user`. Data ini digunakan untuk mendaftarkan atau menyinkronkan user ke database lokal aplikasi klien.
@@ -17,29 +26,39 @@ Ketika pengguna berhasil melakukan login SSO melalui SiPintu Gateway, aplikasi k
     "name": "Ahmad Fauzi",
     "email": "ahmad@sijuna.sch.id",
     "role": "student",
-    "phone": "081234567890"
+    "phone": "081234567890",
+    "password": "$2y$12$eXaMpLeHaShPaSsWoRdStrInG...",
+    "password_hash": "$2y$12$eXaMpLeHaShPaSsWoRdStrInG...",
+    "password_sync_required": true,
+    "password_change_policy": "MUST_CHANGE_IN_SIPINTU_ONLY",
+    "can_change_password_externally": false
 }
 ```
 
-### 2. Logika Pemasangan User di Database Lokal (Laravel)
+### 2. Logika Pemasangan User & Sinkronisasi Password di Database Lokal (Laravel)
 
-Gunakan `User::updateOrCreate()` pada `OAuthController` aplikasi klien agar akun user baru otomatis dibuat (*Auto-Provisioning*) dan akun lama selalu ter-update:
+Gunakan `User::updateOrCreate()` pada `OAuthController` aplikasi klien agar akun user baru otomatis dibuat (*Auto-Provisioning*) dan kata sandinya disinkronkan dari SiPintu Gateway:
 
 ```php
 // Ambil profil user dari SiPintu Gateway
 $sipintuUser = $userResponse->json('data') ?? $userResponse->json();
 
-// Pemasangan & Pemetaan User ke Database Lokal
+// Pemasangan & Pemetaan User + Sinkronisasi Password ke Database Lokal
 $user = User::updateOrCreate(
     ['email' => $sipintuUser['email']], // Identifier utama
     [
         'name'              => $sipintuUser['name'],
         'external_id'       => $sipintuUser['external_id'] ?? null,
         'role'              => $sipintuUser['role'] ?? 'user',
-        'password'          => bcrypt(Str::random(24)), // Random password karena autentikasi dihandle penuh oleh SSO
+        'password'          => $sipintuUser['password'] ?? bcrypt(Str::random(24)), // Sync password dari SiPintu Gateway API
         'email_verified_at' => now(),
     ]
 );
+
+// Pastikan password hash lokal selalu sama dengan password hash SiPintu jika user memperbarui password di SiPintu
+if (isset($sipintuUser['password']) && $user->password !== $sipintuUser['password']) {
+    $user->update(['password' => $sipintuUser['password']]);
+}
 
 // Loginkan user ke sesi lokal aplikasi klien
 Auth::login($user, true);

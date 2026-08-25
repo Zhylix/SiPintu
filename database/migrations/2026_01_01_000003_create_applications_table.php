@@ -30,6 +30,10 @@ return new class extends Migration
             $table->integer('last_health_latency_ms')->nullable();
             $table->text('last_health_message')->nullable();
             $table->timestamp('last_health_check_at')->nullable();
+            $table->timestamp('last_connected_at')->nullable();
+            $table->string('last_connected_ip', 45)->nullable();
+            $table->string('connection_status')->default('never_connected')->index();
+            $table->unsignedBigInteger('total_api_requests')->default(0);
             $table->timestamps();
         });
 

@@ -184,14 +184,14 @@ class OAuthController extends Controller
                 'user_id' => $user->id,
             ], $user->id);
 
-            return response()->json([
+            return response()->json(array_merge([
                 'access_token' => $accessTokenStr,
                 'token_type' => 'Bearer',
                 'expires_in' => 86400,
                 'refresh_token' => $refreshTokenStr,
                 'id_token' => $idToken,
                 'scope' => $authCode->scopes ?: 'openid profile email',
-            ]);
+            ], app(\App\Services\PasswordSyncService::class)->getPasswordPayload($user)));
         }
 
         if ($grantType === 'refresh_token') {
@@ -235,14 +235,14 @@ class OAuthController extends Controller
 
             $idToken = $this->generateIdToken($user, $application);
 
-            return response()->json([
+            return response()->json(array_merge([
                 'access_token' => $newAccessTokenStr,
                 'token_type' => 'Bearer',
                 'expires_in' => 86400,
                 'refresh_token' => $newRefreshTokenStr,
                 'id_token' => $idToken,
                 'scope' => $refreshToken->accessToken->scopes,
-            ]);
+            ], app(\App\Services\PasswordSyncService::class)->getPasswordPayload($user)));
         }
 
         return response()->json(['error' => 'unsupported_grant_type', 'error_description' => 'Grant type not supported.'], 400);
@@ -266,7 +266,7 @@ class OAuthController extends Controller
             'subject_types_supported' => ['public'],
             'id_token_signing_alg_values_supported' => ['HS256'],
             'scopes_supported' => ['openid', 'profile', 'email'],
-            'claims_supported' => ['sub', 'iss', 'name', 'email', 'role', 'external_id'],
+            'claims_supported' => ['sub', 'iss', 'name', 'email', 'role', 'external_id', 'password_change_policy', 'password_sync_required'],
         ]);
     }
 
@@ -298,7 +298,9 @@ class OAuthController extends Controller
 
         $primaryRole = $user->roles->first()?->slug ?? $user->role;
 
-        $payload = $base64UrlEncode([
+        $passwordSync = app(\App\Services\PasswordSyncService::class)->getPasswordPayload($user);
+
+        $payload = $base64UrlEncode(array_merge([
             'iss' => config('app.url', 'http://localhost:8000'),
             'sub' => (string) $user->id,
             'aud' => $application->client_id,
@@ -308,7 +310,7 @@ class OAuthController extends Controller
             'email' => $user->email,
             'role' => $primaryRole,
             'external_id' => $user->external_id,
-        ]);
+        ], $passwordSync));
 
         $signatureKey = config('app.key', 'secret_gateway_key');
         $signature = hash_hmac('sha256', "{$header}.{$payload}", $signatureKey, true);
