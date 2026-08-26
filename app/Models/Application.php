@@ -112,8 +112,11 @@ class Application extends Model
 
     public function isRoleAllowed(Role|string $role): bool
     {
-        $roleSlug = is_string($role) ? $role : $role->slug;
+        $roleSlug = is_string($role) ? $role : ($role->slug ?? $role->name);
 
-        return $this->roles()->where('slug', $roleSlug)->exists();
+        return $this->roles()->where(function ($query) use ($roleSlug) {
+            $query->where('roles.slug', $roleSlug)
+                ->orWhere('roles.name', $roleSlug);
+        })->exists();
     }
 }

@@ -19,8 +19,12 @@ class GatewaySeeder extends Seeder
         $rolesMap = [];
         foreach ($rolesData as $roleName) {
             $rolesMap[$roleName] = Role::firstOrCreate(
-                ['name' => $roleName, 'guard_name' => 'web']
+                ['name' => $roleName, 'guard_name' => 'web'],
+                ['slug' => \Illuminate\Support\Str::slug($roleName)]
             );
+            if (empty($rolesMap[$roleName]->slug)) {
+                $rolesMap[$roleName]->update(['slug' => \Illuminate\Support\Str::slug($roleName)]);
+            }
         }
 
         // 2. Permissions Definition

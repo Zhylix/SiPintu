@@ -5,16 +5,43 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Spatie\Permission\Models\Role as SpatieRole;
 
+use Illuminate\Support\Str;
+
 class Role extends SpatieRole
 {
     protected $fillable = [
         'name',
+        'slug',
         'guard_name',
     ];
 
-    public function getSlugAttribute(): string
+    protected static function booted(): void
     {
-        return $this->name;
+        static::creating(function (Role $role) {
+            if (empty($role->slug) && ! empty($role->name)) {
+                $role->slug = Str::slug($role->name);
+            }
+        });
+
+        static::updating(function (Role $role) {
+            if (empty($role->slug) && ! empty($role->name)) {
+                $role->slug = Str::slug($role->name);
+            }
+        });
+    }
+
+    public static function create(array $attributes = [])
+    {
+        if (empty($attributes['slug']) && ! empty($attributes['name'])) {
+            $attributes['slug'] = Str::slug($attributes['name']);
+        }
+
+        return parent::create($attributes);
+    }
+
+    public function getSlugAttribute(?string $value): string
+    {
+        return $value ?: Str::slug($this->name ?? '');
     }
 
     public function getDisplayName(): string

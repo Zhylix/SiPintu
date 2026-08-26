@@ -106,7 +106,7 @@ class ApiIdentityController extends Controller
                 return [
                     'id' => $role->id,
                     'name' => $role->name,
-                    'slug' => $role->name,
+                    'slug' => $role->slug ?? $role->name,
                 ];
             }),
             'permissions' => $user->permissions()->pluck('name')->values(),

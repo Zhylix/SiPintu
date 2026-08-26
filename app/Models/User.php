@@ -111,15 +111,20 @@ class User extends Authenticatable
             return true;
         }
 
-        $allowedRoleSlugs = $app->roles()->pluck('roles.slug')->toArray();
+        $allowedRoleSlugs = array_filter(array_merge(
+            $app->roles()->pluck('roles.slug')->toArray(),
+            $app->roles()->pluck('roles.name')->toArray()
+        ));
+
         if (empty($allowedRoleSlugs)) {
             return false;
         }
 
-        $userRoleSlugs = array_merge(
+        $userRoleSlugs = array_filter(array_merge(
             $this->roles()->pluck('roles.slug')->toArray(),
-            array_filter([$this->role])
-        );
+            $this->roles()->pluck('roles.name')->toArray(),
+            [$this->role]
+        ));
 
         return ! empty(array_intersect($allowedRoleSlugs, $userRoleSlugs));
     }
