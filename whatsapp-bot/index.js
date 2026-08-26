@@ -41,6 +41,12 @@ let lastQrImage = null;
 let isConnecting = false;
 let isBotEnabled = true;
 let isManualLogoutRequested = false;
+let latestBaileysPackageVersion = null;
+let currentInstalledBaileysVersion = '6.7.18';
+let isBaileysUpdateAvailable = false;
+let baileysProtocolVersion = null;
+let reconnectAttempts = 0;
+let watchdogTimer = null;
 
 // Anti-crash process error handlers
 process.on('uncaughtException', (err) => {
@@ -50,6 +56,43 @@ process.on('uncaughtException', (err) => {
 process.on('unhandledRejection', (reason, promise) => {
     console.error('[WhatsApp Bot Error] Unhandled Rejection:', reason?.message || reason);
 });
+
+// Fungsi untuk mengecek update package Baileys di registry NPM
+async function checkBaileysNpmUpdate() {
+    try {
+        const packageJsonPath = path.join(__dirname, 'package.json');
+        if (fs.existsSync(packageJsonPath)) {
+            const pkg = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+            const installed = pkg.dependencies?.['@whiskeysockets/baileys'];
+            if (installed) {
+                currentInstalledBaileysVersion = installed.replace(/[\^~]/g, '');
+            }
+        }
+
+        const res = await fetch('https://registry.npmjs.org/@whiskeysockets/baileys/latest', {
+            headers: { 'Accept': 'application/json' },
+            signal: AbortSignal.timeout(6000)
+        });
+
+        if (res.ok) {
+            const data = await res.json();
+            latestBaileysPackageVersion = data.version || null;
+
+            if (latestBaileysPackageVersion && currentInstalledBaileysVersion) {
+                isBaileysUpdateAvailable = latestBaileysPackageVersion !== currentInstalledBaileysVersion;
+            }
+
+            console.log(`[Baileys NPM Check] Terinstall: v${currentInstalledBaileysVersion} | Latest NPM: v${latestBaileysPackageVersion || 'Unknown'} ${isBaileysUpdateAvailable ? '⚠️ (Update Baru Tersedia!)' : '✅ (Versi Terbaru)'}`);
+        }
+    } catch (err) {
+        console.error('[Baileys NPM Check] Gagal mengecek update npm Baileys:', err.message);
+    }
+}
+
+// Cek update otomatis setiap 6 jam sekali
+setInterval(() => {
+    checkBaileysNpmUpdate();
+}, 6 * 60 * 60 * 1000);
 
 // Middleware Auth API Key
 const authenticateApiKey = (req, res, next) => {
@@ -81,10 +124,33 @@ async function connectToWhatsApp() {
             sock = null;
         }
 
-        const { state, saveCreds } = await useMultiFileAuthState(AUTH_DIR);
-        const { version } = await fetchLatestBaileysVersion();
+        if (watchdogTimer) clearTimeout(watchdogTimer);
+        watchdogTimer = setTimeout(() => {
+            if (isConnecting && connectionState !== 'open') {
+                console.warn('[WhatsApp Bot Watchdog] Inisialisasi koneksi menggantung > 45 detik. Mengulang koneksi ulang...');
+                isConnecting = false;
+                connectionState = 'close';
+                connectToWhatsApp();
+            }
+        }, 45000);
 
-        console.log(`[WhatsApp Bot] Memulai Bot Baileys v${version.join('.')}...`);
+        const { state, saveCreds } = await useMultiFileAuthState(AUTH_DIR);
+        
+        let version = [2, 3000, 1019846200];
+        try {
+            const fetched = await Promise.race([
+                fetchLatestBaileysVersion(),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout fetching Baileys version')), 7000))
+            ]);
+            if (fetched?.version) {
+                version = fetched.version;
+            }
+        } catch (vErr) {
+            console.warn('[WhatsApp Bot] Warning: Gagal fetch versi Baileys dari internet, menggunakan versi fallback default:', vErr.message);
+        }
+        baileysProtocolVersion = version ? version.join('.') : '2.3000.1019846200';
+
+        console.log(`[WhatsApp Bot] Memulai Bot Baileys v${baileysProtocolVersion}...`);
 
         sock = makeWASocket({
             version,
@@ -107,6 +173,7 @@ async function connectToWhatsApp() {
             }
 
             if (qr) {
+                if (watchdogTimer) clearTimeout(watchdogTimer);
                 isConnecting = false;
                 lastQr = qr;
                 try {
@@ -145,14 +212,19 @@ async function connectToWhatsApp() {
                     console.log('[WhatsApp Bot] Terputus sementara. Mempertahankan sesi & mencoba menghubungkan ulang...');
                 }
 
-                const retryDelay = isLoggedOut ? 1500 : 3000;
-                console.log(`[WhatsApp Bot] Menghubungkan kembali dalam ${retryDelay / 1000} detik...`);
+                reconnectAttempts++;
+                const baseDelay = isLoggedOut ? 1500 : 3000;
+                const retryDelay = Math.min(30000, Math.round(baseDelay * Math.pow(1.3, Math.min(reconnectAttempts, 6))));
+
+                console.log(`[WhatsApp Bot] Percobaan reconnect #${reconnectAttempts}. Menghubungkan kembali dalam ${retryDelay / 1000} detik...`);
                 setTimeout(() => {
                     connectToWhatsApp();
                 }, retryDelay);
             } else if (connection === 'open') {
+                if (watchdogTimer) clearTimeout(watchdogTimer);
                 isConnecting = false;
                 connectionState = 'open';
+                reconnectAttempts = 0;
                 lastQr = null;
                 lastQrImage = null;
                 const botPhone = sock.user?.id?.split(':')[0] || 'Unknown';
@@ -165,10 +237,12 @@ async function connectToWhatsApp() {
     } catch (err) {
         isConnecting = false;
         connectionState = 'close';
+        reconnectAttempts++;
         console.error('[WhatsApp Bot] Error inisialisasi socket Baileys:', err.message);
+        const retryDelay = Math.min(30000, Math.round(3000 * Math.pow(1.3, Math.min(reconnectAttempts, 6))));
         setTimeout(() => {
             connectToWhatsApp();
-        }, 3000);
+        }, retryDelay);
     }
 }
 
@@ -204,7 +278,27 @@ app.get('/status', (req, res) => {
         bot_phone: isConnected ? botPhone : null,
         bot_enabled: isBotEnabled,
         qr_code: isConnected ? null : lastQrImage,
+        baileys_info: {
+            installed_package_version: currentInstalledBaileysVersion,
+            latest_npm_version: latestBaileysPackageVersion,
+            update_available: isBaileysUpdateAvailable,
+            protocol_version: baileysProtocolVersion
+        },
         timestamp: new Date().toISOString()
+    });
+});
+
+// 1.2 Check Baileys Package Update Endpoint
+app.get('/check-update', async (req, res) => {
+    await checkBaileysNpmUpdate();
+    return res.json({
+        status: 'success',
+        installed_package_version: currentInstalledBaileysVersion,
+        latest_npm_version: latestBaileysPackageVersion,
+        update_available: isBaileysUpdateAvailable,
+        message: isBaileysUpdateAvailable 
+            ? `Versi baru @whiskeysockets/baileys (v${latestBaileysPackageVersion}) tersedia di npm!`
+            : `Package @whiskeysockets/baileys sudah versi terbaru (v${currentInstalledBaileysVersion}).`
     });
 });
 
@@ -329,6 +423,7 @@ const server = app.listen(PORT, () => {
     console.log(`==================================================`);
     console.log(`⚡ WhatsApp Bot Server running on http://127.0.0.1:${PORT}`);
     console.log(`==================================================`);
+    checkBaileysNpmUpdate();
     connectToWhatsApp();
 });
 

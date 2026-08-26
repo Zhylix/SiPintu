@@ -102,6 +102,7 @@ Route::get('/oauth/authorize', [OAuthController::class, 'authorize'])->name('oau
 Route::post('/oauth/token', [OAuthController::class, 'token'])->withoutMiddleware([PreventRequestForgery::class])->name('oauth.token');
 Route::post('/oauth/logout', [OAuthController::class, 'logout'])->withoutMiddleware([PreventRequestForgery::class])->name('oauth.logout');
 Route::get('/.well-known/openid-configuration', [OAuthController::class, 'openidConfiguration'])->name('oauth.well-known');
+Route::get('/oauth/openid-configuration', [OAuthController::class, 'openidConfiguration']);
 Route::get('/oauth/jwks.json', [OAuthController::class, 'jwks'])->name('oauth.jwks');
 
 /*
