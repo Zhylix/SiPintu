@@ -58,18 +58,21 @@
         }
     </style>
 </head>
+@php
+    $siteLogoUrl = \App\Models\Setting::getLogoUrl();
+@endphp
 <body class="h-full font-sans antialiased bg-slate-50 text-slate-800 relative overflow-x-hidden selection:bg-emerald-700 selection:text-white">
     
     <!-- Watermark Logo Sekolah di Background -->
     <div class="fixed inset-0 flex items-center justify-center opacity-[0.05] pointer-events-none z-0">
-        <img src="{{ asset('images/logo-smkn1bangsri.png') }}" alt="Watermark SMKN 1 Bangsri" class="w-[800px] h-[800px] object-contain">
+        <img src="{{ $siteLogoUrl }}" alt="Watermark SMKN 1 Bangsri" class="w-[800px] h-[800px] object-contain">
     </div>
 
     <!-- Official Top Institutional Header Bar -->
     <div class="bg-emerald-950 text-white text-xs font-bold h-9 border-b-2 border-emerald-600 relative z-20 overflow-hidden select-none whitespace-nowrap flex items-center shrink-0">
         <div class="animate-marquee flex items-center">
             <div class="flex items-center space-x-6 shrink-0 px-4 whitespace-nowrap">
-                <img src="{{ asset('images/logo-smkn1bangsri.png') }}" class="w-4 h-4 object-contain shrink-0" alt="Logo">
+                <img src="{{ $siteLogoUrl }}" class="w-4 h-4 object-contain shrink-0" alt="Logo">
                 <span>PEMERINTAH PROVINSI JAWA TENGAH &bull; DINAS PENDIDIKAN DAN KEBUDAYAAN &bull; SMKN 1 BANGSRI</span>
                 <span class="text-emerald-400">&bull;</span>
                 <span class="text-emerald-200">GATEWAY RESMI SMKN 1 BANGSRI</span>
@@ -80,7 +83,7 @@
                 <span class="text-emerald-400">&bull;</span>
             </div>
             <div class="flex items-center space-x-6 shrink-0 px-4 whitespace-nowrap" aria-hidden="true">
-                <img src="{{ asset('images/logo-smkn1bangsri.png') }}" class="w-4 h-4 object-contain shrink-0" alt="Logo">
+                <img src="{{ $siteLogoUrl }}" class="w-4 h-4 object-contain shrink-0" alt="Logo">
                 <span>PEMERINTAH PROVINSI JAWA TENGAH &bull; DINAS PENDIDIKAN DAN KEBUDAYAAN &bull; SMKN 1 BANGSRI</span>
                 <span class="text-emerald-400">&bull;</span>
                 <span class="text-emerald-200">GATEWAY RESMI SMKN 1 BANGSRI</span>
@@ -100,7 +103,7 @@
                 <div class="flex items-center justify-between h-20">
                     <!-- Brand Logo -->
                     <a href="/" class="flex items-center space-x-3.5 group">
-                        <img src="{{ asset('images/logo-smkn1bangsri.png') }}" alt="Logo SMKN 1 Bangsri" class="w-12 h-12 object-contain group-hover:scale-105 transition-all drop-shadow-sm">
+                        <img src="{{ $siteLogoUrl }}" alt="Logo SMKN 1 Bangsri" class="w-12 h-12 object-contain group-hover:scale-105 transition-all drop-shadow-sm">
                         <div>
                             <span class="font-black text-lg text-emerald-950 tracking-tight flex items-center gap-2">
                                 SIPINTU <span class="px-2 py-0.5 text-[10px] bg-emerald-100 text-emerald-800 border border-emerald-300 rounded font-extrabold">GATEWAY</span>
@@ -241,7 +244,7 @@
 
                             <!-- Footer info -->
                             <div class="pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600">
-                                <span>Keamanan Terenkripsi</span>
+                                <span>Terenkripsi</span>
                             </div>
                         </div>
                     </div>

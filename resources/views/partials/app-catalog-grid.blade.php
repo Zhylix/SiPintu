@@ -42,9 +42,9 @@ x-on:favorite-updated.window="
         favoriteIds = favoriteIds.filter(id => id !== $event.detail.appId);
     }
 ">
-    <!-- Search Bar & Category Filter Pills (Rata Kiri Profesional) -->
+    <!-- Search Bar & Category Filter Pills -->
     <div class="flex flex-col lg:flex-row items-center justify-between gap-4 bg-white border border-slate-200 rounded-2xl p-4 shadow-sm text-left">
-        <!-- Category Pills Navigation (Scrollable & Rata Kiri) -->
+        <!-- Category Pills Navigation  -->
         <div class="flex items-center justify-start space-x-2 overflow-x-auto pb-2 lg:pb-0 no-scrollbar max-w-full w-full">
             <button @click="selectedCategory = 'all'"
                     :class="selectedCategory === 'all' ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20 font-extrabold' : 'bg-slate-100 text-slate-700 hover:text-emerald-700 hover:bg-emerald-50'"
@@ -90,7 +90,7 @@ x-on:favorite-updated.window="
         </div>
     </div>
 
-    <!-- Applications Grid (Rata Kiri Profesional) -->
+    <!-- Applications Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         @forelse($applications as $app)
             @php
@@ -101,7 +101,7 @@ x-on:favorite-updated.window="
                  class="group relative bg-white border border-slate-200 hover:border-emerald-500 rounded-2xl p-5 transition-all duration-300 hover:shadow-xl hover:shadow-emerald-900/5 flex flex-col justify-between space-y-4 text-left items-start overflow-hidden">
                 
                 <div class="w-full space-y-3 flex flex-col items-start min-w-0">
-                    <!-- Card Top Header (Rata Kiri) -->
+                    <!-- Card Top Header -->
                     <div class="flex items-start justify-between w-full gap-3">
                         <div class="flex items-center space-x-3 text-left min-w-0 flex-1">
                             @if($app->logo_url)
@@ -125,7 +125,7 @@ x-on:favorite-updated.window="
                             </div>
                         </div>
 
-                        <!-- Favorite ⭐ Button (AJAX Dynamic Toggle - No Page Refresh) -->
+                        <!-- Favorite Button -->
                         <button type="button"
                                 @click="toggleFavorite({{ $app->id }}, '{{ route('applications.favorite.toggle', $app) }}')"
                                 :title="favoriteIds.includes({{ $app->id }}) ? 'Hapus dari favorit' : 'Tambah ke favorit'"
@@ -150,7 +150,7 @@ x-on:favorite-updated.window="
 
                     <a href="{{ route('oauth.authorize', ['client_id' => $app->client_id, 'redirect_uri' => $app->redirect_uri, 'response_type' => 'code', 'scope' => 'openid profile email']) }}"
                        class="w-full sm:w-auto inline-flex items-center justify-center space-x-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl transition-all shadow-md shadow-emerald-600/20 whitespace-nowrap shrink-0">
-                        <span>Masuk Akses Terpadu</span>
+                        <span>Masuk</span>
                         <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
                         </svg>

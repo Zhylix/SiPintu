@@ -56,11 +56,14 @@
         [x-cloak] { display: none !important; }
     </style>
 </head>
+@php
+    $siteLogoUrl = \App\Models\Setting::getLogoUrl();
+@endphp
 <body class="h-full font-sans antialiased bg-slate-100 text-slate-800 selection:bg-emerald-700 selection:text-white relative" x-data="{ mobileMenuOpen: false }">
     
     <!-- Watermark Logo Sekolah di Background Aplikasi -->
     <div class="fixed inset-0 flex items-center justify-center opacity-[0.04] pointer-events-none z-0">
-        <img src="{{ asset('images/logo-smkn1bangsri.png') }}" alt="Watermark SMKN 1 Bangsri" class="w-[750px] h-[750px] object-contain">
+        <img src="{{ $siteLogoUrl }}" alt="Watermark SMKN 1 Bangsri" class="w-[750px] h-[750px] object-contain">
     </div>
 
     <!-- Mobile Slide-over Drawer Backdrop & Overlay -->
@@ -79,7 +82,7 @@
             <!-- Mobile Drawer Brand Header -->
             <div class="h-16 flex items-center justify-between px-4 border-b border-slate-200 bg-white">
                 <a href="{{ route('dashboard') }}" class="flex items-center space-x-2.5">
-                    <img src="{{ asset('images/logo-smkn1bangsri.png') }}" alt="Logo SMKN 1 Bangsri" class="w-8 h-8 object-contain">
+                    <img src="{{ $siteLogoUrl }}" alt="Logo SMKN 1 Bangsri" class="w-8 h-8 object-contain">
                     <div>
                         <span class="font-black text-xs text-emerald-950 tracking-tight flex items-center gap-1">
                             SIPINTU <span class="px-1 py-0.5 text-[8px] bg-emerald-100 text-emerald-800 border border-emerald-300 rounded font-extrabold">MOBILE</span>
@@ -148,6 +151,11 @@
                         <svg class="w-4 h-4 mr-2.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                         Analitik & Laporan
                     </a>
+
+                    <a href="{{ route('admin.settings.index') }}" class="flex items-center px-3 py-2 text-xs font-bold rounded-xl transition-all {{ request()->routeIs('admin.settings.*') ? 'bg-emerald-700 text-white shadow-md shadow-emerald-700/20' : 'text-slate-700 hover:text-emerald-800 hover:bg-emerald-50' }}">
+                        <svg class="w-4 h-4 mr-2.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        Pengaturan Logo & BG
+                    </a>
                 @elseif(auth()->user()->isTeacher())
                     <div class="px-3 pb-2 text-[10px] font-extrabold text-emerald-900 uppercase tracking-wider">Portal Guru SMKN 1 Bangsri</div>
                     
@@ -196,7 +204,7 @@
             <!-- Drawer User Footer Profile -->
             <div class="p-4 border-t border-slate-200 bg-emerald-50/50 flex items-center justify-between">
                 <div class="flex items-center space-x-3 overflow-hidden">
-                    <img src="{{ asset('images/logo-smkn1bangsri.png') }}" class="w-8 h-8 object-contain shrink-0" alt="Logo">
+                    <img src="{{ $siteLogoUrl }}" class="w-8 h-8 object-contain shrink-0" alt="Logo">
                     <div class="truncate">
                         <div class="text-xs font-black text-emerald-950 truncate">{{ auth()->user()->name }}</div>
                         <div class="text-[10px] text-emerald-800 capitalize truncate font-bold">{{ auth()->user()->getUserTypeName() }}</div>
@@ -217,7 +225,7 @@
         <div class="bg-emerald-800 text-white text-xs font-bold h-9 border-b-2 border-emerald-600 relative z-20 overflow-hidden select-none whitespace-nowrap flex items-center shrink-0">
             <div class="animate-marquee flex items-center">
                 <div class="flex items-center space-x-6 shrink-0 px-4 whitespace-nowrap">
-                    <img src="{{ asset('images/logo-smkn1bangsri.png') }}" class="w-4 h-4 object-contain shrink-0" alt="Logo">
+                    <img src="{{ $siteLogoUrl }}" class="w-4 h-4 object-contain shrink-0" alt="Logo">
                     <span>PEMERINTAH PROVINSI JAWA TENGAH &bull; DINAS PENDIDIKAN DAN KEBUDAYAAN &bull; SMKN 1 BANGSRI</span>
                     <span class="text-emerald-400">&bull;</span>
                     <span class="text-emerald-200">GATEWAY RESMI SMKN 1 BANGSRI</span>
@@ -228,7 +236,7 @@
                     <span class="text-emerald-400">&bull;</span>
                 </div>
                 <div class="flex items-center space-x-6 shrink-0 px-4 whitespace-nowrap" aria-hidden="true">
-                    <img src="{{ asset('images/logo-smkn1bangsri.png') }}" class="w-4 h-4 object-contain shrink-0" alt="Logo">
+                    <img src="{{ $siteLogoUrl }}" class="w-4 h-4 object-contain shrink-0" alt="Logo">
                     <span>PEMERINTAH PROVINSI JAWA TENGAH &bull; DINAS PENDIDIKAN DAN KEBUDAYAAN &bull; SMKN 1 BANGSRI</span>
                     <span class="text-emerald-400">&bull;</span>
                     <span class="text-emerald-200">GATEWAY RESMI SMKN 1 BANGSRI</span>
@@ -247,7 +255,7 @@
                 <!-- Brand Logo Header -->
                 <div class="h-20 flex items-center px-5 border-b border-slate-200 bg-white">
                     <a href="{{ route('dashboard') }}" class="flex items-center space-x-3 group">
-                        <img src="{{ asset('images/logo-smkn1bangsri.png') }}" alt="Logo SMKN 1 Bangsri" class="w-11 h-11 object-contain group-hover:scale-105 transition-transform">
+                        <img src="{{ $siteLogoUrl }}" alt="Logo SMKN 1 Bangsri" class="w-11 h-11 object-contain group-hover:scale-105 transition-transform">
                         <div>
                             <span class="font-black text-sm text-emerald-950 tracking-tight flex items-center gap-1">
                                 SIPINTU <span class="px-1.5 py-0.5 text-[9px] bg-emerald-100 text-emerald-800 border border-emerald-300 rounded font-extrabold">GATEWAY</span>
@@ -312,6 +320,11 @@
                         <a href="{{ route('admin.analytics.index') }}" class="flex items-center px-3 py-2.5 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('admin.analytics.*') ? 'bg-emerald-700 text-white shadow-md shadow-emerald-700/20' : 'text-slate-700 hover:text-emerald-800 hover:bg-emerald-50' }}">
                             <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                             Analitik & Laporan
+                        </a>
+
+                        <a href="{{ route('admin.settings.index') }}" class="flex items-center px-3 py-2.5 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('admin.settings.*') ? 'bg-emerald-700 text-white shadow-md shadow-emerald-700/20' : 'text-slate-700 hover:text-emerald-800 hover:bg-emerald-50' }}">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                            Pengaturan Logo & BG
                         </a>
                     @elseif(auth()->user()->isTeacher())
                         <div class="px-3 pb-2 text-[11px] font-extrabold text-emerald-900 uppercase tracking-wider">Portal Guru SMKN 1 Bangsri</div>
@@ -454,7 +467,7 @@
                             @if(!empty($title))
                                 <div class="p-4 mb-4 rounded-2xl border flex items-start justify-between shadow-xs bg-emerald-50 border-emerald-200 text-emerald-900">
                                     <div class="flex items-start space-x-3">
-                                        <img src="{{ asset('images/logo-smkn1bangsri.png') }}" class="w-7 h-7 object-contain mt-0.5 shrink-0" alt="Logo">
+                                        <img src="{{ $siteLogoUrl }}" class="w-7 h-7 object-contain mt-0.5 shrink-0" alt="Logo">
                                         <div>
                                             <div class="font-black text-sm text-emerald-950 flex flex-wrap items-center gap-2">
                                                 <span>{{ $title }}</span>

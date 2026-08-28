@@ -68,6 +68,9 @@
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
+@php
+    $siteLogoUrl = \App\Models\Setting::getLogoUrl();
+@endphp
 <body class="h-full font-sans antialiased bg-slate-100 text-slate-900 selection:bg-brand-primary selection:text-white pb-20">
     
     <!-- Mobile App Container (Centered Max-width 480px) -->
@@ -77,14 +80,14 @@
         <div class="bg-brand-dark text-white text-xs font-bold h-9 border-b-2 border-brand-primary overflow-hidden select-none whitespace-nowrap flex items-center shrink-0">
             <div class="animate-marquee flex items-center">
                 <div class="flex items-center space-x-4 shrink-0 px-3 whitespace-nowrap">
-                    <img src="{{ asset('images/logo-smkn1bangsri.png') }}" class="w-4 h-4 object-contain shrink-0" alt="Logo">
+                    <img src="{{ $siteLogoUrl }}" class="w-4 h-4 object-contain shrink-0" alt="Logo">
                     <span class="whitespace-nowrap">PEMERINTAH PROVINSI JAWA TENGAH &bull; SMKN 1 BANGSRI</span>
                     <span class="text-emerald-400">&bull;</span>
                     <span class="text-emerald-200 whitespace-nowrap">SIPINTU MOBILE GATEWAY</span>
                     <span class="text-emerald-400">&bull;</span>
                 </div>
                 <div class="flex items-center space-x-4 shrink-0 px-3 whitespace-nowrap" aria-hidden="true">
-                    <img src="{{ asset('images/logo-smkn1bangsri.png') }}" class="w-4 h-4 object-contain shrink-0" alt="Logo">
+                    <img src="{{ $siteLogoUrl }}" class="w-4 h-4 object-contain shrink-0" alt="Logo">
                     <span class="whitespace-nowrap">PEMERINTAH PROVINSI JAWA TENGAH &bull; SMKN 1 BANGSRI</span>
                     <span class="text-emerald-400">&bull;</span>
                     <span class="text-emerald-200 whitespace-nowrap">SIPINTU MOBILE GATEWAY</span>
@@ -96,7 +99,7 @@
         <!-- 2. Sticky Mobile Header (Centered & Non-wrapping Text) -->
         <header class="sticky top-0 z-40 bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between shadow-xs">
             <div class="flex items-center space-x-3">
-                <img src="{{ asset('images/logo-smkn1bangsri.png') }}" alt="Logo SMKN 1 Bangsri" class="w-9 h-9 object-contain shrink-0">
+                <img src="{{ $siteLogoUrl }}" alt="Logo SMKN 1 Bangsri" class="w-9 h-9 object-contain shrink-0">
                 <div class="text-left">
                     <div class="flex items-center space-x-1.5">
                         <span class="font-black text-sm text-brand-dark tracking-tight whitespace-nowrap">SIPINTU</span>

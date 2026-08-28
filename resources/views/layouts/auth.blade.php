@@ -55,18 +55,29 @@
         }
     </style>
 </head>
+@php
+    $siteLogoUrl = \App\Models\Setting::getLogoUrl();
+    $loginBgUrl = \App\Models\Setting::getLoginBgUrl();
+@endphp
 <body class="h-full font-sans antialiased bg-slate-100 text-slate-800 flex flex-col justify-between min-h-screen relative overflow-x-hidden selection:bg-emerald-700 selection:text-white">
     
-    <!-- Watermark Logo Sekolah di Background -->
-    <div class="fixed inset-0 flex items-center justify-center opacity-[0.06] pointer-events-none z-0">
-        <img src="{{ asset('images/logo-smkn1bangsri.png') }}" alt="Watermark SMKN 1 Bangsri" class="w-[650px] h-[650px] object-contain">
-    </div>
+    <!-- Background Login Page (Bedakan dari Logo Website Utama) -->
+    @if($loginBgUrl)
+        <div class="fixed inset-0 bg-cover bg-center pointer-events-none z-0" style="background-image: url('{{ $loginBgUrl }}');">
+            <div class="absolute inset-0 bg-slate-900/30 backdrop-blur-[2px]"></div>
+        </div>
+    @else
+        <!-- Watermark Logo Sekolah di Background (Fallback Bawaan) -->
+        <div class="fixed inset-0 flex items-center justify-center opacity-[0.06] pointer-events-none z-0">
+            <img src="{{ $siteLogoUrl }}" alt="Watermark SMKN 1 Bangsri" class="w-[650px] h-[650px] object-contain">
+        </div>
+    @endif
 
     <!-- Official Top Institutional Header Bar -->
     <div class="bg-emerald-950 text-white text-xs font-bold h-9 border-b-2 border-emerald-600 relative z-10 overflow-hidden select-none whitespace-nowrap flex items-center shrink-0">
         <div class="animate-marquee flex items-center">
             <div class="flex items-center space-x-6 shrink-0 px-4 whitespace-nowrap">
-                <img src="{{ asset('images/logo-smkn1bangsri.png') }}" class="w-4 h-4 object-contain shrink-0" alt="Logo">
+                <img src="{{ $siteLogoUrl }}" class="w-4 h-4 object-contain shrink-0" alt="Logo">
                 <span>PEMERINTAH PROVINSI JAWA TENGAH &bull; DINAS PENDIDIKAN DAN KEBUDAYAAN &bull; SMKN 1 BANGSRI</span>
                 <span class="text-emerald-400">&bull;</span>
                 <span class="text-emerald-200">GATEWAY RESMI SMKN 1 BANGSRI</span>
@@ -77,7 +88,7 @@
                 <span class="text-emerald-400">&bull;</span>
             </div>
             <div class="flex items-center space-x-6 shrink-0 px-4 whitespace-nowrap" aria-hidden="true">
-                <img src="{{ asset('images/logo-smkn1bangsri.png') }}" class="w-4 h-4 object-contain shrink-0" alt="Logo">
+                <img src="{{ $siteLogoUrl }}" class="w-4 h-4 object-contain shrink-0" alt="Logo">
                 <span>PEMERINTAH PROVINSI JAWA TENGAH &bull; DINAS PENDIDIKAN DAN KEBUDAYAAN &bull; SMKN 1 BANGSRI</span>
                 <span class="text-emerald-400">&bull;</span>
                 <span class="text-emerald-200">GATEWAY RESMI SMKN 1 BANGSRI</span>
@@ -95,7 +106,7 @@
         <!-- Logo Badge Header -->
         <div class="text-center mb-6">
             <a href="/" class="inline-block mb-3">
-                <img src="{{ asset('images/logo-smkn1bangsri.png') }}" alt="Logo SMKN 1 Bangsri" class="w-24 h-24 mx-auto drop-shadow-md hover:scale-105 transition-transform">
+                <img src="{{ $siteLogoUrl }}" alt="Logo SMKN 1 Bangsri" class="w-24 h-24 mx-auto object-contain drop-shadow-md hover:scale-105 transition-transform">
             </a>
             <h1 class="text-2xl font-black text-emerald-950 tracking-tight">
                 SiPintu <span class="text-emerald-700 font-extrabold">SKANSABA</span>

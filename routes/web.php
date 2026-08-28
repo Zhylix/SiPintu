@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\AdminAuditLogController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminMonitoringController;
 use App\Http\Controllers\Admin\AdminRoleController;
+use App\Http\Controllers\Admin\AdminSettingController;
 use App\Http\Controllers\Admin\AdminSijunaController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Auth\AuthController;
@@ -185,6 +186,13 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::patch('/announcements/{announcement}/toggle', [AdminAnnouncementController::class, 'toggleStatus'])->name('announcements.toggle');
     Route::post('/announcements/{announcement}/send-whatsapp', [AdminAnnouncementController::class, 'sendWhatsApp'])->name('announcements.send-whatsapp');
     Route::get('/announcements/{announcement}/whatsapp-logs', [AdminAnnouncementController::class, 'whatsAppLogs'])->name('announcements.whatsapp-logs');
+
+    // Website Settings & Logo / Background Login CRUD
+    Route::get('/settings', [AdminSettingController::class, 'index'])->name('settings.index');
+    Route::post('/settings/logo', [AdminSettingController::class, 'updateLogo'])->name('settings.logo.update');
+    Route::delete('/settings/logo', [AdminSettingController::class, 'destroyLogo'])->name('settings.logo.destroy');
+    Route::post('/settings/login-bg', [AdminSettingController::class, 'updateLoginBg'])->name('settings.login-bg.update');
+    Route::delete('/settings/login-bg', [AdminSettingController::class, 'destroyLoginBg'])->name('settings.login-bg.destroy');
 });
 
 /*
