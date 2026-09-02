@@ -45,10 +45,16 @@
             </div>
 
             <div>
-                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Username (Opsional)</label>
-                <input type="text" name="username" value="{{ old('username') }}" placeholder="guru_bambang"
+                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">NIS Siswa / NIP Guru / ID Eksternal</label>
+                <input type="text" name="external_id" value="{{ old('external_id') }}" placeholder="Contoh: 19850101... (NIP) / 2024001... (NIS)"
                     class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 font-semibold text-sm focus:border-emerald-600 focus:bg-white focus:outline-none transition-all">
             </div>
+        </div>
+
+        <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Username (Opsional)</label>
+            <input type="text" name="username" value="{{ old('username') }}" placeholder="guru_bambang"
+                class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 font-semibold text-sm focus:border-emerald-600 focus:bg-white focus:outline-none transition-all">
         </div>
 
         <div>

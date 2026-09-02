@@ -76,6 +76,7 @@ class AdminUserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'username' => ['nullable', 'string', 'max:100', 'unique:users,username'],
+            'external_id' => ['nullable', 'string', 'max:100', 'unique:users,external_id'],
             'password' => ['required', 'string', 'min:8'],
             'role' => ['required', Rule::in(['teacher', 'dudi', 'student', 'alumni'])],
             'phone' => ['nullable', 'string', 'max:30'],
@@ -83,6 +84,7 @@ class AdminUserController extends Controller
         ], [
             'email.unique' => 'Email ini sudah terdaftar.',
             'username.unique' => 'Username ini sudah digunakan.',
+            'external_id.unique' => 'NIS / NIP / ID Eksternal ini sudah digunakan.',
             'password.min' => 'Password minimal 8 karakter.',
         ]);
 
@@ -90,6 +92,7 @@ class AdminUserController extends Controller
             'name' => $validated['name'],
             'email' => $validated['email'],
             'username' => $validated['username'] ?? null,
+            'external_id' => $validated['external_id'] ?? null,
             'password' => Hash::make($validated['password']),
             'role' => $validated['role'],
             'phone' => $validated['phone'] ?? null,
@@ -125,10 +128,15 @@ class AdminUserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
             'username' => ['nullable', 'string', 'max:100', Rule::unique('users')->ignore($user->id)],
+            'external_id' => ['nullable', 'string', 'max:100', Rule::unique('users')->ignore($user->id)],
             'role' => ['required', Rule::in(['teacher', 'dudi', 'admin', 'student', 'alumni'])],
             'phone' => ['nullable', 'string', 'max:30'],
             'status' => ['required', Rule::in(['active', 'inactive', 'suspended'])],
             'password' => ['nullable', 'string', 'min:8'],
+        ], [
+            'email.unique' => 'Email ini sudah terdaftar.',
+            'username.unique' => 'Username ini sudah digunakan.',
+            'external_id.unique' => 'NIS / NIP / ID Eksternal ini sudah digunakan.',
         ]);
 
         if (auth()->id() === $user->id && $validated['role'] !== 'admin') {
@@ -139,6 +147,7 @@ class AdminUserController extends Controller
             'name' => $validated['name'],
             'email' => $validated['email'],
             'username' => $validated['username'] ?? null,
+            'external_id' => $validated['external_id'] ?? null,
             'role' => $validated['role'],
             'phone' => $validated['phone'] ?? null,
             'status' => $validated['status'],

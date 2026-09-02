@@ -58,10 +58,27 @@
             </div>
 
             <div>
-                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Username (Opsional)</label>
-                <input type="text" name="username" value="{{ old('username', $user->username) }}"
+                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                    @if($user->isStudent() || $user->isAlumni())
+                        NIS Siswa
+                    @elseif($user->isTeacher())
+                        NIP Guru
+                    @elseif($user->isDudi())
+                        Kode DUDI
+                    @else
+                        ID Eksternal / Identifier
+                    @endif
+                </label>
+                <input type="text" name="external_id" value="{{ old('external_id', $user->external_id) }}" 
+                    placeholder="@if($user->isStudent() || $user->isAlumni()) Contoh: 2024001... @elseif($user->isTeacher()) Contoh: 19850101... @else ID Eksternal @endif"
                     class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 font-semibold text-sm focus:border-emerald-600 focus:bg-white focus:outline-none transition-all">
             </div>
+        </div>
+
+        <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Username (Opsional)</label>
+            <input type="text" name="username" value="{{ old('username', $user->username) }}"
+                class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 font-semibold text-sm focus:border-emerald-600 focus:bg-white focus:outline-none transition-all">
         </div>
 
         <div>

@@ -173,4 +173,31 @@ class User extends Authenticatable
 
         return Storage::disk('public')->url($this->avatar);
     }
+
+    public function getNisAttribute(): ?string
+    {
+        if ($this->isStudent() || $this->isAlumni()) {
+            return $this->external_id ?: $this->username;
+        }
+
+        return null;
+    }
+
+    public function getNipAttribute(): ?string
+    {
+        if ($this->isTeacher()) {
+            return $this->external_id ?: $this->username;
+        }
+
+        return null;
+    }
+
+    public function getDudiCodeAttribute(): ?string
+    {
+        if ($this->isDudi()) {
+            return $this->external_id ?: $this->username;
+        }
+
+        return null;
+    }
 }

@@ -92,12 +92,27 @@
                         <span class="font-bold text-slate-800 capitalize">{{ $user->getUserTypeName() }}</span>
                     </div>
                     <div>
-                        <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">
-                            {{ $user->isTeacher() ? 'NIP Guru' : ($user->isDudi() ? 'Kode DUDI' : ($user->isStudent() ? 'NIS Siswa' : 'ID Account')) }}
-                        </span>
-                        <span class="font-mono font-bold text-emerald-800 text-xs break-all">
-                            {{ $user->external_id ?: ($user->username ?: '-') }}
-                        </span>
+                        @if($user->isStudent() || $user->isAlumni())
+                            <span class="text-[10px] text-emerald-700 font-bold uppercase tracking-wider block">NIS Siswa</span>
+                            <span class="font-mono font-bold text-xs {{ $user->nis ? 'text-emerald-800' : 'text-slate-300 italic' }}">
+                                {{ $user->nis ?: '-' }}
+                            </span>
+                        @elseif($user->isTeacher())
+                            <span class="text-[10px] text-blue-700 font-bold uppercase tracking-wider block">NIP Guru</span>
+                            <span class="font-mono font-bold text-xs {{ $user->nip ? 'text-blue-800' : 'text-slate-300 italic' }}">
+                                {{ $user->nip ?: '-' }}
+                            </span>
+                        @elseif($user->isDudi())
+                            <span class="text-[10px] text-amber-700 font-bold uppercase tracking-wider block">Kode DUDI</span>
+                            <span class="font-mono font-bold text-xs {{ $user->dudi_code ? 'text-amber-800' : 'text-slate-300 italic' }}">
+                                {{ $user->dudi_code ?: '-' }}
+                            </span>
+                        @else
+                            <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">ID Account</span>
+                            <span class="font-mono font-bold text-xs text-slate-700">
+                                {{ $user->external_id ?: ($user->username ?: '-') }}
+                            </span>
+                        @endif
                     </div>
                     <div>
                         <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">No. WhatsApp</span>
@@ -142,18 +157,28 @@
             <table class="w-full text-left text-xs">
                 <thead class="bg-emerald-50 text-emerald-900 uppercase font-black text-[10px] border-b border-slate-200">
                     <tr>
-                        <th class="px-6 py-4">Pengguna</th>
-                        <th class="px-6 py-4">Role / Type</th>
-                        <th class="px-6 py-4">Identifier (NIS / NIP / Kode DUDI)</th>
-                        <th class="px-6 py-4">Nomor WhatsApp</th>
-                        <th class="px-6 py-4">Status Akun</th>
-                        <th class="px-6 py-4 text-right">Aksi</th>
+                        <th class="px-5 py-4">Pengguna</th>
+                        <th class="px-4 py-4">Role / Type</th>
+                        <th class="px-4 py-4">
+                            @if(request('role') === 'teacher')
+                                NIP Guru
+                            @elseif(request('role') === 'student' || request('role') === 'alumni')
+                                NIS Siswa
+                            @elseif(request('role') === 'dudi')
+                                Kode DUDI
+                            @else
+                                Identifier (NIP / NIS / Kode DUDI)
+                            @endif
+                        </th>
+                        <th class="px-4 py-4">Nomor WhatsApp</th>
+                        <th class="px-4 py-4">Status Akun</th>
+                        <th class="px-5 py-4 text-right">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200 font-sans text-slate-700 bg-white">
                     @forelse($users as $user)
                         <tr class="hover:bg-emerald-50/50 transition-colors">
-                            <td class="px-6 py-4 whitespace-nowrap">
+                            <td class="px-5 py-4 whitespace-nowrap">
                                 <div class="flex items-center space-x-3">
                                     @if($user->avatar_url)
                                         <img src="{{ $user->avatar_url }}" alt="{{ $user->name }}" loading="lazy" decoding="async" class="w-9 h-9 rounded-full object-cover border border-emerald-300 shrink-0">
@@ -173,7 +198,7 @@
                                     </div>
                                 </div>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
+                            <td class="px-4 py-4 whitespace-nowrap">
                                 <div class="flex flex-col gap-1 items-start">
                                     <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase
                                         {{ $user->role === 'admin' ? 'bg-purple-100 text-purple-800 border border-purple-300' : '' }}
@@ -188,10 +213,51 @@
                                     @endif
                                 </div>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap font-mono font-bold text-emerald-800">
-                                {{ $user->external_id ?: ($user->username ?: '-') }}
+                            <td class="px-4 py-4 whitespace-nowrap font-mono">
+                                @if($user->isTeacher())
+                                    @if($user->nip)
+                                        <span class="px-2.5 py-1 rounded-lg bg-blue-50 text-blue-900 border border-blue-200 font-bold text-xs inline-flex items-center gap-1.5">
+                                            @if(empty(request('role')) || request('role') === 'all')
+                                                <span class="text-[10px] uppercase tracking-wider text-blue-600 font-black">NIP:</span>
+                                            @endif
+                                            {{ $user->nip }}
+                                        </span>
+                                    @else
+                                        <span class="text-slate-300 font-normal italic">-</span>
+                                    @endif
+                                @elseif($user->isStudent() || $user->isAlumni())
+                                    @if($user->nis)
+                                        <span class="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-900 border border-emerald-200 font-bold text-xs inline-flex items-center gap-1.5">
+                                            @if(empty(request('role')) || request('role') === 'all')
+                                                <span class="text-[10px] uppercase tracking-wider text-emerald-600 font-black">NIS:</span>
+                                            @endif
+                                            {{ $user->nis }}
+                                        </span>
+                                    @else
+                                        <span class="text-slate-300 font-normal italic">-</span>
+                                    @endif
+                                @elseif($user->isDudi())
+                                    @if($user->dudi_code)
+                                        <span class="px-2.5 py-1 rounded-lg bg-amber-50 text-amber-900 border border-amber-200 font-bold text-xs inline-flex items-center gap-1.5">
+                                            @if(empty(request('role')) || request('role') === 'all')
+                                                <span class="text-[10px] uppercase tracking-wider text-amber-600 font-black">DUDI:</span>
+                                            @endif
+                                            {{ $user->dudi_code }}
+                                        </span>
+                                    @else
+                                        <span class="text-slate-300 font-normal italic">-</span>
+                                    @endif
+                                @else
+                                    @if($user->external_id || $user->username)
+                                        <span class="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-800 border border-slate-200 font-bold text-xs inline-block">
+                                            {{ $user->external_id ?: $user->username }}
+                                        </span>
+                                    @else
+                                        <span class="text-slate-300 font-normal italic">-</span>
+                                    @endif
+                                @endif
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
+                            <td class="px-4 py-4 whitespace-nowrap">
                                 @if($user->phone && $user->phone !== '0')
                                     <div class="inline-flex items-center space-x-1.5 px-2.5 py-1">
                                         <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
@@ -204,12 +270,12 @@
                                     </div>
                                 @endif
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
+                            <td class="px-4 py-4 whitespace-nowrap">
                                 <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase {{ $user->status === 'active' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-rose-100 text-rose-800 border border-rose-300' }}">
                                     {{ $user->status }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-right space-x-2">
+                            <td class="px-5 py-4 whitespace-nowrap text-right space-x-2">
                                 <a href="{{ route('admin.users.edit', $user) }}" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 rounded-lg font-bold transition-colors">
                                     Edit
                                 </a>
