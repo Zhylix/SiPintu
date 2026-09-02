@@ -34,17 +34,17 @@ class CheckGatewayHealthCommand extends Command
         $summary = $validator->getDownstreamClientsSummary();
 
         $this->components->info("Total Aplikasi Downstream Terdaftar: {$summary['total_applications']}");
-        $this->line("   - 🟢 Terkoneksi (Aktif): {$summary['connected_count']} aplikasi");
-        $this->line("   - 🔴 Terputus (Inaktif): {$summary['disconnected_count']} aplikasi");
-        $this->line("   - ⚪ Belum Pernah Terkoneksi: {$summary['never_connected_count']} aplikasi");
+        $this->line("   - [ONLINE] Terkoneksi (Aktif): {$summary['connected_count']} aplikasi");
+        $this->line("   - [OFFLINE] Terputus (Inaktif): {$summary['disconnected_count']} aplikasi");
+        $this->line("   - [NEVER] Belum Pernah Terkoneksi: {$summary['never_connected_count']} aplikasi");
         $this->newLine();
 
         $tableData = [];
         foreach ($summary['clients'] as $client) {
             $statusLabel = match ($client['connection_status']) {
-                'connected' => '🟢 TERKONEKSI (ONLINE)',
-                'disconnected' => '🔴 TERPUTUS (OFFLINE)',
-                default => '⚪ BELUM PERNAH',
+                'connected' => '[ONLINE] TERKONEKSI',
+                'disconnected' => '[OFFLINE] TERPUTUS',
+                default => '[NEVER] BELUM PERNAH',
             };
 
             $tableData[] = [
@@ -70,14 +70,14 @@ class CheckGatewayHealthCommand extends Command
             $result = $validator->validateClientConnection($clientId, $secret, true);
 
             if ($result['valid']) {
-                $this->components->info("✓ KONEKSI VALID! {$result['message']}");
-                $app = $result['application'];
-                $this->line("   - Nama Aplikasi: {$app['name']}");
-                $this->line("   - Client ID: {$app['client_id']}");
-                $this->line("   - Terakhir Terkoneksi: {$app['last_connected_human']}");
-                $this->line("   - Total Requests: {$app['total_api_requests']}");
+                $this->components->info("[OK] KONEKSI VALID! {$result['message']}");
+                if (isset($result['application'])) {
+                    $this->line("   - Aplikasi: {$result['application']['name']} ({$result['application']['client_id']})");
+                    $this->line("   - Status: {$result['application']['connection_status']}");
+                    $this->line("   - Last Connected: {$result['application']['last_connected_human']}");
+                }
             } else {
-                $this->components->error("✗ KONEKSI GAGAL! {$result['message']}");
+                $this->components->error("[ERROR] KONEKSI GAGAL! {$result['message']}");
             }
         }
 

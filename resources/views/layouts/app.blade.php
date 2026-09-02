@@ -201,10 +201,13 @@
                 @endif
             </nav>
 
-            <!-- Drawer User Footer Profile -->
             <div class="p-4 border-t border-slate-200 bg-emerald-50/50 flex items-center justify-between">
                 <div class="flex items-center space-x-3 overflow-hidden">
-                    <img src="{{ $siteLogoUrl }}" class="w-8 h-8 object-contain shrink-0" alt="Logo">
+                    @if(auth()->user()->avatar_url)
+                        <img src="{{ auth()->user()->avatar_url }}" class="w-8 h-8 rounded-full object-cover shrink-0 border border-emerald-300 shadow-xs" alt="{{ auth()->user()->name }}">
+                    @else
+                        <img src="{{ $siteLogoUrl }}" class="w-8 h-8 object-contain shrink-0" alt="Logo">
+                    @endif
                     <div class="truncate">
                         <div class="text-xs font-black text-emerald-950 truncate">{{ auth()->user()->name }}</div>
                         <div class="text-[10px] text-emerald-800 capitalize truncate font-bold">{{ auth()->user()->getUserTypeName() }}</div>
@@ -374,7 +377,11 @@
                 <!-- User Footer Profile -->
                 <div class="p-4 border-t border-slate-200 bg-emerald-50/50 flex items-center justify-between">
                     <div class="flex items-center space-x-3 overflow-hidden">
-                        <img src="{{ asset('images/logo-smkn1bangsri.png') }}" class="w-8 h-8 object-contain shrink-0" alt="Logo">
+                        @if(auth()->user()->avatar_url)
+                            <img src="{{ auth()->user()->avatar_url }}" class="w-8 h-8 rounded-full object-cover shrink-0 border border-emerald-300 shadow-xs" alt="{{ auth()->user()->name }}">
+                        @else
+                            <img src="{{ $siteLogoUrl }}" class="w-8 h-8 object-contain shrink-0" alt="Logo">
+                        @endif
                         <div class="truncate">
                             <div class="text-sm font-black text-emerald-950 truncate">{{ auth()->user()->name }}</div>
                             <div class="text-xs text-emerald-800 capitalize truncate font-bold">{{ auth()->user()->getUserTypeName() }}</div>
@@ -400,7 +407,7 @@
                         </button>
 
                         <div class="flex items-center space-x-2">
-                            <img src="{{ asset('images/logo-smkn1bangsri.png') }}" class="w-7 h-7 object-contain md:hidden" alt="Logo">
+                            <img src="{{ $siteLogoUrl }}" class="w-7 h-7 object-contain md:hidden" alt="Logo">
                             <h1 class="text-sm font-extrabold sm:font-black text-emerald-950 tracking-tight whitespace-nowrap">{{ $headerTitle ?? 'Dashboard Gateway' }}</h1>
                         </div>
                     </div>
@@ -411,8 +418,15 @@
                             Aktif
                         </span>
 
-                        <a href="{{ route('profile') }}" class="text-xs font-bold text-slate-700 hover:text-emerald-800 transition-colors whitespace-nowrap">
-                            Profil Saya
+                        <a href="{{ route('profile') }}" class="flex items-center space-x-2 text-xs font-bold text-slate-700 hover:text-emerald-800 transition-colors whitespace-nowrap group">
+                            @if(auth()->user()->avatar_url)
+                                <img src="{{ auth()->user()->avatar_url }}" class="w-7 h-7 rounded-full object-cover ring-2 ring-emerald-600/30 shadow-xs group-hover:scale-105 transition-transform" alt="{{ auth()->user()->name }}">
+                            @else
+                                <div class="w-7 h-7 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-black text-[10px] ring-1 ring-emerald-300">
+                                    {{ auth()->user()->initials() }}
+                                </div>
+                            @endif
+                            <span>Profil Saya</span>
                         </a>
                     </div>
                 </header>

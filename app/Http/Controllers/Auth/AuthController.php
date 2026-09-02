@@ -489,7 +489,7 @@ class AuthController extends Controller
         }
 
         $waService = app(WhatsAppService::class);
-        $message = "📢 *UJI COBA NOTIFIKASI SIPINTU*\n\nHalo *{$user->name}*,\n\nIni adalah pesan konfirmasi bahwa nomor WhatsApp Anda (_{$user->phone}_) telah terhubung secara sukses dengan sistem *SiPintu Gateway SMKN 1 Bangsri*.\n\nWaktu tes: ".now()->format('d M Y H:i:s').' WIB.';
+        $message = "[NOTIFIKASI SIPINTU]\n\nHalo *{$user->name}*,\n\nIni adalah pesan konfirmasi bahwa nomor WhatsApp Anda (_{$user->phone}_) telah terhubung secara sukses dengan sistem *SiPintu Gateway SMKN 1 Bangsri*.\n\nWaktu tes: ".now()->format('d M Y H:i:s').' WIB.';
 
         $result = $waService->sendMessage($user->phone, $message);
 

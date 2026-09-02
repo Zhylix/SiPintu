@@ -16,7 +16,7 @@
 
             <a href="{{ route('admin.applications.create') }}" class="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-extrabold rounded-xl transition-all shadow-md shadow-emerald-700/20 flex items-center space-x-2 flex-1 sm:flex-none justify-center shrink-0">
                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                <span class="whitespace-nowrap">+ Daftarkan Aplikasi Baru</span>
+                <span class="whitespace-nowrap">Tambah Aplikasi</span>
             </a>
         </div>
     </div>
@@ -39,7 +39,7 @@
         </div>
     @endif
 
-    <!-- Patokan Standar Integrasi & Indikator -->
+    <!-- Indikator-->
     <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-4 shadow-sm max-w-full">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-3">
             <div class="flex items-center space-x-2.5 font-black text-sm tracking-tight text-emerald-950">

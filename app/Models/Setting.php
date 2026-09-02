@@ -61,8 +61,9 @@ class Setting extends Model
 
     /**
      * Get the accessible public URL for the Login Background Image.
+     * Defaults to logo-smkn1bangsri.png if no custom background image is uploaded.
      */
-    public static function getLoginBgUrl(): ?string
+    public static function getLoginBgUrl(): string
     {
         $path = static::get('login_background');
 
@@ -76,6 +77,6 @@ class Setting extends Model
             }
         }
 
-        return null;
+        return asset('images/logo-smkn1bangsri.png');
     }
 }

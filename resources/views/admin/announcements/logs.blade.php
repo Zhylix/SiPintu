@@ -57,7 +57,7 @@
                                         class="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-emerald-100/80 border border-slate-200 hover:border-emerald-300 transition-all font-mono text-slate-800 font-bold text-xs group cursor-pointer"
                                         title="Klik untuk mengganti nomor WhatsApp user ini">
                                         <span>{{ $log->phone_number !== '-' ? $log->phone_number : ($log->user->phone ?: 'Belum Ada No. WA') }}</span>
-                                        <span class="text-xs opacity-60 group-hover:opacity-100">✏️</span>
+                                        <svg class="w-3.5 h-3.5 opacity-60 group-hover:opacity-100 inline text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                                     </button>
                                 @else
                                     <span class="font-mono text-slate-800 font-bold">{{ $log->phone_number }}</span>
@@ -65,16 +65,16 @@
                             </td>
                             <td class="px-5 py-4 whitespace-nowrap">
                                 @if($log->status === 'sent')
-                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300 uppercase">
-                                        ✓ Berhasil Terkirim
+                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300 uppercase inline-flex items-center gap-1">
+                                        <svg class="w-3 h-3 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg> Berhasil Terkirim
                                     </span>
                                 @elseif($log->status === 'pending')
-                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-800 border border-amber-300 uppercase">
-                                        ⏳ Menunggu Queue
+                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-800 border border-amber-300 uppercase inline-flex items-center gap-1">
+                                        <svg class="w-3 h-3 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> Menunggu Queue
                                     </span>
                                 @else
-                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-rose-100 text-rose-800 border border-rose-300 uppercase">
-                                        ✕ Gagal Terkirim
+                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-rose-100 text-rose-800 border border-rose-300 uppercase inline-flex items-center gap-1">
+                                        <svg class="w-3 h-3 text-rose-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg> Gagal Terkirim
                                     </span>
                                 @endif
                             </td>
@@ -115,7 +115,9 @@
             <div x-show="phoneModalOpen" x-transition:enter="ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="ease-in duration-150" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" class="relative inline-block w-full max-w-md p-5 sm:p-6 overflow-hidden text-left align-middle transition-all transform bg-white shadow-2xl rounded-2xl border border-slate-200 z-10 mx-auto my-auto">
                 <div class="flex items-center justify-between pb-3 border-b border-slate-100">
                     <div class="flex items-center space-x-2">
-                        <span class="text-xl">📱</span>
+                        <span class="p-2 bg-emerald-100 text-emerald-800 rounded-xl flex items-center justify-center">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                        </span>
                         <h3 class="text-base font-black text-slate-900">Ganti Nomor WhatsApp Penerima</h3>
                     </div>
                     <button @click="phoneModalOpen = false" class="text-slate-400 hover:text-slate-600 text-lg font-bold">&times;</button>

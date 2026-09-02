@@ -6,7 +6,9 @@
     <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
             <div class="flex items-center space-x-2">
-                <span class="p-2 bg-emerald-100 text-emerald-800 rounded-xl font-black text-lg">🖼️</span>
+                <span class="p-2 bg-emerald-100 text-emerald-800 rounded-xl flex items-center justify-center">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                </span>
                 <h2 class="text-xl font-black text-emerald-950 tracking-tight">Pengaturan Logo Website & Background Login</h2>
             </div>
             <p class="text-xs text-slate-600 font-medium mt-1">
@@ -55,8 +57,8 @@
             <div>
                 <div class="flex items-center justify-between pb-4 border-b border-slate-100">
                     <div class="flex items-center space-x-3">
-                        <div class="w-10 h-10 rounded-2xl bg-emerald-100 border border-emerald-300 flex items-center justify-center font-black text-emerald-800 text-lg">
-                            🏫
+                        <div class="w-10 h-10 rounded-2xl bg-emerald-100 border border-emerald-300 flex items-center justify-center font-black text-emerald-800">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5m0 0h4m-4 0V11m0 0h4m-4 0H9m4 0V5m-4 6V5m0 0H7m2 0h4"></path></svg>
                         </div>
                         <div>
                             <h3 class="font-extrabold text-slate-900 text-sm">Logo Website (Utama)</h3>
@@ -128,8 +130,8 @@
             <div>
                 <div class="flex items-center justify-between pb-4 border-b border-slate-100">
                     <div class="flex items-center space-x-3">
-                        <div class="w-10 h-10 rounded-2xl bg-emerald-100 border border-emerald-300 flex items-center justify-center font-black text-emerald-800 text-lg">
-                            🌅
+                        <div class="w-10 h-10 rounded-2xl bg-emerald-100 border border-emerald-300 flex items-center justify-center font-black text-emerald-800">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                         </div>
                         <div>
                             <h3 class="font-extrabold text-slate-900 text-sm">Background Login (Kustom)</h3>
@@ -143,23 +145,27 @@
                         </span>
                     @else
                         <span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-slate-100 text-slate-600 border border-slate-200">
-                            Watermark Bawaan
+                            Logo SMKN 1 Bangsri (Bawaan)
                         </span>
                     @endif
                 </div>
 
                 <!-- Preview Display -->
-                <div class="mt-6 flex flex-col items-center justify-center p-4 bg-slate-100 border border-slate-200 rounded-2xl relative overflow-hidden h-44 shadow-inner">
-                    <template x-if="bgPreview">
-                        <img :src="bgPreview" alt="Preview Background Login" class="w-full h-full object-cover rounded-xl shadow">
-                    </template>
-                    <template x-if="!bgPreview">
-                        <div class="flex flex-col items-center justify-center text-slate-400 p-4 text-center">
-                            <span class="text-3xl mb-1">🖼️</span>
-                            <span class="text-xs font-bold text-slate-600">Background Bawaan (Watermark Logo Sekolah)</span>
-                            <span class="text-[10px] text-slate-600 mt-0.5">Unggah gambar wallpaper untuk mengganti tampilan latar belakang login.</span>
-                        </div>
-                    </template>
+                <div class="mt-6 flex flex-col items-center justify-center p-6 bg-slate-50 border border-slate-200 rounded-2xl relative overflow-hidden group">
+                    <div class="w-32 h-32 flex items-center justify-center bg-white border border-slate-200 rounded-2xl p-3 shadow-md relative">
+                        <template x-if="bgPreview">
+                            <img :src="bgPreview" alt="Preview Background Login" class="max-w-full max-h-full object-contain">
+                        </template>
+                        <template x-if="!bgPreview">
+                            <div class="flex flex-col items-center justify-center text-slate-400 text-center">
+                                <svg class="w-6 h-6 mb-1 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                <span class="text-[10px] font-bold text-slate-500">Logo Bawaan</span>
+                            </div>
+                        </template>
+                    </div>
+                    <div class="mt-3 text-center">
+                        <span class="text-[11px] font-bold text-slate-600">Tampilan Background Login Saat Ini</span>
+                    </div>
                 </div>
 
                 <!-- Form Upload Login Background -->
@@ -204,7 +210,9 @@
     <!-- Info Section / Live Simulation Card -->
     <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4">
         <div class="flex items-center space-x-3 pb-3 border-b border-slate-100">
-            <span class="text-xl">ℹ️</span>
+            <div class="p-2 bg-emerald-100 text-emerald-800 rounded-xl flex items-center justify-center shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </div>
             <div>
                 <h3 class="font-extrabold text-slate-900 text-sm">Informasi Pemisahan Identitas Visual</h3>
                 <p class="text-xs text-slate-600 font-medium">Memahami perbedaan penggunaan Logo Website vs Background Login</p>

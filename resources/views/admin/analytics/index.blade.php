@@ -189,8 +189,8 @@
                                 </div>
                                 <div class="min-w-0">
                                     <h4 class="text-xs font-black text-slate-900 truncate">{{ is_array($app) ? $app['name'] : $app->name }}</h4>
-                                    <span class="text-[10px] text-slate-500 font-semibold block truncate">
-                                        {{ (is_array($app) ? $app['category_name'] : ($app->category?->name ?? 'Umum')) }} • {{ (is_array($app) ? $app['status'] : $app->status) === 'active' ? '● Aktif' : '○ Inaktif' }}
+                                    <span class="text-[10px] text-slate-500 font-semibold flex items-center gap-1 truncate">
+                                        {{ (is_array($app) ? $app['category_name'] : ($app->category?->name ?? 'Umum')) }} • <span class="w-1.5 h-1.5 rounded-full inline-block {{ (is_array($app) ? $app['status'] : $app->status) === 'active' ? 'bg-emerald-500' : 'bg-slate-400' }}"></span>{{ (is_array($app) ? $app['status'] : $app->status) === 'active' ? 'Aktif' : 'Inaktif' }}
                                     </span>
                                 </div>
                             </div>

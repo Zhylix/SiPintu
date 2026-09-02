@@ -57,21 +57,16 @@
 </head>
 @php
     $siteLogoUrl = \App\Models\Setting::getLogoUrl();
+    $loginBg = \App\Models\Setting::get('login_background');
+    $isCustomLoginBg = !empty($loginBg) && \Illuminate\Support\Facades\Storage::disk('public')->exists($loginBg);
     $loginBgUrl = \App\Models\Setting::getLoginBgUrl();
 @endphp
 <body class="h-full font-sans antialiased bg-slate-100 text-slate-800 flex flex-col justify-between min-h-screen relative overflow-x-hidden selection:bg-emerald-700 selection:text-white">
     
-    <!-- Background Login Page (Bedakan dari Logo Website Utama) -->
-    @if($loginBgUrl)
-        <div class="fixed inset-0 bg-cover bg-center pointer-events-none z-0" style="background-image: url('{{ $loginBgUrl }}');">
-            <div class="absolute inset-0 bg-slate-900/30 backdrop-blur-[2px]"></div>
-        </div>
-    @else
-        <!-- Watermark Logo Sekolah di Background (Fallback Bawaan) -->
-        <div class="fixed inset-0 flex items-center justify-center opacity-[0.06] pointer-events-none z-0">
-            <img src="{{ $siteLogoUrl }}" alt="Watermark SMKN 1 Bangsri" class="w-[650px] h-[650px] object-contain">
-        </div>
-    @endif
+    <!-- Background Login Page (Default Logo Sekolah / Kustom Wallpaper) -->
+    <div class="fixed inset-0 flex items-center justify-center {{ $isCustomLoginBg ? 'opacity-80' : 'opacity-[0.06]' }} pointer-events-none z-0 p-4">
+        <img src="{{ $loginBgUrl }}" alt="Background Login SMKN 1 Bangsri" class="w-[650px] h-[650px] object-contain">
+    </div>
 
     <!-- Official Top Institutional Header Bar -->
     <div class="bg-emerald-950 text-white text-xs font-bold h-9 border-b-2 border-emerald-600 relative z-10 overflow-hidden select-none whitespace-nowrap flex items-center shrink-0">

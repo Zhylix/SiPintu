@@ -338,8 +338,8 @@
                 <!-- Filter Tabs -->
                 <div class="flex bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-extrabold">
                     <button @click="activeTab = 'all'" :class="activeTab === 'all' ? 'bg-white text-emerald-950 shadow-xs' : 'text-slate-600 hover:text-slate-900'" class="px-3 py-1 rounded-lg transition-all">Semua</button>
-                    <button @click="activeTab = 'connected'" :class="activeTab === 'connected' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 hover:text-emerald-700'" class="px-3 py-1 rounded-lg transition-all">🟢 Online</button>
-                    <button @click="activeTab = 'disconnected'" :class="activeTab === 'disconnected' ? 'bg-rose-600 text-white shadow-xs' : 'text-slate-600 hover:text-rose-700'" class="px-3 py-1 rounded-lg transition-all">🔴 Offline</button>
+                    <button @click="activeTab = 'connected'" :class="activeTab === 'connected' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 hover:text-emerald-700'" class="px-3 py-1 rounded-lg transition-all inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span> Online</button>
+                    <button @click="activeTab = 'disconnected'" :class="activeTab === 'disconnected' ? 'bg-rose-600 text-white shadow-xs' : 'text-slate-600 hover:text-rose-700'" class="px-3 py-1 rounded-lg transition-all inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-rose-400 inline-block"></span> Offline</button>
                 </div>
 
                 <!-- Grid vs Table View Switcher -->
@@ -498,7 +498,7 @@
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-2">
                         <span class="w-3 h-3 rounded-full" :class="clientResult.valid ? 'bg-emerald-600 animate-ping' : 'bg-rose-600'"></span>
-                        <span class="font-black text-sm" x-text="clientResult.valid ? '✓ RESPONS REST API: KONEKSI & OTORISASI VALID' : '✗ RESPONS REST API: TERJADI KESALAHAN OTORISASI'"></span>
+                        <span class="font-black text-sm" x-text="clientResult.valid ? 'RESPONS REST API: KONEKSI & OTORISASI VALID' : 'RESPONS REST API: TERJADI KESALAHAN OTORISASI'"></span>
                     </div>
                     <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase font-mono"
                         :class="clientResult.valid ? 'bg-emerald-200 text-emerald-900' : 'bg-rose-200 text-rose-900'"

@@ -65,7 +65,7 @@ class WhatsAppService
      */
     public function formatAnnouncementMessage(string $userName, string $content): string
     {
-        return "📢 PENGUMUMAN\n\n".
+        return "PENGUMUMAN\n\n".
                "Halo, {$userName}\n\n".
                "{$content}\n\n".
                'Terima kasih.';

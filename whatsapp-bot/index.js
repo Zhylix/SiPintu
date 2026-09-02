@@ -82,7 +82,7 @@ async function checkBaileysNpmUpdate() {
                 isBaileysUpdateAvailable = latestBaileysPackageVersion !== currentInstalledBaileysVersion;
             }
 
-            console.log(`[Baileys NPM Check] Terinstall: v${currentInstalledBaileysVersion} | Latest NPM: v${latestBaileysPackageVersion || 'Unknown'} ${isBaileysUpdateAvailable ? '⚠️ (Update Baru Tersedia!)' : '✅ (Versi Terbaru)'}`);
+            console.log(`[Baileys NPM Check] Terinstall: v${currentInstalledBaileysVersion} | Latest NPM: v${latestBaileysPackageVersion || 'Unknown'} ${isBaileysUpdateAvailable ? '[UPDATE TERSEDIA]' : '[VERSI TERBARU]'}`);
         }
     } catch (err) {
         console.error('[Baileys NPM Check] Gagal mengecek update npm Baileys:', err.message);
@@ -181,8 +181,8 @@ async function connectToWhatsApp() {
                 } catch (e) {
                     console.error('[WhatsApp Bot] Error generating QR Data URL:', e.message);
                 }
-                console.log('\n==================================================');
-                console.log('📱 SCAN QR CODE DI BAWAH UNTUK LOGIN WHATSAPP:');
+                console.log('==================================================');
+                console.log('[QR CODE] SCAN QR CODE DI BAWAH UNTUK LOGIN WHATSAPP:');
                 console.log('==================================================');
                 qrcodeTerminal.generate(qr, { small: true });
                 console.log('==================================================\n');
@@ -229,7 +229,7 @@ async function connectToWhatsApp() {
                 lastQrImage = null;
                 const botPhone = sock.user?.id?.split(':')[0] || 'Unknown';
                 console.log('\n==================================================');
-                console.log('🚀 WHATSAPP BOT BAILEYS BERHASIL TERHUBUNG!');
+                console.log('[SUCCESS] WHATSAPP BOT BAILEYS BERHASIL TERHUBUNG!');
                 console.log(`Nomor Terhubung: ${botPhone}`);
                 console.log('==================================================\n');
             }
@@ -421,7 +421,7 @@ app.post('/send-message', authenticateApiKey, async (req, res) => {
 
 const server = app.listen(PORT, () => {
     console.log(`==================================================`);
-    console.log(`⚡ WhatsApp Bot Server running on http://127.0.0.1:${PORT}`);
+    console.log(`[SERVER] WhatsApp Bot Server running on http://127.0.0.1:${PORT}`);
     console.log(`==================================================`);
     checkBaileysNpmUpdate();
     connectToWhatsApp();
@@ -429,7 +429,7 @@ const server = app.listen(PORT, () => {
 
 server.on('error', (err) => {
     if (err.code === 'EADDRINUSE') {
-        console.error(`\n❌ ERROR: Port ${PORT} sedang digunakan oleh proses lain!`);
+        console.error(`\n[ERROR] Port ${PORT} sedang digunakan oleh proses lain!`);
         console.error(`Silakan hentikan proses pada port ${PORT} terlebih dahulu.`);
         console.error(`Atau jalankan perintah: fuser -k ${PORT}/tcp\n`);
         process.exit(1);

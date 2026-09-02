@@ -144,8 +144,8 @@ x-on:favorite-updated.window="
 
                 <!-- Footer Launch Button -->
                 <div class="pt-3 border-t border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 w-full text-left">
-                    <span class="inline-flex items-center text-[10px] font-extrabold text-emerald-800 bg-emerald-100 px-2.5 py-0.5 rounded-full border border-emerald-300 whitespace-nowrap shrink-0 self-start">
-                        ● Terintegrasi
+                    <span class="inline-flex items-center gap-1 text-[10px] font-extrabold text-emerald-800 bg-emerald-100 px-2.5 py-0.5 rounded-full border border-emerald-300 whitespace-nowrap shrink-0 self-start">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span> Terintegrasi
                     </span>
 
                     <a href="{{ route('oauth.authorize', ['client_id' => $app->client_id, 'redirect_uri' => $app->redirect_uri, 'response_type' => 'code', 'scope' => 'openid profile email']) }}"

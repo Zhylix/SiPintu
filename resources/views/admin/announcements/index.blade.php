@@ -55,8 +55,8 @@
     }" x-init="init()" class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-4">
         <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 rounded-full bg-emerald-100 border border-emerald-300 flex items-center justify-center text-xl shrink-0">
-                    🤖
+                <div class="w-10 h-10 rounded-full bg-emerald-100 border border-emerald-300 flex items-center justify-center text-emerald-700 shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
                 </div>
                 <div>
                     <h3 class="font-extrabold text-slate-900 text-sm flex items-center gap-2 flex-wrap">
@@ -123,10 +123,10 @@
                             </div>
                             <h4 class="text-sm font-black text-slate-900">Langkah Menghubungkan Nomor WhatsApp Pengirim:</h4>
                             <ol class="text-xs text-slate-700 font-medium space-y-1 list-decimal list-inside">
-                                <li>Buka aplikasi <strong>WhatsApp</strong> di Smartphone Anda.</li>
-                                <li>Buka menu <strong>Pengaturan / Setelan</strong> &rarr; pilih <strong>Perangkat Tertaut (Linked Devices)</strong>.</li>
-                                <li>Klik <strong>Tautkan Perangkat (Link a Device)</strong>.</li>
-                                <li>Arahkan kamera HP Anda ke gambar <strong>QR Code</strong> di samping.</li>
+                                <li class="flex gap-2 items-start"><span class="bg-emerald-200 text-emerald-800 w-4 h-4 flex items-center justify-center rounded-full text-[9px] font-bold mt-0.5 shrink-0">1</span> Buka aplikasi <strong>WhatsApp</strong> di Smartphone Anda.</li>
+                                <li class="flex gap-2 items-start"><span class="bg-emerald-200 text-emerald-800 w-4 h-4 flex items-center justify-center rounded-full text-[9px] font-bold mt-0.5 shrink-0">2</span> Buka menu <strong>Pengaturan / Setelan</strong> &rarr; pilih <strong>Perangkat Tertaut (Linked Devices)</strong>.</li>
+                                <li class="flex gap-2 items-start"><span class="bg-emerald-200 text-emerald-800 w-4 h-4 flex items-center justify-center rounded-full text-[9px] font-bold mt-0.5 shrink-0">3</span> Klik <strong>Tautkan Perangkat (Link a Device)</strong>.</li>
+                                <li class="flex gap-2 items-start"><span class="bg-emerald-200 text-emerald-800 w-4 h-4 flex items-center justify-center rounded-full text-[9px] font-bold mt-0.5 shrink-0">4</span> Arahkan kamera HP Anda ke gambar <strong>QR Code</strong> di samping.</li>
                             </ol>
                             <p class="text-[11px] text-emerald-800 font-bold flex items-center gap-1 mt-2">
                                 <span class="w-2 h-2 rounded-full bg-emerald-600 animate-ping"></span>
@@ -137,8 +137,8 @@
                 </template>
                 <template x-if="!qrCode">
                     <div class="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left p-4 bg-white/80 rounded-xl border border-emerald-100">
-                        <div class="w-12 h-12 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center text-2xl shrink-0 animate-pulse">
-                            🔄
+                        <div class="w-12 h-12 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center shrink-0 animate-spin">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                         </div>
                         <div>
                             <h4 class="text-xs font-black text-slate-900">Menyiapkan QR Code WhatsApp...</h4>
@@ -164,7 +164,9 @@
                 <div x-show="qrModalOpen" x-transition:enter="ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="ease-in duration-150" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" class="relative inline-block w-full max-w-lg p-5 sm:p-6 overflow-hidden text-center align-middle transition-all transform bg-white shadow-2xl rounded-3xl border border-slate-200 z-10 mx-auto my-auto">
                     <div class="flex items-center justify-between pb-3 border-b border-slate-100">
                         <div class="flex items-center space-x-2">
-                            <span class="text-xl">📱</span>
+                            <span class="p-2 bg-emerald-100 text-emerald-800 rounded-xl flex items-center justify-center">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                            </span>
                             <h3 class="text-base font-black text-slate-900">QR Code WhatsApp Bot</h3>
                         </div>
                         <button @click="qrModalOpen = false" class="text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
@@ -304,8 +306,9 @@
                                 <form action="{{ route('admin.announcements.toggle', $announcement) }}" method="POST">
                                     @csrf
                                     @method('PATCH')
-                                    <button type="submit" class="px-3 py-1 rounded-full text-[10px] font-extrabold transition-all {{ $announcement->is_active ? 'bg-emerald-100 text-emerald-800 border border-emerald-300 hover:bg-emerald-200' : 'bg-slate-100 text-slate-500 border border-slate-200 hover:bg-slate-200' }}">
-                                        {{ $announcement->is_active ? '● Aktif (Tampil)' : '○ Non-Aktif' }}
+                                    <button type="submit" class="px-3 py-1 rounded-full text-[10px] font-extrabold transition-all inline-flex items-center gap-1.5 {{ $announcement->is_active ? 'bg-emerald-100 text-emerald-800 border border-emerald-300 hover:bg-emerald-200' : 'bg-slate-100 text-slate-500 border border-slate-200 hover:bg-slate-200' }}">
+                                        <span class="w-1.5 h-1.5 rounded-full {{ $announcement->is_active ? 'bg-emerald-600' : 'bg-slate-400' }}"></span>
+                                        <span>{{ $announcement->is_active ? 'Aktif (Tampil)' : 'Non-Aktif' }}</span>
                                     </button>
                                 </form>
                             </td>
