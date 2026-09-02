@@ -61,8 +61,8 @@
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5m0 0h4m-4 0V11m0 0h4m-4 0H9m4 0V5m-4 6V5m0 0H7m2 0h4"></path></svg>
                         </div>
                         <div>
-                            <h3 class="font-extrabold text-slate-900 text-sm">Logo Website (Utama)</h3>
-                            <p class="text-[11px] text-slate-600 font-medium">Header, Navigation, Sidebar & Branding</p>
+                            <h3 class="font-extrabold text-slate-900 text-sm">Logo Website & Favicon Tab Browser</h3>
+                            <p class="text-[11px] text-slate-600 font-medium">Header, Navigation, Sidebar, Tab Browser (Favicon) & Branding</p>
                         </div>
                     </div>
 
@@ -83,7 +83,7 @@
                         <img :src="logoPreview" alt="Preview Logo Website" class="max-w-full max-h-full object-contain">
                     </div>
                     <div class="mt-3 text-center">
-                        <span class="text-[11px] font-bold text-slate-600">Tampilan Logo Saat Ini</span>
+                        <span class="text-[11px] font-bold text-slate-600">Tampilan Logo & Icon Tab Browser Saat Ini</span>
                     </div>
                 </div>
 
@@ -91,7 +91,7 @@
                 <form action="{{ route('admin.settings.logo.update') }}" method="POST" enctype="multipart/form-data" class="mt-6 space-y-4">
                     @csrf
                     <div>
-                        <label class="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-2">Unggah Logo Baru</label>
+                        <label class="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-2">Unggah Logo Baru (Otomatis Menjadi Favicon Tab Browser)</label>
                         <input type="file" name="logo" accept="image/*" @change="
                             const file = $event.target.files[0];
                             if(file) {
@@ -105,7 +105,7 @@
 
                     <button type="submit" class="w-full py-3 px-4 bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold rounded-xl shadow-md shadow-emerald-700/20 text-xs flex items-center justify-center space-x-2 transition-all">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                        <span>Simpan Logo Website</span>
+                        <span>Simpan Logo Website & Favicon Tab</span>
                     </button>
                 </form>
             </div>
@@ -223,10 +223,10 @@
             <div class="p-4 bg-emerald-50/70 border border-emerald-200 rounded-2xl space-y-2">
                 <div class="font-black text-emerald-950 flex items-center gap-1.5">
                     <span class="w-2 h-2 rounded-full bg-emerald-600"></span>
-                    <span>1. Logo Website (Website Branding Logo)</span>
+                    <span>1. Logo Website & Favicon (Website Branding Logo)</span>
                 </div>
                 <p class="text-slate-600 leading-relaxed">
-                    Logo ini tampil di seluruh layout aplikasi, header marquee, menu sidebar admin, portal siswa, portal guru, portal DUDI, dan footer copyright.
+                    Logo ini tampil di seluruh layout aplikasi, header marquee, menu sidebar admin, portal siswa, portal guru, portal DUDI, footer copyright, serta secara otomatis digunakan sebagai <strong>Logo/Favicon di Tab Browser</strong>.
                 </p>
             </div>
 

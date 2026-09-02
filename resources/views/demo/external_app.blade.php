@@ -1,9 +1,16 @@
 <!DOCTYPE html>
+@php
+    $siteLogoUrl = \App\Models\Setting::getLogoUrl();
+@endphp
 <html lang="id" class="h-full bg-slate-950 text-slate-100 dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simulasi Aplikasi Eksternal (SSO Client Test)</title>
+    <!-- Website Logo favicon for browser tab -->
+    <link rel="icon" href="{{ $siteLogoUrl }}" sizes="any">
+    <link rel="shortcut icon" href="{{ $siteLogoUrl }}">
+    <link rel="apple-touch-icon" href="{{ $siteLogoUrl }}">
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

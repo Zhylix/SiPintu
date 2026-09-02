@@ -1,9 +1,19 @@
 <!DOCTYPE html>
+@php
+    $siteLogoUrl = \App\Models\Setting::getLogoUrl();
+    $loginBg = \App\Models\Setting::get('login_background');
+    $isCustomLoginBg = !empty($loginBg) && \Illuminate\Support\Facades\Storage::disk('public')->exists($loginBg);
+    $loginBgUrl = \App\Models\Setting::getLoginBgUrl();
+@endphp
 <html lang="id" class="h-full bg-slate-50 text-slate-800">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $title ?? 'Login' }}</title>
+    <!-- Website Logo favicon for browser tab -->
+    <link rel="icon" href="{{ $siteLogoUrl }}" sizes="any">
+    <link rel="shortcut icon" href="{{ $siteLogoUrl }}">
+    <link rel="apple-touch-icon" href="{{ $siteLogoUrl }}">
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -55,12 +65,6 @@
         }
     </style>
 </head>
-@php
-    $siteLogoUrl = \App\Models\Setting::getLogoUrl();
-    $loginBg = \App\Models\Setting::get('login_background');
-    $isCustomLoginBg = !empty($loginBg) && \Illuminate\Support\Facades\Storage::disk('public')->exists($loginBg);
-    $loginBgUrl = \App\Models\Setting::getLoginBgUrl();
-@endphp
 <body class="h-full font-sans antialiased bg-slate-100 text-slate-800 flex flex-col justify-between min-h-screen relative overflow-x-hidden selection:bg-emerald-700 selection:text-white">
     
     <!-- Background Login Page (Default Logo Sekolah / Kustom Wallpaper) -->

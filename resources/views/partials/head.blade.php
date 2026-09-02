@@ -1,3 +1,6 @@
+@php
+    $siteLogoUrl = \App\Models\Setting::getLogoUrl();
+@endphp
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
@@ -5,9 +8,10 @@
     {{ filled($title ?? null) ? $title.' - '.config('app.name', 'Laravel') : config('app.name', 'Laravel') }}
 </title>
 
-<link rel="icon" href="/favicon.ico" sizes="any">
-<link rel="icon" href="/favicon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<!-- Website Logo favicon for browser tab -->
+<link rel="icon" href="{{ $siteLogoUrl }}" sizes="any">
+<link rel="shortcut icon" href="{{ $siteLogoUrl }}">
+<link rel="apple-touch-icon" href="{{ $siteLogoUrl }}">
 
 @fonts
 

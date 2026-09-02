@@ -1,10 +1,17 @@
 <!DOCTYPE html>
+@php
+    $siteLogoUrl = \App\Models\Setting::getLogoUrl();
+@endphp
 <html lang="id" class="h-full bg-white text-slate-800">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>SiPintu</title>
     <meta name="description" content="Portal Resmi Gateway SMKN 1 Bangsri.">
+    <!-- Website Logo favicon for browser tab -->
+    <link rel="icon" href="{{ $siteLogoUrl }}" sizes="any">
+    <link rel="shortcut icon" href="{{ $siteLogoUrl }}">
+    <link rel="apple-touch-icon" href="{{ $siteLogoUrl }}">
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -58,9 +65,6 @@
         }
     </style>
 </head>
-@php
-    $siteLogoUrl = \App\Models\Setting::getLogoUrl();
-@endphp
 <body class="h-full font-sans antialiased bg-slate-50 text-slate-800 relative overflow-x-hidden selection:bg-emerald-700 selection:text-white">
     
     <!-- Watermark Logo Sekolah di Background -->

@@ -1,9 +1,16 @@
 <!DOCTYPE html>
+@php
+    $siteLogoUrl = \App\Models\Setting::getLogoUrl();
+@endphp
 <html lang="id" class="h-full bg-slate-100 text-slate-800">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $title ?? 'SiPintu' }}</title>
+    <!-- Website Logo favicon for browser tab -->
+    <link rel="icon" href="{{ $siteLogoUrl }}" sizes="any">
+    <link rel="shortcut icon" href="{{ $siteLogoUrl }}">
+    <link rel="apple-touch-icon" href="{{ $siteLogoUrl }}">
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -56,9 +63,6 @@
         [x-cloak] { display: none !important; }
     </style>
 </head>
-@php
-    $siteLogoUrl = \App\Models\Setting::getLogoUrl();
-@endphp
 <body class="h-full font-sans antialiased bg-slate-100 text-slate-800 selection:bg-emerald-700 selection:text-white relative" x-data="{ mobileMenuOpen: false }">
     
     <!-- Watermark Logo Sekolah di Background Aplikasi -->
