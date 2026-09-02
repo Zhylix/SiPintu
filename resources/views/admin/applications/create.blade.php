@@ -168,7 +168,7 @@
 
         <div class="pt-4 border-t border-slate-200 flex justify-end space-x-3">
             <button type="submit" class="px-6 py-3 bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold text-xs rounded-xl shadow-md shadow-emerald-700/20 transition-all">
-                Daftarkan Aplikasi & Simpan Kredensial &rarr;
+                Daftarkan Aplikasi &rarr;
             </button>
         </div>
     </form>

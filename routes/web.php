@@ -55,6 +55,11 @@ Route::middleware('guest')->group(function () {
     Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->name('password.email');
 });
 
+// Explicit 404 response for any registration attempt
+Route::any('/register', fn () => abort(404));
+Route::any('/register/{any}', fn () => abort(404))->where('any', '.*');
+Route::any('/user/register', fn () => abort(404));
+
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
