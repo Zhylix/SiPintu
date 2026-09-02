@@ -65,7 +65,7 @@
                 <!-- [ FOTO ] Avatar Profile -->
                 <div class="relative inline-block mx-auto mb-3 group">
                     @if($user->avatar_url)
-                        <img src="{{ $user->avatar_url }}" alt="{{ $user->name }}" class="w-24 h-24 rounded-2xl object-cover ring-4 ring-emerald-500/10 shadow-sm transition-transform duration-300 group-hover:scale-105">
+                        <img src="{{ $user->avatar_url }}" alt="{{ $user->name }}" loading="lazy" decoding="async" class="w-24 h-24 rounded-2xl object-cover ring-4 ring-emerald-500/10 shadow-sm transition-transform duration-300 group-hover:scale-105">
                     @else
                         <div class="w-24 h-24 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-black text-3xl shadow-sm ring-4 ring-emerald-500/10">
                             {{ $user->initials() }}
@@ -552,7 +552,7 @@
                 </template>
                 <template x-if="!avatarPreview">
                     @if($user->avatar_url)
-                        <img src="{{ $user->avatar_url }}" class="w-32 h-32 rounded-2xl object-cover ring-4 ring-emerald-500/30 shadow-xl">
+                        <img src="{{ $user->avatar_url }}" loading="lazy" decoding="async" class="w-32 h-32 rounded-2xl object-cover ring-4 ring-emerald-500/30 shadow-xl">
                     @else
                         <div class="w-32 h-32 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-400 text-white flex items-center justify-center font-black text-4xl shadow-xl">
                             {{ $user->initials() }}
@@ -565,7 +565,7 @@
                     <div>
                         <input type="file" name="avatar" accept="image/jpeg,image/png,image/jpg,image/webp" @change="handleFileChange($event)" required
                             class="w-full text-xs text-slate-600 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-extrabold file:bg-emerald-100 file:text-emerald-800 hover:file:bg-emerald-200 file:cursor-pointer transition-all">
-                        <p class="text-[10px] text-slate-400 mt-1.5 text-center font-medium">Format: JPEG, PNG, WEBP (Maksimal 2 MB)</p>
+                        <p class="text-[10px] text-emerald-700 mt-1.5 text-center font-semibold">Otomatis diompress & di-crop WebP (Super Ringan & Cepat)</p>
                     </div>
 
                     <div class="flex items-center gap-3 pt-2">

@@ -67,7 +67,7 @@
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-3">
                         @if($user->avatar_url)
-                            <img src="{{ $user->avatar_url }}" alt="{{ $user->name }}" class="w-10 h-10 rounded-full object-cover border border-emerald-300 shrink-0">
+                            <img src="{{ $user->avatar_url }}" alt="{{ $user->name }}" loading="lazy" decoding="async" class="w-10 h-10 rounded-full object-cover border border-emerald-300 shrink-0">
                         @else
                             <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center justify-center font-extrabold text-xs shrink-0">
                                 {{ $user->initials() }}
@@ -156,7 +156,7 @@
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex items-center space-x-3">
                                     @if($user->avatar_url)
-                                        <img src="{{ $user->avatar_url }}" alt="{{ $user->name }}" class="w-9 h-9 rounded-full object-cover border border-emerald-300 shrink-0">
+                                        <img src="{{ $user->avatar_url }}" alt="{{ $user->name }}" loading="lazy" decoding="async" class="w-9 h-9 rounded-full object-cover border border-emerald-300 shrink-0">
                                     @else
                                         <div class="w-9 h-9 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center justify-center font-extrabold text-xs shrink-0">
                                             {{ $user->initials() }}

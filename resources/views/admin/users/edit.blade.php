@@ -5,7 +5,7 @@
     <div class="flex items-center justify-between">
         <div class="flex items-center space-x-3">
             @if($user->avatar_url)
-                <img src="{{ $user->avatar_url }}" alt="{{ $user->name }}" class="w-12 h-12 rounded-2xl object-cover ring-2 ring-emerald-500/20 shadow-sm shrink-0">
+                <img src="{{ $user->avatar_url }}" alt="{{ $user->name }}" loading="lazy" decoding="async" class="w-12 h-12 rounded-2xl object-cover ring-2 ring-emerald-500/20 shadow-sm shrink-0">
             @else
                 <div class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center justify-center font-black text-sm shrink-0">
                     {{ $user->initials() }}

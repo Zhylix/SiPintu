@@ -204,7 +204,7 @@
             <div class="p-4 border-t border-slate-200 bg-emerald-50/50 flex items-center justify-between">
                 <div class="flex items-center space-x-3 overflow-hidden">
                     @if(auth()->user()->avatar_url)
-                        <img src="{{ auth()->user()->avatar_url }}" class="w-8 h-8 rounded-full object-cover shrink-0 border border-emerald-300 shadow-xs" alt="{{ auth()->user()->name }}">
+                        <img src="{{ auth()->user()->avatar_url }}" loading="lazy" decoding="async" class="w-8 h-8 rounded-full object-cover shrink-0 border border-emerald-300 shadow-xs" alt="{{ auth()->user()->name }}">
                     @else
                         <img src="{{ $siteLogoUrl }}" class="w-8 h-8 object-contain shrink-0" alt="Logo">
                     @endif
@@ -378,7 +378,7 @@
                 <div class="p-4 border-t border-slate-200 bg-emerald-50/50 flex items-center justify-between">
                     <div class="flex items-center space-x-3 overflow-hidden">
                         @if(auth()->user()->avatar_url)
-                            <img src="{{ auth()->user()->avatar_url }}" class="w-8 h-8 rounded-full object-cover shrink-0 border border-emerald-300 shadow-xs" alt="{{ auth()->user()->name }}">
+                            <img src="{{ auth()->user()->avatar_url }}" loading="lazy" decoding="async" class="w-8 h-8 rounded-full object-cover shrink-0 border border-emerald-300 shadow-xs" alt="{{ auth()->user()->name }}">
                         @else
                             <img src="{{ $siteLogoUrl }}" class="w-8 h-8 object-contain shrink-0" alt="Logo">
                         @endif
@@ -420,7 +420,7 @@
 
                         <a href="{{ route('profile') }}" class="flex items-center space-x-2 text-xs font-bold text-slate-700 hover:text-emerald-800 transition-colors whitespace-nowrap group">
                             @if(auth()->user()->avatar_url)
-                                <img src="{{ auth()->user()->avatar_url }}" class="w-7 h-7 rounded-full object-cover ring-2 ring-emerald-600/30 shadow-xs group-hover:scale-105 transition-transform" alt="{{ auth()->user()->name }}">
+                                <img src="{{ auth()->user()->avatar_url }}" loading="lazy" decoding="async" class="w-7 h-7 rounded-full object-cover ring-2 ring-emerald-600/30 shadow-xs group-hover:scale-105 transition-transform" alt="{{ auth()->user()->name }}">
                             @else
                                 <div class="w-7 h-7 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-black text-[10px] ring-1 ring-emerald-300">
                                     {{ auth()->user()->initials() }}

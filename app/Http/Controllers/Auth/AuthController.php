@@ -365,26 +365,94 @@ class AuthController extends Controller
         $user = Auth::user();
 
         $request->validate([
-            'avatar' => ['required', 'image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
+            'avatar' => ['required', 'image', 'mimes:jpeg,png,jpg,webp', 'max:5120'],
         ], [
             'avatar.required' => 'Pilih berkas foto profil terlebih dahulu.',
             'avatar.image' => 'Berkas harus berupa gambar.',
             'avatar.mimes' => 'Format foto harus JPEG, PNG, atau WEBP.',
-            'avatar.max' => 'Ukuran maksimal foto profil adalah 2 MB.',
+            'avatar.max' => 'Ukuran berkas foto profil awal maksimal 5 MB.',
         ]);
 
         if ($user->avatar && ! filter_var($user->avatar, FILTER_VALIDATE_URL)) {
             Storage::disk('public')->delete($user->avatar);
         }
 
-        $path = $request->file('avatar')->store('avatars', 'public');
+        $path = $this->optimizeAndStoreAvatar($request->file('avatar'));
         $user->update(['avatar' => $path]);
 
         AuditLogger::log('update_avatar', ['avatar_path' => $path], $user->id);
 
         return back()
-            ->with('success', 'Foto profil berhasil diperbarui!')
+            ->with('success', 'Foto profil berhasil diunggah dan dioptimasi!')
             ->with('active_section', 'nama_lengkap');
+    }
+
+    /**
+     * Crop, resize, and compress uploaded avatar to 400x400 WebP format for ultra-fast web delivery.
+     */
+    private function optimizeAndStoreAvatar($file): string
+    {
+        $targetSize = 400;
+        $quality = 80;
+
+        $filename = 'avatars/'.Str::random(40).'.webp';
+        $destinationPath = storage_path('app/public/'.$filename);
+
+        if (! file_exists(dirname($destinationPath))) {
+            mkdir(dirname($destinationPath), 0755, true);
+        }
+
+        $sourceImagePath = $file->getRealPath();
+        $imageInfo = @getimagesize($sourceImagePath);
+
+        if (! $imageInfo) {
+            return $file->store('avatars', 'public');
+        }
+
+        $mime = $imageInfo['mime'] ?? '';
+        $srcImage = match ($mime) {
+            'image/jpeg', 'image/jpg' => @imagecreatefromjpeg($sourceImagePath),
+            'image/png' => @imagecreatefrompng($sourceImagePath),
+            'image/webp' => @imagecreatefromwebp($sourceImagePath),
+            'image/gif' => @imagecreatefromgif($sourceImagePath),
+            default => null,
+        };
+
+        if (! $srcImage) {
+            return $file->store('avatars', 'public');
+        }
+
+        $origWidth = imagesx($srcImage);
+        $origHeight = imagesy($srcImage);
+
+        // Center square crop calculations
+        $cropSize = min($origWidth, $origHeight);
+        $cropX = (int) (($origWidth - $cropSize) / 2);
+        $cropY = (int) (($origHeight - $cropSize) / 2);
+
+        $dstImage = imagecreatetruecolor($targetSize, $targetSize);
+
+        // Retain alpha channel for PNG/WebP
+        imagealphablending($dstImage, false);
+        imagesavealpha($dstImage, true);
+        $transparent = imagecolorallocatealpha($dstImage, 255, 255, 255, 127);
+        imagefilledrectangle($dstImage, 0, 0, $targetSize, $targetSize, $transparent);
+
+        imagecopyresampled(
+            $dstImage,
+            $srcImage,
+            0, 0,
+            $cropX, $cropY,
+            $targetSize, $targetSize,
+            $cropSize, $cropSize
+        );
+
+        imagewebp($dstImage, $destinationPath, $quality);
+
+        imagedestroy($srcImage);
+        imagedestroy($dstImage);
+
+        return $filename;
     }
 
     public function deleteAvatar(Request $request): RedirectResponse

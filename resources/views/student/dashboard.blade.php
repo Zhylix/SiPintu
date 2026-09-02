@@ -10,7 +10,7 @@
         <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative z-10 w-full">
             <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-5 w-full min-w-0">
                 @if(auth()->user()->avatar_url)
-                    <img src="{{ auth()->user()->avatar_url }}" alt="{{ auth()->user()->name }}" class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl object-cover ring-4 ring-emerald-500/20 shadow-md shrink-0">
+                    <img src="{{ auth()->user()->avatar_url }}" alt="{{ auth()->user()->name }}" loading="lazy" decoding="async" class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl object-cover ring-4 ring-emerald-500/20 shadow-md shrink-0">
                 @else
                     <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-700 border border-emerald-500 text-white flex items-center justify-center font-black text-xl sm:text-2xl shadow-md shrink-0">
                         {{ auth()->user()->initials() }}
