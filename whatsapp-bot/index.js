@@ -419,7 +419,7 @@ app.post('/send-message', authenticateApiKey, async (req, res) => {
     }
 });
 
-const server = app.listen(PORT, () => {
+const server = app.listen(PORT, '127.0.0.1', () => {
     console.log(`==================================================`);
     console.log(`[SERVER] WhatsApp Bot Server running on http://127.0.0.1:${PORT}`);
     console.log(`==================================================`);

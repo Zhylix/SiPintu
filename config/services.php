@@ -44,7 +44,7 @@ return [
     ],
 
     'whatsapp' => [
-        'bot_url' => env('WA_BOT_URL', 'http://127.0.0.1:3000'),
+        'bot_url' => env('WA_BOT_URL', 'http://127.0.0.1:3789'),
         'api_key' => env('WA_BOT_API_KEY', 'sipintu_wa_secret_key_2026'),
     ],
 
