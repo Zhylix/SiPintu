@@ -179,6 +179,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::post('/monitoring/health-checks', [AdminMonitoringController::class, 'runHealthChecks'])->name('monitoring.run-health-checks');
     Route::post('/monitoring/validate-gateway', [AdminMonitoringController::class, 'validateGateway'])->name('monitoring.validate-gateway');
     Route::post('/monitoring/validate-client', [AdminMonitoringController::class, 'validateClientApp'])->name('monitoring.validate-client');
+    Route::post('/monitoring/diagnose-sso', [AdminMonitoringController::class, 'diagnoseSso'])->name('monitoring.diagnose-sso');
+    Route::post('/monitoring/diagnose-all-sso', [AdminMonitoringController::class, 'diagnoseAllSso'])->name('monitoring.diagnose-all-sso');
 
     // Analytics & Usage Reports
     Route::get('/analytics', [AdminAnalyticsController::class, 'index'])->name('analytics.index');

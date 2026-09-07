@@ -89,4 +89,55 @@ class AdminMonitoringController extends Controller
             'data' => $result,
         ]);
     }
+
+    /**
+     * Jalankan diagnosa otomatis koneksi SSO untuk aplikasi downstream spesifik
+     */
+    public function diagnoseSso(Request $request, \App\Services\SsoDiagnosticsService $diagnosticsService): JsonResponse
+    {
+        $clientId = $request->input('client_id');
+        $appId = $request->input('application_id');
+        $secret = $request->input('client_secret');
+
+        $query = Application::query();
+        if ($clientId) {
+            $query->where('client_id', trim($clientId));
+        } elseif ($appId) {
+            $query->where('id', $appId);
+        } else {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Harap sertakan client_id atau application_id.',
+            ], 400);
+        }
+
+        $app = $query->first();
+        if (! $app) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Aplikasi downstream tidak ditemukan di sistem.',
+            ], 404);
+        }
+
+        $diagnosis = $diagnosticsService->diagnose($app, $secret ? (string) $secret : null);
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $diagnosis,
+        ]);
+    }
+
+    /**
+     * Jalankan diagnosa koneksi SSO massal untuk seluruh aplikasi downstream
+     */
+    public function diagnoseAllSso(\App\Services\SsoDiagnosticsService $diagnosticsService): JsonResponse
+    {
+        $results = $diagnosticsService->diagnoseAll();
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $results,
+        ]);
+    }
 }
+

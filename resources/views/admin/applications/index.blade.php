@@ -201,7 +201,11 @@
                                 @endif
                             </td>
                             <td class="px-4 sm:px-6 py-4 whitespace-nowrap text-right">
-                                <div class="inline-flex flex-wrap items-center justify-end gap-1.5 min-w-[200px] sm:min-w-[240px]">
+                                    <a href="{{ route('admin.monitoring.index') }}?diagnose={{ $app->client_id }}" class="px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-[11px] font-bold inline-flex items-center gap-1" title="Jalankan diagnosa koneksi SSO untuk {{ $app->name }}">
+                                        <svg class="w-3 h-3 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                        <span>Diagnosa SSO</span>
+                                    </a>
+
                                     <form action="{{ route('admin.applications.test-health', $app) }}" method="POST" class="inline">
                                         @csrf
                                         <button type="submit" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[11px] font-bold border border-slate-200">
