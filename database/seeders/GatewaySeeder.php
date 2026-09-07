@@ -102,6 +102,7 @@ class GatewaySeeder extends Seeder
                 'external_id' => '4439',
                 'password' => Hash::make('password'),
                 'role' => 'student',
+                'classroom' => 'XII PPLG 1',
                 'status' => 'active',
             ]
         );

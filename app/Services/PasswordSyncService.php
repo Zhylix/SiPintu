@@ -2,10 +2,7 @@
 
 namespace App\Services;
 
-use App\Models\Application;
 use App\Models\User;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 
 class PasswordSyncService
 {
@@ -45,58 +42,6 @@ class PasswordSyncService
             ];
         }
 
-        $activeApps = Application::where('status', 'active')->get();
-        $results = [];
-
-        foreach ($activeApps as $app) {
-            $webhookUrl = rtrim($app->base_url, '/').'/api/sipintu/sync-password';
-
-            try {
-                $payload = array_merge([
-                    'event' => 'user.password_updated',
-                    'user_id' => (string) $user->id,
-                    'external_id' => $user->external_id,
-                    'email' => $user->email,
-                    'username' => $user->username,
-                    'role' => $user->role,
-                    'updated_at' => now()->toIso8601String(),
-                ], $this->getPasswordPayload($user));
-
-                $response = Http::timeout(3)
-                    ->withHeaders([
-                        'X-SiPintu-Event' => 'user.password_updated',
-                        'X-SiPintu-Client-ID' => $app->client_id,
-                    ])
-                    ->post($webhookUrl, $payload);
-
-                $results[$app->id] = [
-                    'app_name' => $app->name,
-                    'client_id' => $app->client_id,
-                    'status' => $response->successful() ? 'synced' : 'failed',
-                    'http_code' => $response->status(),
-                ];
-            } catch (\Exception $e) {
-                $results[$app->id] = [
-                    'app_name' => $app->name,
-                    'client_id' => $app->client_id,
-                    'status' => 'error',
-                    'error' => $e->getMessage(),
-                ];
-            }
-        }
-
-        AuditLogger::log('sso_password_broadcast', [
-            'user_id' => $user->id,
-            'email' => $user->email,
-            'role' => $user->role,
-            'apps_count' => count($activeApps),
-            'results' => $results,
-        ], $user->id);
-
-        return [
-            'status' => 'success',
-            'synced_apps_count' => count($activeApps),
-            'details' => $results,
-        ];
+        return app(UserDataSyncService::class)->broadcastUserUpdate($user, ['password']);
     }
 }

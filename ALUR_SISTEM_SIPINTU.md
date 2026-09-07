@@ -100,8 +100,8 @@ sequenceDiagram
     participant SiPintuOAuth as OAuthController (/oauth)
     participant ResourceAPI as API Gateway (/api/v1)
 
-    User->>ClientApp: Klik "Login via SiPintu"
-    ClientApp->>SiPintuOAuth: GET /oauth/authorize?client_id=...&redirect_uri=...&scope=openid profile&response_type=code
+    User->>SiPintuOAuth: Klik Aplikasi di Katalog SiPintu (atau Auto-Redirect dari Klien)
+    SiPintuOAuth->>SiPintuOAuth: Validasi Client ID & Redirect URI (/oauth/authorize)
     
     alt User belum Login ke SiPintu
         SiPintuOAuth-->>User: Redirect ke Form Login (/login)
@@ -150,6 +150,34 @@ flowchart TD
     NextItem -- Ya --> Loop
     NextItem -- Tidak --> SaveLog[Catat Aktivitas ke Tabel sync_logs]
     SaveLog --> Finish([Proses Sinkronisasi Selesai])
+```
+
+### 4.2 Alur Real-time Push Webhook ke Aplikasi Hilir (Downstream)
+
+Ketika data pengguna (nama lengkap, email, username, NIS/NIP, peran/role, kelas, nomor telepon/WhatsApp, foto profil, status, atau kata sandi) diperbarui di SiPintu, SiPintu secara otomatis memancarkan request webhook real-time ke seluruh aplikasi hilir (*downstream*) yang terdaftar dan aktif.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Pengguna as Admin / Guru / Siswa
+    participant SiPintu as SiPintu Identity Gateway
+    participant Observer as UserObserver
+    participant SyncService as UserDataSyncService
+    participant Downstream as Aplikasi Hilir (CBT / Absensi / PKL)
+
+    Pengguna->>SiPintu: Ubah data profil / ganti password / admin edit
+    SiPintu->>SiPintu: Simpan pembaruan ke Database SiPintu
+    SiPintu->>Observer: Model Event: updated(User)
+    Observer->>SyncService: Panggil broadcastUserUpdate()
+    SyncService->>SyncService: Susun JSON Payload & HMAC Signature (X-SiPintu-Signature)
+    
+    loop Setiap Aplikasi Hilir Aktif
+        SyncService->>Downstream: HTTP POST /api/sipintu/sync-user
+        Downstream->>Downstream: Verifikasi HMAC Signature & Update Database Lokal
+        Downstream-->>SyncService: HTTP 200 OK (status: success)
+    end
+
+    SyncService->>SiPintu: Catat audit_logs (user_data_sync_broadcast)
 ```
 
 ---

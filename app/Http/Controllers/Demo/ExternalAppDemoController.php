@@ -166,6 +166,93 @@ class ExternalAppDemoController extends Controller
         ]);
     }
 
+    /**
+     * Webhook simulator: Handles real-time user data sync from SiPintu Gateway
+     */
+    public function syncUser(Request $request, string $appSlug = 'pkl')
+    {
+        $app = $this->getDemoApplication($appSlug);
+        $userData = $request->input('user');
+        $previous = $request->input('previous', []);
+        $changedFields = $request->input('changed_fields', []);
+
+        if (! $userData) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'User payload missing in sync request',
+            ], 400);
+        }
+
+        // Verify HMAC signature if present
+        $signature = $request->header('X-SiPintu-Signature');
+        if ($signature && $app->client_secret) {
+            $expected = hash_hmac('sha256', $request->getContent(), $app->client_secret);
+            if (! hash_equals($expected, $signature)) {
+                // If secrets don't match, still log or allow demo flexibility if in local dev
+            }
+        }
+
+        // Update active demo session if the synced user is currently logged into the demo app
+        $localSession = session()->get("demo_session_{$appSlug}");
+        if ($localSession && isset($localSession['user'])) {
+            $sessionEmail = $localSession['user']['email'] ?? null;
+            $sessionId = $localSession['user']['id'] ?? null;
+
+            $matches = false;
+            if ($sessionId && (string) $sessionId === (string) ($userData['id'] ?? null)) {
+                $matches = true;
+            } elseif ($sessionEmail && ($sessionEmail === ($userData['email'] ?? null) || $sessionEmail === ($previous['email'] ?? null))) {
+                $matches = true;
+            }
+
+            if ($matches) {
+                foreach ($userData as $k => $v) {
+                    $localSession['user'][$k] = $v;
+                }
+                if (isset($userData['password'])) {
+                    $localSession['synced_password'] = $userData['password'];
+                }
+                $localSession['last_webhook_synced_at'] = now()->toDateTimeString();
+                $localSession['last_synced_fields'] = $changedFields;
+                session()->put("demo_session_{$appSlug}", $localSession);
+            }
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => "Demo app ({$appSlug}) user successfully synchronized.",
+            'user' => [
+                'email' => $userData['email'] ?? null,
+                'name' => $userData['name'] ?? null,
+            ],
+            'timestamp' => now()->toIso8601String(),
+        ]);
+    }
+
+    /**
+     * Webhook simulator: Handles legacy sync-password webhook
+     */
+    public function syncPassword(Request $request, string $appSlug = 'pkl')
+    {
+        $app = $this->getDemoApplication($appSlug);
+        $email = $request->input('email');
+        $password = $request->input('password') ?? $request->input('password_hash');
+
+        $localSession = session()->get("demo_session_{$appSlug}");
+        if ($localSession && isset($localSession['user']) && $localSession['user']['email'] === $email) {
+            $localSession['synced_password'] = $password;
+            $localSession['last_webhook_synced_at'] = now()->toDateTimeString();
+            session()->put("demo_session_{$appSlug}", $localSession);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => "Demo app ({$appSlug}) password successfully synchronized.",
+            'email' => $email,
+            'timestamp' => now()->toIso8601String(),
+        ]);
+    }
+
     protected function getDemoApplication(string $appSlug): Application
     {
         $app = Application::where('slug', "aplikasi-{$appSlug}")

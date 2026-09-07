@@ -177,7 +177,7 @@ Mekanisme otentikasi terpusat saat pengguna mencoba masuk ke aplikasi pihak keti
 
 ```mermaid
 flowchart TD
-    AppClient(["Aplikasi Hilir (Misal: E-Absensi / CBT)"]) --> UserClickSSO["User Klik 'Login dengan SiPintu'"]
+    AppClient(["Portal SiPintu ATAU Auto-Redirect Aplikasi Hilir"]) --> UserClickSSO["Pengguna Pilih Aplikasi di Katalog SiPintu"]
     UserClickSSO --> AuthReq["Redirect Browser ke SiPintu:
     GET /oauth/authorize?
     client_id=CLIENT_ID

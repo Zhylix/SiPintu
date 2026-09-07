@@ -216,4 +216,6 @@ Route::prefix('demo')->name('demo.')->group(function () {
     Route::get('/{appSlug}/callback', [ExternalAppDemoController::class, 'callback'])->name('callback');
     Route::get('/{appSlug}/logout', [ExternalAppDemoController::class, 'logout'])->name('logout');
     Route::get('/{appSlug}/health', [ExternalAppDemoController::class, 'healthCheck'])->name('health');
+    Route::post('/{appSlug}/sync-user', [ExternalAppDemoController::class, 'syncUser'])->withoutMiddleware([PreventRequestForgery::class])->name('sync-user');
+    Route::post('/{appSlug}/sync-password', [ExternalAppDemoController::class, 'syncPassword'])->withoutMiddleware([PreventRequestForgery::class])->name('sync-password');
 });

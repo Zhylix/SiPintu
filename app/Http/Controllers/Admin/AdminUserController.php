@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\AuditLogger;
+use App\Services\PasswordSyncService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -160,7 +161,7 @@ class AdminUserController extends Controller
         $user->update($updateData);
 
         if (! empty($validated['password'])) {
-            app(\App\Services\PasswordSyncService::class)->broadcastPasswordChange($user);
+            app(PasswordSyncService::class)->broadcastPasswordChange($user);
         }
 
         // Sync role using Spatie Permission
@@ -172,7 +173,7 @@ class AdminUserController extends Controller
             'email' => $user->email,
         ]);
 
-        return redirect()->route('admin.users.index')->with('success', "Data pengguna {$user->name} berhasil diperbarui.");
+        return redirect()->route('admin.users.index')->with('success', "Data pengguna {$user->name} berhasil diperbarui dan disinkronkan ke seluruh aplikasi downstream.");
     }
 
     public function destroy(User $user): RedirectResponse

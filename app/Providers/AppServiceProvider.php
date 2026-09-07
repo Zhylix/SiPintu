@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Models\User;
+use App\Observers\UserObserver;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Support\Facades\Date;
@@ -26,11 +28,15 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->configureDefaults();
 
+        User::observe(UserObserver::class);
+
         PreventRequestForgery::except([
             'oauth/*',
             'oauth/token',
             'oauth/logout',
             'api/*',
+            'demo/*/sync-user',
+            'demo/*/sync-password',
         ]);
     }
 

@@ -612,60 +612,79 @@ class SsoDiagnosticsService
     }
 
     /**
-     * 6. Periksa Endpoint Webhook Sinkronisasi Kata Sandi
+     * 6. Periksa Endpoint Webhook Sinkronisasi Data Pengguna & Kata Sandi
      */
     protected function checkPasswordSyncWebhook(Application $app): array
     {
-        $targetUrl = rtrim($app->base_url, '/').'/api/sipintu/sync-password';
+        $userSyncUrl = rtrim($app->base_url, '/').'/api/sipintu/sync-user';
+        $passwordSyncUrl = rtrim($app->base_url, '/').'/api/sipintu/sync-password';
         $startTime = microtime(true);
         $issues = [];
 
         try {
-            // Ping webhook URL via POST kosong untuk cek apakah endpoint menerima request
-            $response = Http::timeout(3)->post($targetUrl, ['ping' => true]);
+            // 1. Cek endpoint modern /api/sipintu/sync-user terlebih dahulu
+            $response = Http::timeout(3)->post($userSyncUrl, ['ping' => true]);
             $latency = round((microtime(true) - $startTime) * 1000, 2);
             $code = $response->status();
 
-            // Jika status bukan 404, berarti route ada
             if ($code !== 404) {
                 return [
                     'check' => [
                         'id' => 'password_webhook',
-                        'name' => 'Webhook Sinkronisasi Password Otomatis',
+                        'name' => 'Webhook Sinkronisasi Data Pengguna & Password Otomatis',
                         'status' => 'PASS',
-                        'target' => $targetUrl,
+                        'target' => $userSyncUrl,
                         'http_code' => $code,
                         'latency_ms' => $latency,
-                        'message' => "Route webhook sinkronisasi password aktif merespons (HTTP {$code}).",
+                        'message' => "Route webhook sinkronisasi otomatis data pengguna aktif merespons (HTTP {$code}).",
                     ],
                     'issues' => [],
                 ];
             }
 
-            // Jika 404 (opsional tapi disarankan)
+            // 2. Cek endpoint fallback /api/sipintu/sync-password jika sync-user 404
+            $fallbackResponse = Http::timeout(3)->post($passwordSyncUrl, ['ping' => true]);
+            $fallbackCode = $fallbackResponse->status();
+
+            if ($fallbackCode !== 404) {
+                return [
+                    'check' => [
+                        'id' => 'password_webhook',
+                        'name' => 'Webhook Sinkronisasi Password Otomatis',
+                        'status' => 'PASS',
+                        'target' => $passwordSyncUrl,
+                        'http_code' => $fallbackCode,
+                        'latency_ms' => round((microtime(true) - $startTime) * 1000, 2),
+                        'message' => "Route webhook sinkronisasi password aktif merespons (HTTP {$fallbackCode}). Disarankan upgrade ke /api/sipintu/sync-user untuk sinkronisasi profil penuh.",
+                    ],
+                    'issues' => [],
+                ];
+            }
+
+            // 3. Jika kedua endpoint 404
             $issues[] = [
                 'id' => 'PASSWORD_WEBHOOK_NOT_CONFIGURED',
-                'title' => 'Webhook Sinkronisasi Password Belum Disediakan',
+                'title' => 'Webhook Sinkronisasi Data Pengguna Belum Disediakan',
                 'severity' => 'WARNING',
                 'location' => 'APLIKASI_DOWNSTREAM',
                 'location_label' => 'Aplikasi Downstream',
-                'cause' => "Aplikasi downstream belum memiliki endpoint POST /api/sipintu/sync-password. Jika siswa mengubah password di SiPintu, downstream tidak akan menerima update instan secara background (namun password tetap disinkronkan saat login SSO berikutnya).",
+                'cause' => "Aplikasi downstream belum memiliki endpoint POST /api/sipintu/sync-user (atau /api/sipintu/sync-password). Jika data pengguna atau password diubah di SiPintu, downstream tidak akan menerima update instan secara real-time di latar belakang.",
                 'solution_title' => 'Tambahkan Endpoint Webhook Sinkronisasi di Downstream',
                 'solution_steps' => [
-                    "Sediakan route POST /api/sipintu/sync-password di downstream untuk memperbarui password hash siswa secara pasif.",
+                    "Sediakan route POST /api/sipintu/sync-user di downstream untuk memperbarui data profil & password hash siswa/guru secara real-time.",
                 ],
-                'solution_code' => "Route::post('/api/sipintu/sync-password', [OAuthController::class, 'syncPassword']);",
+                'solution_code' => "Route::post('/api/sipintu/sync-user', [OAuthController::class, 'syncUser']);",
             ];
 
             return [
                 'check' => [
                     'id' => 'password_webhook',
-                    'name' => 'Webhook Sinkronisasi Password Otomatis',
+                    'name' => 'Webhook Sinkronisasi Data Pengguna & Password Otomatis',
                     'status' => 'WARN',
-                    'target' => $targetUrl,
+                    'target' => $userSyncUrl,
                     'http_code' => 404,
                     'latency_ms' => $latency,
-                    'message' => 'Endpoint webhook belum tersedia (404 Not Found). Password akan tetap disinkronkan saat login SSO.',
+                    'message' => 'Endpoint webhook belum tersedia (404 Not Found). Data pengguna akan disinkronkan saat login SSO berikutnya.',
                 ],
                 'issues' => $issues,
             ];
@@ -675,9 +694,9 @@ class SsoDiagnosticsService
             return [
                 'check' => [
                     'id' => 'password_webhook',
-                    'name' => 'Webhook Sinkronisasi Password Otomatis',
+                    'name' => 'Webhook Sinkronisasi Data Pengguna & Password Otomatis',
                     'status' => 'WARN',
-                    'target' => $targetUrl,
+                    'target' => $userSyncUrl,
                     'http_code' => null,
                     'latency_ms' => $latency,
                     'message' => 'Pemeriksaan webhook dilewati (Host downstream belum merespons).',

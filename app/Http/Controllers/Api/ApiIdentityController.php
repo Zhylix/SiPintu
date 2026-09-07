@@ -195,6 +195,18 @@ class ApiIdentityController extends Controller
 
         $students = $sijunaService->getStudents();
 
+        // Prioritize active students with valid classrooms first, then sort by id descending
+        usort($students, function ($a, $b) {
+            $classA = ! empty($a['classroom'] ?? $a['kelas'] ?? $a['classroom_name'] ?? $a['class'] ?? null);
+            $classB = ! empty($b['classroom'] ?? $b['kelas'] ?? $b['classroom_name'] ?? $b['class'] ?? null);
+
+            if ($classA !== $classB) {
+                return $classA ? -1 : 1;
+            }
+
+            return ($b['id'] ?? 0) <=> ($a['id'] ?? 0);
+        });
+
         return response()->json([
             'status' => 'success',
             'source' => 'Gateway Proxy (SIJUNA Service + Redis Cache)',

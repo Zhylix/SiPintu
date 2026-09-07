@@ -115,10 +115,12 @@ SiPintu Gateway dilengkapi dengan CLI helper terintegrasi:
 
 ### 1. Route Definition (`routes/web.php` di Aplikasi Klien)
 
+> 💡 **TIDAK PERLU TOMBOL LOGIN**: Aplikasi klien cukup menyediakan 1 route callback untuk menerima lemparan SSO otomatis dari Portal SiPintu Gateway:
+
 ```php
 use App\Http\Controllers\OAuthController;
 
-Route::get('/login/sipintu', [OAuthController::class, 'redirect'])->name('oauth.redirect');
+// Endpoint penerima redirect SSO otomatis dari SiPintu Gateway (WAJIB)
 Route::get('/oauth/callback', [OAuthController::class, 'callback'])->name('oauth.callback');
 Route::post('/logout', [OAuthController::class, 'logout'])->name('logout');
 ```
@@ -135,100 +137,82 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
 class OAuthController extends Controller
 {
     /**
-     * Step 1: Redirect pengguna ke halaman Login SiPintu Gateway
-     */
-    public function redirect(Request $request)
-    {
-        $state = Str::random(40);
-        $request->session()->put('oauth_state', $state);
-
-        // Cookie fallback untuk stabilitas lintas port (misal localhost:8000 ke localhost:8001)
-        Cookie::queue('oauth_state', $state, 10, null, null, false, true);
-
-        $query = http_build_query([
-            'client_id'     => config('services.sipintu.client_id', env('SIPINTU_CLIENT_ID')),
-            'redirect_uri'  => config('services.sipintu.redirect_uri', env('SIPINTU_REDIRECT_URI')),
-            'response_type' => 'code',
-            'scope'         => 'openid profile email',
-            'state'         => $state,
-        ]);
-
-        $baseUrl = config('services.sipintu.base_url', env('SIPINTU_BASE_URL', 'http://localhost:8000'));
-
-        return redirect()->away("{$baseUrl}/oauth/authorize?{$query}");
-    }
-
-    /**
-     * Step 2: Handle Callback setelah disetujui di SiPintu
+     * Handle Callback otomatis setelah pengguna mengklik aplikasi di Portal SiPintu
      */
     public function callback(Request $request)
     {
-        $sessionState = $request->session()->pull('oauth_state');
-        $cookieState  = $request->cookie('oauth_state');
-        $requestState = $request->input('state');
+        $code = $request->input('code');
 
-        // Validasi Anti-CSRF State Parameter
-        $validState = ($requestState && ($requestState === $sessionState || $requestState === $cookieState));
-
-        if (! $validState) {
-            return redirect()->route('login')->with('error', 'Validasi State OAuth gagal (CSRF Protection).');
+        if (! $code) {
+            return redirect('/login')->with('error', 'Otorisasi SSO SiPintu gagal: Kode otorisasi tidak ditemukan.');
         }
 
-        $code = $request->input('code');
-        $baseUrl = config('services.sipintu.base_url', env('SIPINTU_BASE_URL', 'http://localhost:8000'));
+        $baseUrl      = rtrim(env('SIPINTU_BASE_URL', config('services.sipintu.base_url', 'http://localhost:8000')), '/');
+        $clientId     = env('SIPINTU_CLIENT_ID', config('services.sipintu.client_id'));
+        $clientSecret = env('SIPINTU_CLIENT_SECRET', config('services.sipintu.client_secret'));
+        $redirectUri  = env('SIPINTU_REDIRECT_URI', config('services.sipintu.redirect_uri'));
 
-        // Step 3: Exchange Code dengan Access Token
+        // Step 1: Exchange Code dengan Access Token (Backend-to-Backend HTTP POST)
         $response = Http::asForm()->acceptJson()->post("{$baseUrl}/oauth/token", [
             'grant_type'    => 'authorization_code',
-            'client_id'     => config('services.sipintu.client_id', env('SIPINTU_CLIENT_ID')),
-            'client_secret' => config('services.sipintu.client_secret', env('SIPINTU_CLIENT_SECRET')),
-            'redirect_uri'  => config('services.sipintu.redirect_uri', env('SIPINTU_REDIRECT_URI')),
+            'client_id'     => $clientId,
+            'client_secret' => $clientSecret,
+            'redirect_uri'  => $redirectUri,
             'code'          => $code,
         ]);
 
         if ($response->failed()) {
-            $errorMsg = $response->json('error_description') ?? 'Gagal menukarkan Authorization Code.';
-            return redirect()->route('login')->with('error', $errorMsg);
+            $errorMsg = $response->json('error_description') ?? 'Gagal menukarkan Authorization Code ke SiPintu Gateway.';
+            return redirect('/login')->with('error', $errorMsg);
         }
 
         $tokenData = $response->json();
         $accessToken = $tokenData['access_token'];
 
-        // Step 4: Ambil Profil Pengguna
+        // Step 2: Ambil Data Profil Pengguna & Password Hash dari SiPintu Gateway
         $userResponse = Http::withToken($accessToken)
             ->acceptJson()
             ->get("{$baseUrl}/api/v1/user");
 
         if ($userResponse->failed()) {
-            return redirect()->route('login')->with('error', 'Gagal mengambil data akun dari SiPintu Gateway.');
+            return redirect('/login')->with('error', 'Gagal mengambil data akun dari SiPintu Gateway.');
         }
 
         $sipintuUser = $userResponse->json('data') ?? $userResponse->json();
 
-        // Step 5: Autentikasi Pengguna di Aplikasi Lokal
+        // Step 3: Autentikasi & Auto-Provisioning Pengguna di Database Lokal
         $user = User::updateOrCreate(
             ['email' => $sipintuUser['email']],
             [
                 'name'              => $sipintuUser['name'],
-                'password'          => bcrypt(Str::random(24)),
+                'external_id'       => $sipintuUser['external_id'] ?? null,
+                'role'              => $sipintuUser['role'] ?? 'user',
+                // Sinkronisasi password hash dari SiPintu Gateway
+                'password'          => $sipintuUser['password'] ?? bcrypt(Str::random(24)),
                 'email_verified_at' => now(),
             ]
         );
 
-        Auth::login($user, true);
+        // Pastikan hash password lokal selalu sinkron jika user memperbarui password di SiPintu
+        if (isset($sipintuUser['password']) && $user->password !== $sipintuUser['password']) {
+            $user->update(['password' => $sipintuUser['password']]);
+        }
 
+        Auth::login($user, true);
+        $request->session()->regenerate();
+
+        // Langsung masuk ke dashboard aplikasi downstream
         return redirect()->intended('/dashboard')->with('success', "Selamat datang kembali, {$user->name}!");
     }
 
     /**
-     * Step 6: Logout
+     * Logout dari sesi lokal
      */
     public function logout(Request $request)
     {
