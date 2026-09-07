@@ -37,7 +37,36 @@ php artisan sipintu:sso-health
 | **Client Secret** | Kunci Rahasia Aplikasi | `sec_uEr8wGucp1jda8Ls6qOBsW03HrYVj6UK` |
 | **Redirect URI** | URL Callback SSO Aplikasi Anda | `http://localhost:8001/oauth/callback` |
 
-> 📌 **Dokumentasi Detail Kode:** Lihat file [SIPINTU_SSO_GUIDE.md](SIPINTU_SSO_GUIDE.md) untuk panduan lengkap controller & route copy-paste.
+### ⚙️ Konfigurasi Variabel Lingkungan (`.env`) di Aplikasi Downstream
+
+Di file `.env` milik **aplikasi downstream** (misal aplikasi CBT, Absensi, dll), cukup tambahkan **4 baris variabel** ini:
+
+```env
+# ===================================================
+# KONEKSI SSO SIPINTU GATEWAY
+# ===================================================
+SIPINTU_BASE_URL=https://sipintu.smkn1.sch.id
+SIPINTU_CLIENT_ID=app_mecmvhpduc8e
+SIPINTU_CLIENT_SECRET=sec_uEr8wGucp1jda8Ls6qOBsW03HrYVj6UK
+SIPINTU_REDIRECT_URI=https://cbt.smkn1.sch.id/oauth/callback
+```
+
+#### Rincian Parameter `.env` Downstream:
+
+| Variabel | Fungsinya | Diisi Dengan Apa? |
+| :--- | :--- | :--- |
+| **`SIPINTU_BASE_URL`** | Menunjuk ke alamat server SiPintu Gateway | URL domain utama SiPintu (misal: `https://sipintu.smkn1.sch.id` atau `http://localhost:8000`). |
+| **`SIPINTU_CLIENT_ID`** | ID pengenal unik aplikasi downstream | Didapat dari SiPintu saat registrasi aplikasi (awalan `app_...`). |
+| **`SIPINTU_CLIENT_SECRET`** | Kunci rahasia aplikasi downstream | Didapat dari SiPintu saat registrasi aplikasi (awalan `sec_...`). |
+| **`SIPINTU_REDIRECT_URI`** | Alamat callback di aplikasi downstream Anda | **Domain aplikasi downstream Anda sendiri** + `/oauth/callback` (misal: `https://cbt.smkn1.sch.id/oauth/callback` atau `http://localhost:8001/oauth/callback`). |
+
+> ⚠️ **Catatan Penting Callback URI:**
+> * Nilai `SIPINTU_REDIRECT_URI` ditulis di file `.env` **aplikasi downstream** dan mengarah ke domain aplikasi downstream itu sendiri.
+> * Nilai ini **wajib sama persis** dengan Redirect URI yang didaftarkan pada database SiPintu agar proses validasi keamanan lolos.
+
+> 📌 **Dokumentasi Detail Kode & Model Hybrid:**
+> * Panduan Controller & Route: [SIPINTU_SSO_GUIDE.md](SIPINTU_SSO_GUIDE.md)
+> * Panduan Model Hybrid (SSO Portal + Login Manual): [PANDUAN_SSO_DOWNSTREAM_HYBRID.md](PANDUAN_SSO_DOWNSTREAM_HYBRID.md)
 
 ---
 

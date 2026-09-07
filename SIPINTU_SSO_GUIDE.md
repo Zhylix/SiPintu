@@ -80,11 +80,21 @@ php artisan sipintu:sso-client "Nama Aplikasi Anda" --redirect=http://localhost:
 ---
 
 ### Langkah 2: Pasang Variabel Lingkungan di Aplikasi Klien (`.env`)
-Buka file `.env` pada aplikasi klien Anda (misal `TESApi`) dan tambahkan:
+Buka file `.env` pada aplikasi klien Anda (misal `TESApi`, `CBT`, dll) dan tambahkan:
 
 ```env
-minta ke SIR HELMY YUNAN NASUTION UNTUK CLIENT ID DAN CLIENT SECRET DAN BASE URL DAN REDIRECT URI
+# ===================================================
+# KONEKSI SSO SIPINTU GATEWAY
+# ===================================================
+SIPINTU_BASE_URL=https://sipintu.smkn1.sch.id
+SIPINTU_CLIENT_ID=app_xxxxxxxxxxxx
+SIPINTU_CLIENT_SECRET=sec_xxxxxxxxxxxxxxxxxxxxxxxxxxxx
+SIPINTU_REDIRECT_URI=https://cbt.smkn1.sch.id/oauth/callback
 ```
+
+> ⚠️ **Catatan Penting Callback URI:**
+> * `SIPINTU_REDIRECT_URI` mengarah ke **domain aplikasi klien Anda sendiri** + `/oauth/callback`.
+> * Nilai ini **harus sama persis** dengan yang didaftarkan di SiPintu pada Langkah 1.
 
 ---
 
