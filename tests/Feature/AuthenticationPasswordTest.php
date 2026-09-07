@@ -78,6 +78,56 @@ class AuthenticationPasswordTest extends TestCase
         $this->assertAuthenticatedAs($student);
     }
 
+    public function test_student_can_login_using_email_nis(): void
+    {
+        $studentRole = Role::firstOrCreate(['name' => 'student', 'guard_name' => 'web']);
+        $student = User::factory()->create([
+            'name' => 'Siti Siswa',
+            'username' => '4439',
+            'external_id' => '4439',
+            'email' => '4439@smkn1bangsri.sch.id',
+            'role' => 'student',
+            'password' => Hash::make('password123'),
+            'status' => 'active',
+        ]);
+        $student->assignRole($studentRole);
+
+        // Login using full Email NIS
+        $response = $this->post(route('login'), [
+            'nis' => '4439@smkn1bangsri.sch.id',
+            'password' => 'password123',
+            'account_type' => 'siswa',
+        ]);
+
+        $response->assertRedirect(route('dashboard'));
+        $this->assertAuthenticatedAs($student);
+    }
+
+    public function test_student_can_login_using_nis_matching_email_prefix(): void
+    {
+        $studentRole = Role::firstOrCreate(['name' => 'student', 'guard_name' => 'web']);
+        $student = User::factory()->create([
+            'name' => 'Budi Siswa',
+            'username' => 'budi_santoso',
+            'external_id' => null,
+            'email' => '5521@smkn1bangsri.sch.id',
+            'role' => 'student',
+            'password' => Hash::make('password123'),
+            'status' => 'active',
+        ]);
+        $student->assignRole($studentRole);
+
+        // Login using only NIS '5521' when email is 5521@smkn1bangsri.sch.id
+        $response = $this->post(route('login'), [
+            'nis' => '5521',
+            'password' => 'password123',
+            'account_type' => 'siswa',
+        ]);
+
+        $response->assertRedirect(route('dashboard'));
+        $this->assertAuthenticatedAs($student);
+    }
+
     public function test_role_mismatch_returns_error_and_retains_input(): void
     {
         $teacherRole = Role::firstOrCreate(['name' => 'teacher', 'guard_name' => 'web']);

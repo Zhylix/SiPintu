@@ -8,6 +8,7 @@ use App\Models\AuditLog;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\AuditLogger;
+use App\Services\PasswordSyncService;
 use App\Services\SijunaApiService;
 use App\Services\WhatsAppService;
 use Exception;
@@ -36,7 +37,7 @@ class AuthController extends Controller
         $identity = match ($accountType) {
             'guru' => trim((string) ($request->input('nip') ?: $request->input('identity', ''))),
             'dudi' => trim((string) ($request->input('kode_dudi') ?: $request->input('identity', ''))),
-            default => trim((string) ($request->input('nis') ?: $request->input('identity', ''))),
+            default => trim((string) ($request->input('nis') ?: ($request->input('email_nis') ?: $request->input('identity', '')))),
         };
 
         $identityFieldName = match ($accountType) {
@@ -56,7 +57,7 @@ class AuthController extends Controller
             $label = match ($accountType) {
                 'guru' => 'NIP atau Email Guru',
                 'dudi' => 'Kode Mitra DUDI atau Email Perusahaan',
-                default => 'NIS atau NISN Siswa',
+                default => 'NIS atau Email NIS Siswa',
             };
 
             return back()->withErrors([
@@ -73,6 +74,24 @@ class AuthController extends Controller
             ->orWhere('username', $identity)
             ->orWhere('external_id', $identity)
             ->first();
+
+        // 1.1 Support login via NIS number when user record stores full email (e.g. 4439 -> 4439@...)
+        if (! $user && ! str_contains($identity, '@') && in_array($accountType, ['siswa', 'admin'])) {
+            $user = User::where('email', 'like', $identity.'@%')
+                ->whereIn('role', ['student', 'siswa', 'alumni'])
+                ->first();
+        }
+
+        // 1.2 Support login via Email NIS when user record stores NIS in username or external_id
+        if (! $user && str_contains($identity, '@') && in_array($accountType, ['siswa', 'admin'])) {
+            $nisPrefix = explode('@', $identity)[0];
+            if (! empty($nisPrefix)) {
+                $user = User::where(function ($q) use ($nisPrefix) {
+                    $q->where('external_id', $nisPrefix)
+                        ->orWhere('username', $nisPrefix);
+                })->whereIn('role', ['student', 'siswa', 'alumni'])->first();
+            }
+        }
 
         if (! $user && in_array(strtolower($identity), ['admin', 'admin@smkn1bangsri.sch.id', 'admin@gateway.sekolah.id'])) {
             $user = User::where('role', 'admin')->first();
@@ -250,10 +269,12 @@ class AuthController extends Controller
         if ($accountType === 'siswa') {
             try {
                 $sijunaService = app(SijunaApiService::class);
-                $studentData = $sijunaService->getStudentByExternalId($identity);
+                $nisSearch = str_contains($identity, '@') ? explode('@', $identity)[0] : $identity;
+                $studentData = $sijunaService->getStudentByExternalId($identity)
+                    ?: ($nisSearch !== $identity ? $sijunaService->getStudentByExternalId($nisSearch) : null);
                 if ($studentData) {
-                    $nis = (string) ($studentData['nis'] ?? $studentData['external_id'] ?? $studentData['id'] ?? $identity);
-                    $email = $studentData['user']['email'] ?? $studentData['email'] ?? ($nis.'@siswa.sekolah.id');
+                    $nis = (string) ($studentData['nis'] ?? $studentData['external_id'] ?? $studentData['id'] ?? $nisSearch);
+                    $email = $studentData['user']['email'] ?? $studentData['email'] ?? ($nis.'@smkn1bangsri.sch.id');
                     $name = $studentData['nama'] ?? $studentData['name'] ?? 'Siswa SIJUNA';
                     $phone = $studentData['hp'] ?? $studentData['phone'] ?? null;
 
@@ -622,7 +643,7 @@ class AuthController extends Controller
         ]);
 
         // Broadcast password change to connected downstream SSO applications (KEC ADMIN)
-        app(\App\Services\PasswordSyncService::class)->broadcastPasswordChange($user);
+        app(PasswordSyncService::class)->broadcastPasswordChange($user);
 
         AuditLogger::log('change_password_success', [], $user->id);
 
