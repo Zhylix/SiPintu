@@ -444,13 +444,23 @@
                 @if(count($auditLogs) > 0)
                     <div class="space-y-3 max-h-[500px] overflow-y-auto pr-1">
                         @foreach($auditLogs as $log)
-                            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex items-start justify-between gap-4 text-xs">
+                            @php
+                                $isSsoFail = $log->isSsoFailure();
+                            @endphp
+                            <div class="p-4 rounded-2xl border flex items-start justify-between gap-4 text-xs {{ $isSsoFail ? 'bg-rose-50/70 border-rose-200' : 'bg-slate-50 border-slate-200' }}">
                                 <div class="flex items-start space-x-3">
-                                    <div class="p-2 rounded-xl bg-emerald-100 text-emerald-800 shrink-0 mt-0.5">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
+                                    <div class="p-2 rounded-xl shrink-0 mt-0.5 {{ $isSsoFail ? 'bg-rose-100 text-rose-800' : 'bg-emerald-100 text-emerald-800' }}">
+                                        @if($isSsoFail)
+                                            <svg class="w-4 h-4 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                        @else
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
+                                        @endif
                                     </div>
                                     <div>
-                                        <div class="font-extrabold text-slate-900 flex items-center gap-2">
+                                        <div class="font-extrabold flex items-center gap-2 {{ $isSsoFail ? 'text-rose-900' : 'text-slate-900' }}">
+                                            @if($isSsoFail)
+                                                <span class="px-2 py-0.5 rounded text-[10px] font-black uppercase bg-rose-100 text-rose-900 border border-rose-300">GAGAL SSO</span>
+                                            @endif
                                             <span>{{ str_replace('_', ' ', strtoupper($log->activity)) }}</span>
                                             <code class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-200 text-slate-700 font-bold">{{ $log->ip_address }}</code>
                                         </div>

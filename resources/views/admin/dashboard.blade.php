@@ -261,15 +261,29 @@
                 </thead>
                 <tbody class="divide-y divide-slate-200 font-mono text-slate-700 bg-white">
                     @foreach($latestAuditLogs as $log)
-                        <tr class="hover:bg-emerald-50/50">
+                        @php
+                            $isSsoFail = $log->isSsoFailure();
+                        @endphp
+                        <tr class="transition-colors {{ $isSsoFail ? 'bg-rose-50/60 hover:bg-rose-100/50' : 'hover:bg-emerald-50/50' }}">
                             <td class="px-4 py-3 whitespace-nowrap text-slate-500 font-semibold">{{ $log->created_at->format('d/m/Y H:i:s') }}</td>
                             <td class="px-4 py-3 whitespace-nowrap font-sans font-bold text-slate-900">
                                 {{ $log->user?->name ?? 'Guest / System' }}
                             </td>
                             <td class="px-4 py-3 whitespace-nowrap">
-                                <span class="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-emerald-100 text-emerald-800 border border-emerald-300">
-                                    {{ $log->activity }}
-                                </span>
+                                @if($isSsoFail)
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-black uppercase bg-rose-100 text-rose-900 border border-rose-300 inline-flex items-center gap-1">
+                                        <svg class="w-3 h-3 text-rose-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                        <span>GAGAL SSO: {{ $log->activity }}</span>
+                                    </span>
+                                @elseif($log->isSsoEvent())
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-sky-100 text-sky-900 border border-sky-300">
+                                        SSO &bull; {{ $log->activity }}
+                                    </span>
+                                @else
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                        {{ $log->activity }}
+                                    </span>
+                                @endif
                             </td>
                             <td class="px-4 py-3 whitespace-nowrap text-slate-500 font-semibold">{{ $log->ip_address ?? '-' }}</td>
                             <td class="px-4 py-3 text-slate-600 max-w-xs truncate font-mono text-[11px]">

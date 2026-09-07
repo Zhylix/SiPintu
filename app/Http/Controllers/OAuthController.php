@@ -29,7 +29,11 @@ class OAuthController extends Controller
         // 1. Validate Client Application
         $application = Application::where('client_id', $clientId)->first();
         if (! $application || $application->status !== 'active') {
-            AuditLogger::log('sso_authorize_invalid_client', ['client_id' => $clientId]);
+            AuditLogger::log('sso_authorize_invalid_client', [
+                'client_id' => $clientId,
+                'via_sso' => true,
+                'is_sso_failure' => true,
+            ]);
 
             return response()->view('oauth.error', [
                 'title' => 'Client Aplikasi Tidak Valid',
@@ -42,6 +46,8 @@ class OAuthController extends Controller
             AuditLogger::log('sso_authorize_invalid_redirect', [
                 'client_id' => $clientId,
                 'requested_uri' => $redirectUri,
+                'via_sso' => true,
+                'is_sso_failure' => true,
             ]);
 
             return response()->view('oauth.error', [
@@ -70,6 +76,8 @@ class OAuthController extends Controller
                 'app_name' => $application->name,
                 'user_id' => $user->id,
                 'role' => $user->role,
+                'via_sso' => true,
+                'is_sso_failure' => true,
             ], $user->id);
 
             return response()->view('oauth.denied', [
@@ -94,6 +102,7 @@ class OAuthController extends Controller
             'application_id' => $application->id,
             'app_name' => $application->name,
             'user_id' => $user->id,
+            'via_sso' => true,
         ], $user->id);
 
         // Build redirect URL
@@ -130,7 +139,11 @@ class OAuthController extends Controller
         $secretValid = ($clientSecret === $application->client_secret)
             || (is_string($application->client_secret) && str_starts_with($application->client_secret, '$2y$') && Hash::check($clientSecret, $application->client_secret));
         if (! $secretValid) {
-            AuditLogger::log('token_exchange_invalid_secret', ['client_id' => $clientId]);
+            AuditLogger::log('token_exchange_invalid_secret', [
+                'client_id' => $clientId,
+                'via_sso' => true,
+                'is_sso_failure' => true,
+            ]);
 
             return response()->json(['error' => 'invalid_client', 'error_description' => 'Client secret verification failed.'], 401);
         }
@@ -145,7 +158,11 @@ class OAuthController extends Controller
                 ->first();
 
             if (! $authCode) {
-                AuditLogger::log('token_exchange_invalid_code', ['client_id' => $clientId]);
+                AuditLogger::log('token_exchange_invalid_code', [
+                    'client_id' => $clientId,
+                    'via_sso' => true,
+                    'is_sso_failure' => true,
+                ]);
 
                 return response()->json(['error' => 'invalid_grant', 'error_description' => 'Authorization code is invalid, expired, or revoked.'], 400);
             }

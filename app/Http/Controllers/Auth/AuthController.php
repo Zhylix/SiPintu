@@ -66,6 +66,8 @@ class AuthController extends Controller
 
         $password = $request->input('password');
 
+        $isSso = session()->has('oauth_return_to') || $request->boolean('via_sso');
+
         // 1. Try finding user in Gateway database by email, username, or external_id (SIJUNA)
         $user = User::where('email', $identity)
             ->orWhere('username', $identity)
@@ -80,7 +82,11 @@ class AuthController extends Controller
             // 1. Direct login for Administrator with valid password regardless of active tab (Guru / DUDI / Siswa)
             if ($user->isAdmin()) {
                 if (! Hash::check($password, $user->password)) {
-                    AuditLogger::log('login_failed_password', ['identity' => $identity]);
+                    AuditLogger::log($isSso ? 'sso_login_failed_password' : 'login_failed_password', [
+                        'identity' => $identity,
+                        'via_sso' => $isSso,
+                        'is_sso_failure' => $isSso,
+                    ]);
 
                     return back()->withErrors([
                         'password' => 'Kata sandi yang Anda masukkan salah.',
@@ -88,7 +94,11 @@ class AuthController extends Controller
                 }
 
                 if ($user->status !== 'active') {
-                    AuditLogger::log('login_failed_suspended', ['identity' => $identity]);
+                    AuditLogger::log($isSso ? 'sso_login_failed_suspended' : 'login_failed_suspended', [
+                        'identity' => $identity,
+                        'via_sso' => $isSso,
+                        'is_sso_failure' => $isSso,
+                    ]);
 
                     return back()->withErrors(['identity' => 'Akun Anda sedang dinonaktifkan atau ditangguhkan.'])->onlyInput('account_type', 'nis', 'nip', 'kode_dudi', 'identity');
                 }
@@ -99,6 +109,7 @@ class AuthController extends Controller
                 AuditLogger::log('login_success_admin', [
                     'user_id' => $user->id,
                     'role' => $user->role,
+                    'via_sso' => $isSso,
                 ], $user->id);
 
                 if (session()->has('oauth_return_to')) {
@@ -130,10 +141,12 @@ class AuthController extends Controller
                 ];
                 $targetTab = $tabMap[$user->role] ?? $userRoleName;
 
-                AuditLogger::log('login_failed_role_mismatch', [
+                AuditLogger::log($isSso ? 'sso_login_failed_role_mismatch' : 'login_failed_role_mismatch', [
                     'identity' => $identity,
                     'selected_tab' => $accountType,
                     'actual_role' => $user->role,
+                    'via_sso' => $isSso,
+                    'is_sso_failure' => $isSso,
                 ]);
 
                 return back()->withErrors([
@@ -143,7 +156,11 @@ class AuthController extends Controller
 
             // 3. Handle password verification for all users (Siswa, Guru, DUDI)
             if (! Hash::check($password, $user->password)) {
-                AuditLogger::log('login_failed_password', ['identity' => $identity]);
+                AuditLogger::log($isSso ? 'sso_login_failed_password' : 'login_failed_password', [
+                    'identity' => $identity,
+                    'via_sso' => $isSso,
+                    'is_sso_failure' => $isSso,
+                ]);
 
                 return back()->withErrors([
                     'password' => 'Kata sandi yang Anda masukkan salah.',
@@ -151,7 +168,11 @@ class AuthController extends Controller
             }
 
             if ($user->status !== 'active') {
-                AuditLogger::log('login_failed_suspended', ['identity' => $identity]);
+                AuditLogger::log($isSso ? 'sso_login_failed_suspended' : 'login_failed_suspended', [
+                    'identity' => $identity,
+                    'via_sso' => $isSso,
+                    'is_sso_failure' => $isSso,
+                ]);
 
                 return back()->withErrors([
                     $identityFieldName => 'Akun Anda sedang dinonaktifkan atau ditangguhkan.',
@@ -164,6 +185,7 @@ class AuthController extends Controller
             AuditLogger::log($user->isStudent() ? 'login_success_student' : ($user->isTeacher() ? 'login_success_teacher' : 'login_success'), [
                 'user_id' => $user->id,
                 'role' => $user->role,
+                'via_sso' => $isSso,
             ], $user->id);
 
             if (session()->has('oauth_return_to')) {
@@ -208,6 +230,7 @@ class AuthController extends Controller
                     AuditLogger::log('login_success_teacher_provisioned', [
                         'external_id' => $teacherUser->external_id,
                         'user_id' => $teacherUser->id,
+                        'via_sso' => $isSso,
                     ], $teacherUser->id);
 
                     if (session()->has('oauth_return_to')) {
@@ -255,6 +278,7 @@ class AuthController extends Controller
                     AuditLogger::log('login_success_student_provisioned', [
                         'external_id' => $studentUser->external_id,
                         'user_id' => $studentUser->id,
+                        'via_sso' => $isSso,
                     ], $studentUser->id);
 
                     if (session()->has('oauth_return_to')) {
@@ -270,7 +294,11 @@ class AuthController extends Controller
             }
         }
 
-        AuditLogger::log('login_failed', ['identity' => $identity]);
+        AuditLogger::log($isSso ? 'sso_login_failed' : 'login_failed', [
+            'identity' => $identity,
+            'via_sso' => $isSso,
+            'is_sso_failure' => $isSso,
+        ]);
 
         $failedMessage = match ($accountType) {
             'guru' => 'Akun Guru dengan NIP, Email, atau Username yang dimasukkan tidak ditemukan/tidak valid.',

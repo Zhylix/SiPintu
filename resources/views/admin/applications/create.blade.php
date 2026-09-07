@@ -132,7 +132,7 @@
         <!-- Role Access Matrix -->
         <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
             <label class="block text-xs font-extrabold text-emerald-950 uppercase tracking-wider">
-                Role Akses Diizinkan (Application Role Permission)
+                Role Akses Diizinkan
             </label>
             <p class="text-xs text-slate-600 font-medium">Pilih role mana saja yang diperbolehkan oleh Gateway untuk mengakses aplikasi eksternal ini:</p>
 
