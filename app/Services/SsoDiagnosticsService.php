@@ -190,6 +190,27 @@ class SsoDiagnosticsService
             ];
         }
 
+        // Cek Validitas Format Base URL
+        if (empty($app->base_url) || ! filter_var($app->base_url, FILTER_VALIDATE_URL)) {
+            $status = 'FAIL';
+            $messages[] = "Base URL '{$app->base_url}' bukan URL valid.";
+            $issues[] = [
+                'id' => 'INVALID_BASE_URL_FORMAT',
+                'title' => 'Format Base URL Tidak Valid',
+                'severity' => 'CRITICAL',
+                'location' => 'GATEWAY_SIPINTU',
+                'location_label' => 'SiPintu Gateway',
+                'cause' => "Base URL yang didaftarkan ('{$app->base_url}') tidak memiliki format URL http:// atau https:// yang valid.",
+                'solution_title' => 'Perbaiki Base URL Aplikasi',
+                'solution_steps' => [
+                    "Buka panel Admin SiPintu > Menu 'Aplikasi Eksternal'.",
+                    "Klik 'Edit' pada aplikasi {$app->name}.",
+                    'Pastikan Base URL menyertakan http:// atau https:// (contoh: http://localhost:8001).',
+                ],
+                'solution_code' => 'http://localhost:8001',
+            ];
+        }
+
         // Cek Validitas Format Redirect URI
         if (! filter_var($app->redirect_uri, FILTER_VALIDATE_URL)) {
             $status = 'FAIL';
@@ -203,18 +224,18 @@ class SsoDiagnosticsService
                 'cause' => "URL callback yang didaftarkan ('{$app->redirect_uri}') tidak memiliki skema http/https atau struktur domain yang benar.",
                 'solution_title' => 'Perbaiki Redirect URI',
                 'solution_steps' => [
-                    "Pastikan menyertakan http:// atau https:// (contoh: http://localhost:8001/oauth/callback).",
+                    'Pastikan menyertakan http:// atau https:// (contoh: http://localhost:8001/oauth/callback).',
                 ],
-                'solution_code' => "http://localhost:8001/oauth/callback",
+                'solution_code' => 'http://localhost:8001/oauth/callback',
             ];
         }
 
         // Cek Kesesuaian Secret jika diberikan
         if ($inputSecret !== null) {
             $secretValid = ($inputSecret === $app->client_secret);
-            if (! $secretValid && (str_starts_with($app->client_secret, '$2y$') || str_starts_with($app->client_secret, '$2a$'))) {
+            if (! $secretValid && ! empty($app->client_secret)) {
                 try {
-                    $secretValid = Hash::check($inputSecret, $app->client_secret);
+                    $secretValid = Hash::check($inputSecret, (string) $app->client_secret);
                 } catch (Throwable $e) {
                     $secretValid = false;
                 }
@@ -229,13 +250,13 @@ class SsoDiagnosticsService
                     'severity' => 'CRITICAL',
                     'location' => 'APLIKASI_DOWNSTREAM',
                     'location_label' => 'Aplikasi Downstream',
-                    'cause' => "Client Secret yang terpasang di file .env downstream tidak sama dengan kunci rahasia di SiPintu.",
+                    'cause' => 'Client Secret yang terpasang di file .env downstream tidak sama dengan kunci rahasia di SiPintu.',
                     'solution_title' => 'Perbarui SIPINTU_CLIENT_SECRET di .env Downstream',
                     'solution_steps' => [
-                        "Buka file .env di aplikasi downstream.",
+                        'Buka file .env di aplikasi downstream.',
                         "Periksa nilai SIPINTU_CLIENT_SECRET, atau buat kunci baru melalui tombol 'Reset Secret' di SiPintu.",
                     ],
-                    'solution_code' => "SIPINTU_CLIENT_SECRET=sec_xxxxxxxxxxxx",
+                    'solution_code' => 'SIPINTU_CLIENT_SECRET=sec_xxxxxxxxxxxx',
                 ];
             }
         }
@@ -272,9 +293,15 @@ class SsoDiagnosticsService
 
         if (! $allRoutesReady) {
             $missing = [];
-            if (! $hasAuthorize) $missing[] = 'oauth.authorize';
-            if (! $hasToken) $missing[] = 'oauth.token';
-            if (! $hasUserApi) $missing[] = 'api.v1.user';
+            if (! $hasAuthorize) {
+                $missing[] = 'oauth.authorize';
+            }
+            if (! $hasToken) {
+                $missing[] = 'oauth.token';
+            }
+            if (! $hasUserApi) {
+                $missing[] = 'api.v1.user';
+            }
 
             $issues[] = [
                 'id' => 'SIPINTU_ROUTES_MISSING',
@@ -299,7 +326,7 @@ class SsoDiagnosticsService
                 'id' => 'oauth_engine',
                 'name' => 'Kesiapan OAuth 2.0 Engine SiPintu',
                 'status' => $status,
-                'target' => config('app.url', 'http://localhost:8000').'/oauth/token',
+                'target' => Route::has('oauth.token') ? route('oauth.token') : (rtrim(config('app.url', 'http://localhost:8000'), '/').'/oauth/token'),
                 'message' => $message,
                 'latency_ms' => 0,
             ],
@@ -312,7 +339,22 @@ class SsoDiagnosticsService
      */
     protected function checkHostReachability(Application $app): array
     {
-        $targetUrl = rtrim($app->base_url, '/');
+        $targetUrl = rtrim((string) $app->base_url, '/');
+        if (empty($targetUrl) || ! filter_var($targetUrl, FILTER_VALIDATE_URL)) {
+            return [
+                'check' => [
+                    'id' => 'host_reachability',
+                    'name' => 'Konektivitas Host Server Downstream',
+                    'status' => 'FAIL',
+                    'target' => $targetUrl ?: '(kosong)',
+                    'http_code' => null,
+                    'latency_ms' => 0,
+                    'message' => 'Base URL kosong atau format tidak valid.',
+                ],
+                'issues' => [],
+            ];
+        }
+
         $startTime = microtime(true);
         $issues = [];
 
@@ -341,36 +383,36 @@ class SsoDiagnosticsService
             if (str_contains($err, 'Connection refused') || str_contains($err, 'Failed to connect')) {
                 $cause = "Server downstream tidak aktif atau port salah. SiPintu tidak dapat menghubungi {$targetUrl}.";
                 $fixSteps = [
-                    "Buka terminal di folder aplikasi downstream.",
-                    "Nyalakan web server downstream (contoh: php artisan serve --port=".(parse_url($targetUrl, PHP_URL_PORT) ?: 8001).").",
-                    "Pastikan port yang berjalan cocok dengan Base URL di SiPintu.",
+                    'Buka terminal di folder aplikasi downstream.',
+                    'Nyalakan web server downstream (contoh: php artisan serve --port='.(parse_url($targetUrl, PHP_URL_PORT) ?: 8001).').',
+                    'Pastikan port yang berjalan cocok dengan Base URL di SiPintu.',
                 ];
-                $fixCode = "php artisan serve --port=".(parse_url($targetUrl, PHP_URL_PORT) ?: 8001);
+                $fixCode = 'php artisan serve --port='.(parse_url($targetUrl, PHP_URL_PORT) ?: 8001);
             } elseif (str_contains($err, 'Could not resolve host') || str_contains($err, 'Name or service not known')) {
                 $cause = "Domain host downstream '{$targetUrl}' tidak dapat ditemukan oleh DNS.";
                 $fixSteps = [
-                    "Pastikan domain atau hostname downstream sudah benar dan dapat di-resolve.",
-                    "Jika menggunakan domain lokal, periksa /etc/hosts pada server SiPintu.",
+                    'Pastikan domain atau hostname downstream sudah benar dan dapat di-resolve.',
+                    'Jika menggunakan domain lokal, periksa /etc/hosts pada server SiPintu.',
                 ];
                 $fixCode = null;
             } elseif (str_contains($err, 'timed out') || str_contains($err, 'Operation timed out')) {
-                $cause = "Koneksi ke downstream time out (melebihi batas toleransi 3 detik). Kemungkinan terhalang firewall atau server downstream overload.";
+                $cause = 'Koneksi ke downstream time out (melebihi batas toleransi 3 detik). Kemungkinan terhalang firewall atau server downstream overload.';
                 $fixSteps = [
-                    "Periksa firewall port pada server downstream.",
-                    "Pastikan downstream dapat diakses langsung dari server SiPintu.",
+                    'Periksa firewall port pada server downstream.',
+                    'Pastikan downstream dapat diakses langsung dari server SiPintu.',
                 ];
                 $fixCode = null;
             } elseif (str_contains($err, 'SSL') || str_contains($err, 'certificate')) {
-                $cause = "Sertifikat SSL/HTTPS di server downstream tidak valid atau kadaluarsa.";
+                $cause = 'Sertifikat SSL/HTTPS di server downstream tidak valid atau kadaluarsa.';
                 $fixSteps = [
-                    "Perbarui sertifikat SSL di server downstream.",
-                    "Jika di lingkungan development, gunakan HTTP sementara atau pasang SSL lokal tepercaya.",
+                    'Perbarui sertifikat SSL di server downstream.',
+                    'Jika di lingkungan development, gunakan HTTP sementara atau pasang SSL lokal tepercaya.',
                 ];
                 $fixCode = null;
             } else {
                 $cause = "Terjadi kegagalan jaringan saat menghubungi downstream: {$err}";
                 $fixSteps = [
-                    "Periksa apakah aplikasi downstream dapat diakses via browser secara langsung.",
+                    'Periksa apakah aplikasi downstream dapat diakses via browser secara langsung.',
                 ];
                 $fixCode = null;
             }
@@ -428,7 +470,7 @@ class SsoDiagnosticsService
                     'cause' => "URL callback '{$callbackUrl}' mengembalikan 404 Not Found. Route /oauth/callback belum didaftarkan di routes/web.php aplikasi downstream.",
                     'solution_title' => 'Tambahkan Route Callback di routes/web.php Downstream',
                     'solution_steps' => [
-                        "Buka file routes/web.php di aplikasi downstream.",
+                        'Buka file routes/web.php di aplikasi downstream.',
                         "Daftarkan route: Route::get('/oauth/callback', [OAuthController::class, 'callback']);",
                     ],
                     'solution_code' => "Route::get('/oauth/callback', [OAuthController::class, 'callback'])->name('oauth.callback');",
@@ -458,8 +500,8 @@ class SsoDiagnosticsService
                     'cause' => "Route callback di downstream menghasilkan Internal Server Error (HTTP {$code}). Kemungkinan terjadi exception di kode OAuthController.",
                     'solution_title' => 'Periksa Log Error di Aplikasi Downstream',
                     'solution_steps' => [
-                        "Buka file storage/logs/laravel.log di folder downstream.",
-                        "Periksa exception di controller OAuthController.php.",
+                        'Buka file storage/logs/laravel.log di folder downstream.',
+                        'Periksa exception di controller OAuthController.php.',
                     ],
                     'solution_code' => null,
                 ];
@@ -513,8 +555,8 @@ class SsoDiagnosticsService
                         'cause' => "SiPintu tidak dapat mencapai URL {$callbackUrl}: ".$e->getMessage(),
                         'solution_title' => 'Pastikan Aplikasi Downstream Berjalan & URL Sesuai',
                         'solution_steps' => [
-                            "Pastikan web server downstream sedang menyala.",
-                            "Pastikan Redirect URI di SiPintu sama persis dengan URL callback downstream.",
+                            'Pastikan web server downstream sedang menyala.',
+                            'Pastikan Redirect URI di SiPintu sama persis dengan URL callback downstream.',
                         ],
                         'solution_code' => null,
                     ],
@@ -559,10 +601,10 @@ class SsoDiagnosticsService
                     'severity' => 'WARNING',
                     'location' => 'APLIKASI_DOWNSTREAM',
                     'location_label' => 'Aplikasi Downstream',
-                    'cause' => "Aplikasi downstream belum menyediakan route GET /health. SSO tetap bisa berjalan, namun status kesehatan otomatis tidak bisa dipantau SiPintu.",
+                    'cause' => 'Aplikasi downstream belum menyediakan route GET /health. SSO tetap bisa berjalan, namun status kesehatan otomatis tidak bisa dipantau SiPintu.',
                     'solution_title' => 'Tambahkan Route /health di routes/web.php Downstream',
                     'solution_steps' => [
-                        "Tambahkan 1 baris route sederhana di routes/web.php aplikasi downstream.",
+                        'Tambahkan 1 baris route sederhana di routes/web.php aplikasi downstream.',
                     ],
                     'solution_code' => "Route::get('/health', fn () => response()->json(['status' => 'ok']));",
                 ];
@@ -581,6 +623,21 @@ class SsoDiagnosticsService
                 ];
             }
 
+            $issues[] = [
+                'id' => 'HEALTH_CHECK_ERROR',
+                'title' => 'Endpoint /health Mengembalikan Galat (HTTP '.$code.')',
+                'severity' => 'WARNING',
+                'location' => 'APLIKASI_DOWNSTREAM',
+                'location_label' => 'Aplikasi Downstream',
+                'cause' => "Endpoint /health di downstream mengembalikan status HTTP {$code}. Route mungkin mengalami kendala internal.",
+                'solution_title' => 'Periksa Implementasi Route /health Downstream',
+                'solution_steps' => [
+                    'Periksa controller atau closure route /health di aplikasi downstream.',
+                    'Pastikan route mengembalikan response HTTP 200 OK.',
+                ],
+                'solution_code' => "Route::get('/health', fn () => response()->json(['status' => 'ok']));",
+            ];
+
             return [
                 'check' => [
                     'id' => 'health_endpoint',
@@ -591,7 +648,7 @@ class SsoDiagnosticsService
                     'latency_ms' => $latency,
                     'message' => "Endpoint /health mengembalikan status HTTP {$code}.",
                 ],
-                'issues' => [],
+                'issues' => $issues,
             ];
         } catch (Throwable $e) {
             $latency = round((microtime(true) - $startTime) * 1000, 2);
@@ -616,13 +673,13 @@ class SsoDiagnosticsService
      */
     protected function checkPasswordSyncWebhook(Application $app): array
     {
-        $userSyncUrl = rtrim($app->base_url, '/').'/api/sipintu/sync-user';
-        $passwordSyncUrl = rtrim($app->base_url, '/').'/api/sipintu/sync-password';
+        $userSyncUrl = rtrim((string) $app->base_url, '/').'/api/sipintu/sync-user';
+        $passwordSyncUrl = rtrim((string) $app->base_url, '/').'/api/sipintu/sync-password';
         $startTime = microtime(true);
         $issues = [];
 
+        // 1. Cek endpoint modern /api/sipintu/sync-user terlebih dahulu
         try {
-            // 1. Cek endpoint modern /api/sipintu/sync-user terlebih dahulu
             $response = Http::timeout(3)->post($userSyncUrl, ['ping' => true]);
             $latency = round((microtime(true) - $startTime) * 1000, 2);
             $code = $response->status();
@@ -641,12 +698,18 @@ class SsoDiagnosticsService
                     'issues' => [],
                 ];
             }
+        } catch (Throwable $e) {
+            // Jika sync-user gagal atau belum tersedia di downstream, lanjutkan ke fallback sync-password
+        }
 
-            // 2. Cek endpoint fallback /api/sipintu/sync-password jika sync-user 404
+        // 2. Cek endpoint fallback /api/sipintu/sync-password
+        try {
             $fallbackResponse = Http::timeout(3)->post($passwordSyncUrl, ['ping' => true]);
             $fallbackCode = $fallbackResponse->status();
 
             if ($fallbackCode !== 404) {
+                $latency = round((microtime(true) - $startTime) * 1000, 2);
+
                 return [
                     'check' => [
                         'id' => 'password_webhook',
@@ -654,55 +717,43 @@ class SsoDiagnosticsService
                         'status' => 'PASS',
                         'target' => $passwordSyncUrl,
                         'http_code' => $fallbackCode,
-                        'latency_ms' => round((microtime(true) - $startTime) * 1000, 2),
+                        'latency_ms' => $latency,
                         'message' => "Route webhook sinkronisasi password aktif merespons (HTTP {$fallbackCode}). Disarankan upgrade ke /api/sipintu/sync-user untuk sinkronisasi profil penuh.",
                     ],
                     'issues' => [],
                 ];
             }
-
-            // 3. Jika kedua endpoint 404
-            $issues[] = [
-                'id' => 'PASSWORD_WEBHOOK_NOT_CONFIGURED',
-                'title' => 'Webhook Sinkronisasi Data Pengguna Belum Disediakan',
-                'severity' => 'WARNING',
-                'location' => 'APLIKASI_DOWNSTREAM',
-                'location_label' => 'Aplikasi Downstream',
-                'cause' => "Aplikasi downstream belum memiliki endpoint POST /api/sipintu/sync-user (atau /api/sipintu/sync-password). Jika data pengguna atau password diubah di SiPintu, downstream tidak akan menerima update instan secara real-time di latar belakang.",
-                'solution_title' => 'Tambahkan Endpoint Webhook Sinkronisasi di Downstream',
-                'solution_steps' => [
-                    "Sediakan route POST /api/sipintu/sync-user di downstream untuk memperbarui data profil & password hash siswa/guru secara real-time.",
-                ],
-                'solution_code' => "Route::post('/api/sipintu/sync-user', [OAuthController::class, 'syncUser']);",
-            ];
-
-            return [
-                'check' => [
-                    'id' => 'password_webhook',
-                    'name' => 'Webhook Sinkronisasi Data Pengguna & Password Otomatis',
-                    'status' => 'WARN',
-                    'target' => $userSyncUrl,
-                    'http_code' => 404,
-                    'latency_ms' => $latency,
-                    'message' => 'Endpoint webhook belum tersedia (404 Not Found). Data pengguna akan disinkronkan saat login SSO berikutnya.',
-                ],
-                'issues' => $issues,
-            ];
         } catch (Throwable $e) {
-            $latency = round((microtime(true) - $startTime) * 1000, 2);
-
-            return [
-                'check' => [
-                    'id' => 'password_webhook',
-                    'name' => 'Webhook Sinkronisasi Data Pengguna & Password Otomatis',
-                    'status' => 'WARN',
-                    'target' => $userSyncUrl,
-                    'http_code' => null,
-                    'latency_ms' => $latency,
-                    'message' => 'Pemeriksaan webhook dilewati (Host downstream belum merespons).',
-                ],
-                'issues' => [],
-            ];
+            // Fallback juga gagal
         }
+
+        // 3. Jika kedua endpoint webhook 404 / tidak terkonfigurasi
+        $latency = round((microtime(true) - $startTime) * 1000, 2);
+        $issues[] = [
+            'id' => 'PASSWORD_WEBHOOK_NOT_CONFIGURED',
+            'title' => 'Webhook Sinkronisasi Data Pengguna Belum Disediakan',
+            'severity' => 'WARNING',
+            'location' => 'APLIKASI_DOWNSTREAM',
+            'location_label' => 'Aplikasi Downstream',
+            'cause' => 'Aplikasi downstream belum memiliki endpoint POST /api/sipintu/sync-user (atau /api/sipintu/sync-password). Jika data pengguna atau password diubah di SiPintu, downstream tidak akan menerima update instan secara real-time di latar belakang.',
+            'solution_title' => 'Tambahkan Endpoint Webhook Sinkronisasi di Downstream',
+            'solution_steps' => [
+                'Sediakan route POST /api/sipintu/sync-user di downstream untuk memperbarui data profil & password hash siswa/guru secara real-time.',
+            ],
+            'solution_code' => "Route::post('/api/sipintu/sync-user', [OAuthController::class, 'syncUser']);",
+        ];
+
+        return [
+            'check' => [
+                'id' => 'password_webhook',
+                'name' => 'Webhook Sinkronisasi Data Pengguna & Password Otomatis',
+                'status' => 'WARN',
+                'target' => $userSyncUrl,
+                'http_code' => 404,
+                'latency_ms' => $latency,
+                'message' => 'Endpoint webhook belum tersedia (404 Not Found). Data pengguna akan disinkronkan saat login SSO berikutnya.',
+            ],
+            'issues' => $issues,
+        ];
     }
 }

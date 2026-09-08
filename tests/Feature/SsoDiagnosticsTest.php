@@ -16,6 +16,7 @@ class SsoDiagnosticsTest extends TestCase
     use RefreshDatabase;
 
     protected User $admin;
+
     protected Role $adminRole;
 
     protected function setUp(): void
@@ -42,7 +43,7 @@ class SsoDiagnosticsTest extends TestCase
             'status' => 'inactive',
         ]);
 
-        $service = new SsoDiagnosticsService();
+        $service = new SsoDiagnosticsService;
         $diagnosis = $service->diagnose($app);
 
         $this->assertEquals('CRITICAL', $diagnosis['overall_status']);
@@ -75,7 +76,7 @@ class SsoDiagnosticsTest extends TestCase
         ]);
         $app->roles()->attach($studentRole);
 
-        $service = new SsoDiagnosticsService();
+        $service = new SsoDiagnosticsService;
         $diagnosis = $service->diagnose($app);
 
         $this->assertEquals('HEALTHY', $diagnosis['overall_status']);
@@ -83,8 +84,63 @@ class SsoDiagnosticsTest extends TestCase
         $this->assertEmpty($diagnosis['issues']);
     }
 
+    public function test_diagnostics_service_checks_connectivity_with_modern_user_sync(): void
+    {
+        Http::fake([
+            'http://localhost:8001' => Http::response('OK', 200),
+            'http://localhost:8001/health' => Http::response(['status' => 'ok'], 200),
+            'http://localhost:8001/oauth/callback' => Http::response('Callback Ready', 200),
+            'http://localhost:8001/api/sipintu/sync-user' => Http::response(['status' => 'synced'], 200),
+        ]);
+
+        $studentRole = Role::firstOrCreate(['name' => 'student', 'guard_name' => 'web']);
+        $app = Application::create([
+            'name' => 'Aplikasi Modern',
+            'slug' => 'aplikasi-modern',
+            'client_id' => 'app_testmodern',
+            'client_secret' => Hash::make('sec_secret123'),
+            'base_url' => 'http://localhost:8001',
+            'redirect_uri' => 'http://localhost:8001/oauth/callback',
+            'status' => 'active',
+        ]);
+        $app->roles()->attach($studentRole);
+
+        $service = new SsoDiagnosticsService;
+        $diagnosis = $service->diagnose($app);
+
+        $this->assertEquals('HEALTHY', $diagnosis['overall_status']);
+        $this->assertEquals(100, $diagnosis['health_score']);
+        $this->assertEmpty($diagnosis['issues']);
+    }
+
+    public function test_diagnostics_service_detects_invalid_base_url(): void
+    {
+        $studentRole = Role::firstOrCreate(['name' => 'student', 'guard_name' => 'web']);
+        $app = Application::create([
+            'name' => 'Aplikasi Invalid URL',
+            'slug' => 'aplikasi-invalid-url',
+            'client_id' => 'app_testinvalid',
+            'client_secret' => Hash::make('sec_secret123'),
+            'base_url' => 'invalid-url',
+            'redirect_uri' => 'http://localhost:8001/oauth/callback',
+            'status' => 'active',
+        ]);
+        $app->roles()->attach($studentRole);
+
+        $service = new SsoDiagnosticsService;
+        $diagnosis = $service->diagnose($app);
+
+        $this->assertEquals('CRITICAL', $diagnosis['overall_status']);
+        $issueIds = array_column($diagnosis['issues'], 'id');
+        $this->assertContains('INVALID_BASE_URL_FORMAT', $issueIds);
+    }
+
     public function test_admin_can_run_sso_diagnosis_api_endpoint(): void
     {
+        Http::fake([
+            '*' => Http::response('OK', 200),
+        ]);
+
         $app = Application::create([
             'name' => 'Test App Endpoint',
             'slug' => 'test-app-endpoint',
@@ -116,6 +172,10 @@ class SsoDiagnosticsTest extends TestCase
 
     public function test_admin_can_run_batch_sso_diagnosis_api_endpoint(): void
     {
+        Http::fake([
+            '*' => Http::response('OK', 200),
+        ]);
+
         Application::create([
             'name' => 'App 1',
             'slug' => 'app-1',
@@ -145,6 +205,10 @@ class SsoDiagnosticsTest extends TestCase
 
     public function test_cli_command_runs_successfully(): void
     {
+        Http::fake([
+            '*' => Http::response('OK', 200),
+        ]);
+
         Application::create([
             'name' => 'CLI Test App',
             'slug' => 'cli-test-app',
