@@ -30,7 +30,6 @@
         password: '', 
         showPassword: false,
         validTypes: ['siswa', 'guru', 'dudi'],
-        siswaMethod: '{{ (old('nis') && str_contains(old('nis'), '@')) ? 'email' : 'nis' }}',
         init() {
             const serverType = '{{ old('account_type', '') }}';
             const hashType = window.location.hash.replace('#', '');
@@ -87,46 +86,15 @@
             </div>
         </div>
 
-        <!-- Group 1: Siswa Field (2 Cara: NIS & Email NIS) -->
-        <div x-show="accountType === 'siswa'" class="space-y-1.5">
-            <div class="flex items-center justify-between">
-                <label for="nis" class="block text-xs font-bold text-slate-700">
-                    <span x-show="siswaMethod === 'nis'">Nomor Induk Siswa (NIS)</span>
-                    <span x-show="siswaMethod === 'email'" x-cloak>Email NIS Siswa</span>
-                </label>
-                <!-- Toggle 2 Cara: NIS atau Email NIS -->
-                <div class="inline-flex items-center p-0.5 bg-slate-100 rounded-lg border border-slate-200 text-[11px]">
-                    <button type="button" @click="siswaMethod = 'nis'"
-                        :class="siswaMethod === 'nis' ? 'bg-white text-emerald-700 font-extrabold shadow-sm' : 'text-slate-500 hover:text-slate-800 font-medium'"
-                        class="px-2.5 py-1 rounded-md transition-all flex items-center space-x-1">
-                        <span>🔢 NIS</span>
-                    </button>
-                    <button type="button" @click="siswaMethod = 'email'"
-                        :class="siswaMethod === 'email' ? 'bg-white text-emerald-700 font-extrabold shadow-sm' : 'text-slate-500 hover:text-slate-800 font-medium'"
-                        class="px-2.5 py-1 rounded-md transition-all flex items-center space-x-1">
-                        <span>✉️ Email NIS</span>
-                    </button>
-                </div>
-            </div>
-
-            <div class="relative">
-                <input type="text" id="nis" name="nis" :required="accountType === 'siswa'" :disabled="accountType !== 'siswa'"
-                    value="{{ old('nis', old('identity')) }}"
-                    :placeholder="siswaMethod === 'email' ? 'Contoh: 4439@smkn1bangsri.sch.id' : 'Contoh NIS: 4439'"
-                    @input="if ($event.target.value.includes('@')) { siswaMethod = 'email'; }"
-                    class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-all text-sm font-semibold">
-            </div>
-
-            <div class="text-[11px] text-slate-600 mt-1 font-medium">
-                <p x-show="siswaMethod === 'nis'" class="flex items-center space-x-1">
-                    <svg class="w-3.5 h-3.5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    <span>Login via nomor <strong>NIS</strong> (contoh: <strong>4439</strong>). Bisa juga gunakan tombol <em>Email NIS</em> di atas.</span>
-                </p>
-                <p x-show="siswaMethod === 'email'" x-cloak class="flex items-center space-x-1">
-                    <svg class="w-3.5 h-3.5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    <span>Login via <strong>Email NIS</strong> resmi (contoh: <strong>4439@smkn1bangsri.sch.id</strong>).</span>
-                </p>
-            </div>
+        <!-- Group 1: Siswa Field (NIS / Email NIS) -->
+        <div x-show="accountType === 'siswa'">
+            <label for="nis" class="block text-xs font-bold text-slate-700 mb-1.5">
+                Nomor Induk Siswa (NIS) / Email NIS
+            </label>
+            <input type="text" id="nis" name="nis" :required="accountType === 'siswa'" :disabled="accountType !== 'siswa'"
+                value="{{ old('nis', old('identity')) }}" placeholder="NIS atau Email NIS (contoh: 4439)"
+                class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-all text-sm font-semibold">
+            <p class="text-[11px] text-slate-600 mt-1 font-medium">Gunakan nomor NIS resmi atau Email NIS siswa.</p>
         </div>
 
         <!-- Group 2: Guru Field (NIP) -->
