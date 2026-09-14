@@ -92,7 +92,7 @@
                         <span>Status Server Bot WhatsApp Sending</span>
                         <template x-if="online && !botEnabled">
                             <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-800 border border-amber-300 uppercase flex items-center gap-1">
-                                <span>💤 Tidur / Hemat RAM</span>
+                                <span>Tidur</span>
                             </span>
                         </template>
                         <template x-if="online && botEnabled && connection === 'open'">
@@ -149,7 +149,7 @@
                         <template x-if="!isToggling && botEnabled">
                             <span class="flex items-center space-x-1.5">
                                 <svg class="w-3.5 h-3.5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
-                                <span>Tidurkan (Hemat RAM)</span>
+                                <span>Tidurkan</span>
                             </span>
                         </template>
                         <template x-if="!isToggling && !botEnabled">
@@ -186,13 +186,10 @@
                         💤
                     </div>
                     <div>
-                        <h4 class="text-xs font-black text-amber-950">Bot WhatsApp Sedang Tidur (Mode Hemat RAM Aktif)</h4>
+                        <h4 class="text-xs font-black text-amber-950">Bot WhatsApp Sedang Tidur</h4>
                         <p class="text-[11px] text-amber-800 font-medium mt-0.5">Socket WhatsApp diistirahatkan sehingga konsumsi memori server sangat hemat (~30 MB). Kredensial nomor WhatsApp Anda tetap aman tersimpan tanpa perlu scan QR ulang.</p>
                     </div>
                 </div>
-                <button type="button" @click="togglePower()" :disabled="isToggling" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black rounded-xl transition-all shadow-md shadow-emerald-600/20 shrink-0 cursor-pointer">
-                    ⚡ Bangunkan & Aktifkan Bot
-                </button>
             </div>
         </template>
 
