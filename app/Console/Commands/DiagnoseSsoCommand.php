@@ -63,7 +63,7 @@ class DiagnoseSsoCommand extends Command
         }
 
         $choices = $apps->mapWithKeys(fn ($a) => [$a->client_id => "{$a->name} ({$a->client_id}) - {$a->base_url}"])->toArray();
-        $choices['ALL'] = '⚡ DIAGNOSA SEMUA APLIKASI SEKALIGUS';
+        $choices['ALL'] = ' DIAGNOSA SEMUA APLIKASI SEKALIGUS';
 
         $selected = $this->choice('Pilih aplikasi downstream yang ingin didiagnosa:', $choices, 'ALL');
 

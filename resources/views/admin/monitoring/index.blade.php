@@ -197,7 +197,7 @@
                     <svg class="w-4 h-4" :class="diagnosingAll ? 'animate-spin' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
-                    <span x-text="diagnosingAll ? 'Mendiagnosa...' : '⚡ Diagnosa Semua SSO'">⚡ Diagnosa Semua SSO</span>
+                    <span x-text="diagnosingAll ? 'Mendiagnosa...' : 'Diagnosa Semua SSO'">Diagnosa Semua SSO</span>
                 </button>
 
                 <form action="{{ route('admin.monitoring.run-health-checks') }}" method="POST">
@@ -607,7 +607,7 @@
                 <!-- Clean Light JSON Telemetry Container -->
                 <div class="pt-2 border-t border-emerald-200/80 space-y-1">
                     <span class="text-[10px] font-extrabold uppercase text-emerald-900 block font-mono">Payload Respons Telemetry JSON:</span>
-    <!-- ========================================================================= -->
+
     <!-- 1. MODAL INTERAKTIF: DIAGNOSA KONEKSI SSO APLIKASI SPESIFIK -->
     <!-- ========================================================================= -->
     <div x-show="showSsoModal" 
@@ -868,9 +868,7 @@
         </div>
     </div>
 
-    <!-- ========================================================================= -->
-    <!-- 2. MODAL INTERAKTIF: HASIL DIAGNOSA SEMUA APLIKASI SEKALIGUS -->
-    <!-- ========================================================================= -->
+
     <div x-show="showBatchModal" 
          x-transition:enter="transition ease-out duration-200"
          x-transition:enter-start="opacity-0"
