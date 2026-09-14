@@ -348,7 +348,6 @@
             </div>
         </div>
 
-        <!-- Top Connected Client Apps by API Volume (Bright Visual Meter Bars) -->
         <div class="lg:col-span-2 bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-5 flex flex-col justify-between">
             <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                 <h3 class="text-sm font-black text-emerald-950 uppercase tracking-wider">Aktivitas Request API Aplikasi Downstream</h3>
@@ -393,9 +392,7 @@
         </div>
     </div>
 
-    <!-- Client Applications Visual Grid / Table Telemetry Panel -->
     <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-6 shadow-sm">
-        <!-- Control Bar: Search & View Modes & Filter Pills -->
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-5">
             <div>
                 <h3 class="text-base font-black text-emerald-950 flex items-center gap-2">

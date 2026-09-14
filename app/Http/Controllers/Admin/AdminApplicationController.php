@@ -24,7 +24,12 @@ class AdminApplicationController extends Controller
 
         if ($request->filled('search')) {
             $search = trim($request->search);
-            $query->where('name', 'like', "{$search}%");
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('client_id', 'like', "%{$search}%")
+                    ->orWhere('base_url', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
+            });
         }
 
         if ($request->filled('category_id') && $request->category_id !== 'all') {
@@ -35,10 +40,17 @@ class AdminApplicationController extends Controller
             $query->where('status', $request->status);
         }
 
-        $applications = $query->latest()->paginate(15)->withQueryString();
+        $applications = $query->latest()->paginate(12)->withQueryString();
         $categories = ApplicationCategory::orderBy('display_order')->get();
 
-        return view('admin.applications.index', compact('applications', 'categories'));
+        $stats = [
+            'total' => Application::count(),
+            'active' => Application::where('status', 'active')->count(),
+            'maintenance' => Application::where('status', 'maintenance')->count(),
+            'inactive' => Application::where('status', 'inactive')->count(),
+        ];
+
+        return view('admin.applications.index', compact('applications', 'categories', 'stats'));
     }
 
     public function create()
