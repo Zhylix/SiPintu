@@ -35,6 +35,7 @@
         botPhone: '{{ $botStatus['data']['bot_phone'] ?? '' }}',
         qrCode: '{{ $botStatus['data']['qr_code'] ?? '' }}',
         botEnabled: {{ isset($botStatus['data']['bot_enabled']) ? ($botStatus['data']['bot_enabled'] ? 'true' : 'false') : 'true' }},
+        isToggling: false,
         fetchStatus() {
             fetch('{{ route('admin.announcements.bot-status') }}')
                 .then(res => res.json())
@@ -47,6 +48,34 @@
                         this.botEnabled = data.data.bot_enabled !== undefined ? data.data.bot_enabled : true;
                     }
                 }).catch(() => { this.online = false; });
+        },
+        togglePower() {
+            if (this.isToggling) return;
+            this.isToggling = true;
+            fetch('{{ route('admin.announcements.toggle-bot-power') }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ enabled: !this.botEnabled })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    this.botEnabled = data.bot_enabled !== undefined ? data.bot_enabled : !this.botEnabled;
+                    this.fetchStatus();
+                } else {
+                    alert(data.error || 'Gagal mengubah status bot');
+                }
+            })
+            .catch(() => {
+                alert('Gagal berkomunikasi dengan server.');
+            })
+            .finally(() => {
+                this.isToggling = false;
+            });
         },
         init() {
             this.fetchStatus();
@@ -61,41 +90,84 @@
                 <div>
                     <h3 class="font-extrabold text-slate-900 text-sm flex items-center gap-2 flex-wrap">
                         <span>Status Server Bot WhatsApp Sending</span>
-                        <template x-if="online && connection === 'open'">
-                            <span :class="botEnabled ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-amber-100 text-amber-800 border-amber-300'" class="px-2.5 py-0.5 rounded-full text-[10px] font-black border uppercase">
-                                <span x-text="botEnabled ? 'Terhubung (ON)' : 'Terhubung (OFF)'"></span>
+                        <template x-if="online && !botEnabled">
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-800 border border-amber-300 uppercase flex items-center gap-1">
+                                <span>💤 Tidur / Hemat RAM</span>
                             </span>
                         </template>
-                        <template x-if="online && connection === 'connecting'">
+                        <template x-if="online && botEnabled && connection === 'open'">
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300 uppercase flex items-center gap-1">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                                <span>Terhubung (Aktif)</span>
+                            </span>
+                        </template>
+                        <template x-if="online && botEnabled && connection === 'connecting'">
                             <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-800 border border-amber-300 uppercase">
                                 Menghubungkan...
                             </span>
                         </template>
-                        <template x-if="!online || connection === 'close'">
+                        <template x-if="!online || (botEnabled && connection === 'close')">
                             <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-800 border border-rose-300 uppercase">
                                 Belum Terhubung
                             </span>
                         </template>
                     </h3>
                     <p class="text-xs text-slate-600 font-medium mt-0.5">
-                        <template x-if="online && connection === 'open' && botPhone">
-                            <span>Nomor Bot Pengirim Aktif: <strong class="font-mono text-emerald-800" x-text="'+' + botPhone"></strong>
-                                <span x-show="!botEnabled" class="text-amber-700 font-bold ml-1">(Pengiriman WhatsApp di-nonaktifkan / OFF)</span>
+                        <template x-if="online && !botEnabled">
+                            <span class="text-amber-700 font-bold flex items-center gap-1.5">
+                                <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                                <span>Mode Tidur (Hemat RAM) aktif. Socket WhatsApp diistirahatkan (~30 MB). Klik 'Aktifkan Bot' untuk menyalakan kembali.</span>
                             </span>
                         </template>
-                        <template x-if="!online || connection !== 'open'">
+                        <template x-if="online && botEnabled && connection === 'open' && botPhone">
+                            <span>Nomor Bot Pengirim Aktif: <strong class="font-mono text-emerald-800" x-text="'+' + botPhone"></strong>
+                                <span class="text-emerald-700 font-semibold ml-1">(Siap mengirim pengumuman)</span>
+                            </span>
+                        </template>
+                        <template x-if="online && botEnabled && connection !== 'open'">
                             <span>Sistem Baileys belum terhubung ke WhatsApp HP. Silakan scan QR code di bawah.</span>
+                        </template>
+                        <template x-if="!online">
+                            <span>Service Bot WhatsApp tidak terdeteksi. Pastikan proses bot sudah dijalankan di server.</span>
                         </template>
                     </p>
                 </div>
             </div>
 
             <div class="flex flex-wrap items-center gap-2">
+                <!-- Tombol Hibernate / Tidur / Aktifkan (Hemat RAM) -->
+                <template x-if="online">
+                    <button type="button" @click="togglePower()" :disabled="isToggling"
+                        :class="botEnabled 
+                            ? 'bg-amber-50 hover:bg-amber-100 text-amber-800 border-amber-300' 
+                            : 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600 shadow-md shadow-emerald-600/20'"
+                        class="px-3.5 py-2 border text-xs font-black rounded-xl transition-all shadow-sm flex items-center space-x-1.5 cursor-pointer disabled:opacity-50"
+                        :title="botEnabled ? 'Tidurkan bot untuk menghemat memori RAM server' : 'Aktifkan kembali koneksi bot WhatsApp'">
+                        <template x-if="isToggling">
+                            <svg class="w-3.5 h-3.5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                        </template>
+                        <template x-if="!isToggling && botEnabled">
+                            <span class="flex items-center space-x-1.5">
+                                <svg class="w-3.5 h-3.5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                                <span>Tidurkan (Hemat RAM)</span>
+                            </span>
+                        </template>
+                        <template x-if="!isToggling && !botEnabled">
+                            <span class="flex items-center space-x-1.5">
+                                <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                <span>Aktifkan Bot (ON)</span>
+                            </span>
+                        </template>
+                    </button>
+                </template>
+
+                <!-- Tombol Logout / Ganti Nomor -->
                 <template x-if="online && connection === 'open'">
                     <form action="{{ route('admin.announcements.logout-bot') }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin MENGGANTI NOMOR WHATSAPP BOT?\n\nSesi WhatsApp bot yang sedang terhubung akan di-logout dan QR Code baru akan dibuat untuk di-scan dengan nomor lain.')">
                         @csrf
-                        <button type="submit" class="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-black rounded-xl transition-all shadow-sm flex items-center space-x-1.5" title="Keluarkan akun WhatsApp untuk ganti ke nomor lain">
-                            <span>Logout</span>
+                        <button type="submit" class="px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-black rounded-xl transition-all shadow-sm flex items-center space-x-1.5" title="Keluarkan akun WhatsApp untuk ganti ke nomor lain">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                            <span>Ganti Nomor</span>
                         </button>
                     </form>
                 </template>
@@ -106,8 +178,26 @@
             </div>
         </div>
 
+        <!-- Hibernate Card Display if bot is in sleep mode -->
+        <template x-if="online && !botEnabled">
+            <div class="p-5 bg-amber-50/70 border border-amber-200 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 text-amber-950 shadow-inner">
+                <div class="flex items-center space-x-3.5">
+                    <div class="w-12 h-12 rounded-2xl bg-amber-100 border border-amber-300 flex items-center justify-center text-amber-700 shrink-0 text-2xl shadow-sm">
+                        💤
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-black text-amber-950">Bot WhatsApp Sedang Tidur (Mode Hemat RAM Aktif)</h4>
+                        <p class="text-[11px] text-amber-800 font-medium mt-0.5">Socket WhatsApp diistirahatkan sehingga konsumsi memori server sangat hemat (~30 MB). Kredensial nomor WhatsApp Anda tetap aman tersimpan tanpa perlu scan QR ulang.</p>
+                    </div>
+                </div>
+                <button type="button" @click="togglePower()" :disabled="isToggling" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black rounded-xl transition-all shadow-md shadow-emerald-600/20 shrink-0 cursor-pointer">
+                    ⚡ Bangunkan & Aktifkan Bot
+                </button>
+            </div>
+        </template>
+
         <!-- Live QR Code Card Display if disconnected / waiting scan -->
-        <template x-if="!online || connection !== 'open'">
+        <template x-if="online && botEnabled && connection !== 'open'">
             <div class="p-5 bg-emerald-50/60 border border-emerald-200 rounded-2xl shadow-inner">
                 <template x-if="qrCode">
                     <div class="flex flex-col md:flex-row items-center gap-6">
@@ -143,16 +233,26 @@
                         <div>
                             <h4 class="text-xs font-black text-slate-900">Menyiapkan QR Code WhatsApp...</h4>
                             <p class="text-[11px] text-slate-600 font-medium mt-0.5">
-                                <template x-if="!online">
-                                    <span>Pastikan server Node.js WhatsApp Bot (port 3000) sudah aktif. Menghubungkan ulang...</span>
-                                </template>
-                                <template x-if="online">
-                                    <span>Memuat QR Code, Mohon tunggu beberapa detik...</span>
-                                </template>
+                                <span>Memuat QR Code, Mohon tunggu beberapa detik...</span>
                             </p>
                         </div>
                     </div>
                 </template>
+            </div>
+        </template>
+
+        <!-- Offline Server Message Display -->
+        <template x-if="!online">
+            <div class="p-5 bg-slate-50 border border-slate-200 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 text-slate-700">
+                <div class="flex items-center space-x-3.5">
+                    <div class="w-11 h-11 rounded-xl bg-slate-200 flex items-center justify-center text-slate-500 shrink-0">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-black text-slate-900">Server WhatsApp Bot Belum Aktif / Terputus</h4>
+                        <p class="text-[11px] text-slate-600 font-medium mt-0.5">Pastikan service bot Node.js sudah berjalan di background server. Cek status via terminal: <code class="bg-slate-200 text-slate-800 px-1 py-0.5 rounded font-mono text-[10px]">npx pm2 status</code>.</p>
+                    </div>
+                </div>
             </div>
         </template>
 

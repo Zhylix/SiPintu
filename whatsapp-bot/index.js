@@ -107,6 +107,12 @@ const authenticateApiKey = (req, res, next) => {
 };
 
 async function connectToWhatsApp() {
+    if (!isBotEnabled) {
+        console.log('[WhatsApp Bot] Bot sedang dalam mode hibernate (OFF). Tidak melakukan koneksi.');
+        isConnecting = false;
+        connectionState = 'close';
+        return;
+    }
     if (isConnecting) return;
     if (sock && (connectionState === 'connecting' || connectionState === 'open')) return;
 
@@ -218,7 +224,9 @@ async function connectToWhatsApp() {
 
                 console.log(`[WhatsApp Bot] Percobaan reconnect #${reconnectAttempts}. Menghubungkan kembali dalam ${retryDelay / 1000} detik...`);
                 setTimeout(() => {
-                    connectToWhatsApp();
+                    if (isBotEnabled) {
+                        connectToWhatsApp();
+                    }
                 }, retryDelay);
             } else if (connection === 'open') {
                 if (watchdogTimer) clearTimeout(watchdogTimer);
@@ -265,8 +273,8 @@ app.get('/status', (req, res) => {
     const botPhone = rawId ? rawId.split(':')[0] : null;
     const isConnected = connectionState === 'open' && Boolean(botPhone);
 
-    // Jika bot tidak terhubung dengan nomor HP & tidak sedang connecting & belum ada QR Code, picu regenerasi QR Code
-    if (!isConnected && !lastQrImage && !isConnecting && connectionState === 'close') {
+    // Jika bot tidak terhubung dengan nomor HP & tidak sedang connecting & belum ada QR Code, picu regenerasi QR Code HANYA jika bot aktif
+    if (isBotEnabled && !isConnected && !lastQrImage && !isConnecting && connectionState === 'close') {
         console.log('[WhatsApp Bot] Bot tidak terhubung dengan nomor dan QR code belum aktif. Memulai pembuatan QR Code...');
         connectToWhatsApp();
     }
@@ -302,7 +310,7 @@ app.get('/check-update', async (req, res) => {
     });
 });
 
-// 1.5 Toggle Bot Power (ON/OFF) Without Logout
+// 1.5 Toggle Bot Power (ON/OFF / Hibernate) Without Logout
 app.post('/toggle-power', authenticateApiKey, (req, res) => {
     if (typeof req.body.enabled === 'boolean') {
         isBotEnabled = req.body.enabled;
@@ -310,12 +318,40 @@ app.post('/toggle-power', authenticateApiKey, (req, res) => {
         isBotEnabled = !isBotEnabled;
     }
 
-    console.log(`[WhatsApp Bot] Status bot diubah ke: ${isBotEnabled ? 'AKTIF (ON)' : 'NON-AKTIF (OFF)'}`);
+    if (!isBotEnabled) {
+        console.log('[WhatsApp Bot] Mode Hibernate / Hemat RAM diaktifkan. Menidurkan socket...');
+        if (watchdogTimer) {
+            clearTimeout(watchdogTimer);
+            watchdogTimer = null;
+        }
+        if (sock) {
+            try {
+                sock.ev.removeAllListeners();
+                sock.end();
+            } catch (e) {}
+            sock = null;
+        }
+        connectionState = 'close';
+        isConnecting = false;
+        lastQr = null;
+        lastQrImage = null;
+    } else {
+        console.log('[WhatsApp Bot] Mengaktifkan bot kembali dari mode sleep...');
+        reconnectAttempts = 0;
+        if (connectionState !== 'open' && !isConnecting) {
+            connectToWhatsApp();
+        }
+    }
+
+    console.log(`[WhatsApp Bot] Status bot diubah ke: ${isBotEnabled ? 'AKTIF (ON)' : 'HIBERNATE / TIDUR (OFF)'}`);
 
     return res.json({
         status: 'success',
         bot_enabled: isBotEnabled,
-        message: `Bot WhatsApp berhasil ${isBotEnabled ? 'diaktifkan (ON)' : 'dinonaktifkan (OFF)'}.`
+        connection: connectionState,
+        message: isBotEnabled 
+            ? 'Bot WhatsApp berhasil diaktifkan (ON).' 
+            : 'Bot WhatsApp berhasil ditidurkan (OFF / Hemat RAM).'
     });
 });
 

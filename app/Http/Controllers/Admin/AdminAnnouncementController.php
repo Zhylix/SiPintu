@@ -232,7 +232,7 @@ class AdminAnnouncementController extends Controller
 
         if ($result['success']) {
             $isBotEnabled = $result['bot_enabled'] ?? true;
-            $statusText = $isBotEnabled ? 'DIAKTIFKAN (ON)' : 'DINONAKTIFKAN (OFF)';
+            $statusText = $isBotEnabled ? 'DIAKTIFKAN (ON)' : 'DITIDURKAN (OFF / HEMAT RAM)';
 
             AuditLog::create([
                 'user_id' => Auth::id(),
@@ -244,10 +244,18 @@ class AdminAnnouncementController extends Controller
                 ],
             ]);
 
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json($result);
+            }
+
             return back()->with(
                 'success',
                 "Status Bot WhatsApp berhasil {$statusText}! Sesi terhubung ke WhatsApp tetap tersimpan (tidak logout)."
             );
+        }
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json($result, 500);
         }
 
         return back()->with('error', $result['error'] ?? 'Gagal mengubah status aktif/non-aktif bot WhatsApp.');
