@@ -68,7 +68,7 @@ class AdminAnnouncementController extends Controller
             'type' => $validated['type'],
             'target_role' => $validated['target_role'],
             'channel' => $validated['channel'],
-            'is_active' => $request->has('is_active'),
+            'is_active' => $request->boolean('is_active'),
             'created_by' => Auth::id(),
             'published_at' => now(),
         ]);
@@ -117,7 +117,7 @@ class AdminAnnouncementController extends Controller
             'type' => $validated['type'],
             'target_role' => $validated['target_role'],
             'channel' => $validated['channel'],
-            'is_active' => $request->has('is_active'),
+            'is_active' => $request->boolean('is_active'),
         ]);
 
         AuditLog::create([

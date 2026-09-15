@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Storage;
 
 class Application extends Model
 {
@@ -50,7 +51,7 @@ class Application extends Model
      */
     public function getLogoUrlAttribute(): ?string
     {
-        if (!$this->logo) {
+        if (! $this->logo) {
             return null;
         }
 
@@ -58,8 +59,8 @@ class Application extends Model
             return $this->logo;
         }
 
-        if (\Illuminate\Support\Facades\Storage::disk('public')->exists($this->logo)) {
-            return \Illuminate\Support\Facades\Storage::disk('public')->url($this->logo);
+        if (Storage::disk('public')->exists($this->logo)) {
+            return Storage::disk('public')->url($this->logo);
         }
 
         return null;

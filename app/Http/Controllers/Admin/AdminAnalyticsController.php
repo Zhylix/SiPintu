@@ -95,21 +95,21 @@ class AdminAnalyticsController extends Controller
 
             $successfulLogins = (clone $baseQuery)->where(function ($q) {
                 $q->where('activity', 'like', 'login_success%')
-                  ->orWhere('activity', 'user_login')
-                  ->orWhere('activity', 'sso_authorize_granted');
+                    ->orWhere('activity', 'user_login')
+                    ->orWhere('activity', 'sso_authorize_granted');
             })->count();
 
             $failedLogins = (clone $baseQuery)->where(function ($q) {
                 $q->where('activity', 'like', 'login_failed%')
-                  ->orWhere('activity', 'like', '%invalid%');
+                    ->orWhere('activity', 'like', '%invalid%');
             })->count();
 
             $totalActivity = (clone $baseQuery)->count();
 
             $securityEvents = (clone $baseQuery)->where(function ($q) {
                 $q->where('activity', 'like', '%blocked%')
-                  ->orWhere('activity', 'like', '%failed%')
-                  ->orWhere('activity', 'like', '%invalid%');
+                    ->orWhere('activity', 'like', '%failed%')
+                    ->orWhere('activity', 'like', '%invalid%');
             })->count();
 
             return [

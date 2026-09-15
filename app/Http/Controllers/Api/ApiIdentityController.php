@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Services\GatewayHealthValidationService;
+use App\Services\PasswordSyncService;
 use App\Services\SijunaApiService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -14,7 +15,7 @@ class ApiIdentityController extends Controller
     /**
      * Return primary identity object for the authenticated OAuth user
      */
-    public function user(Request $request, \App\Services\PasswordSyncService $passwordSyncService): JsonResponse
+    public function user(Request $request, PasswordSyncService $passwordSyncService): JsonResponse
     {
         $user = $request->attributes->get('oauth_user');
 
@@ -45,7 +46,7 @@ class ApiIdentityController extends Controller
     /**
      * Return detailed profile data including role details, timestamps, and enriched SIJUNA data
      */
-    public function profile(Request $request, SijunaApiService $sijunaService, \App\Services\PasswordSyncService $passwordSyncService): JsonResponse
+    public function profile(Request $request, SijunaApiService $sijunaService, PasswordSyncService $passwordSyncService): JsonResponse
     {
         $user = $request->attributes->get('oauth_user');
         $app = $request->attributes->get('oauth_application');
@@ -116,7 +117,7 @@ class ApiIdentityController extends Controller
     /**
      * Endpoint for downstream applications to retrieve or verify updated user password hashes
      */
-    public function passwordSync(Request $request, \App\Services\PasswordSyncService $passwordSyncService): JsonResponse
+    public function passwordSync(Request $request, PasswordSyncService $passwordSyncService): JsonResponse
     {
         $user = $request->attributes->get('oauth_user');
 

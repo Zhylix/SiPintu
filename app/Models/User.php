@@ -26,6 +26,7 @@ class User extends Authenticatable
         'classroom',
         'phone',
         'avatar',
+        'wa_notify',
         'status',
     ];
 
@@ -39,6 +40,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'wa_notify' => 'boolean',
         ];
     }
 

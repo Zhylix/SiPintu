@@ -7,6 +7,7 @@ use App\Jobs\CheckApplicationHealthJob;
 use App\Models\Application;
 use App\Models\OAuthAccessToken;
 use App\Services\GatewayHealthValidationService;
+use App\Services\SsoDiagnosticsService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -93,7 +94,7 @@ class AdminMonitoringController extends Controller
     /**
      * Jalankan diagnosa otomatis koneksi SSO untuk aplikasi downstream spesifik
      */
-    public function diagnoseSso(Request $request, \App\Services\SsoDiagnosticsService $diagnosticsService): JsonResponse
+    public function diagnoseSso(Request $request, SsoDiagnosticsService $diagnosticsService): JsonResponse
     {
         $clientId = $request->input('client_id');
         $appId = $request->input('application_id');
@@ -130,7 +131,7 @@ class AdminMonitoringController extends Controller
     /**
      * Jalankan diagnosa koneksi SSO massal untuk seluruh aplikasi downstream
      */
-    public function diagnoseAllSso(\App\Services\SsoDiagnosticsService $diagnosticsService): JsonResponse
+    public function diagnoseAllSso(SsoDiagnosticsService $diagnosticsService): JsonResponse
     {
         $results = $diagnosticsService->diagnoseAll();
 
@@ -140,4 +141,3 @@ class AdminMonitoringController extends Controller
         ]);
     }
 }
-

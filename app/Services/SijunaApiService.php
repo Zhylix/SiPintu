@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use Exception;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -48,7 +47,7 @@ class SijunaApiService
                 ])
                     ->connectTimeout(5)
                     ->timeout($this->timeout)
-                    ->retry($this->retryTimes, $this->retrySleep, function (Exception $exception) {
+                    ->retry($this->retryTimes, $this->retrySleep, function (Throwable $exception) {
                         return $exception instanceof ConnectionException;
                     })
                     ->get($endpoint, ['page' => $page]);
@@ -145,7 +144,7 @@ class SijunaApiService
                 ])
                     ->connectTimeout(5)
                     ->timeout($this->timeout)
-                    ->retry($this->retryTimes, $this->retrySleep, function (Exception $exception) {
+                    ->retry($this->retryTimes, $this->retrySleep, function (Throwable $exception) {
                         return $exception instanceof ConnectionException;
                     })
                     ->get($endpoint, ['page' => $page]);

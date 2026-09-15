@@ -111,14 +111,40 @@ class SyncSijunaStudentsJob implements ShouldQueue
             }
 
             // Attach student & alumni roles in bulk using Spatie model_has_roles
-            $syncedUsers = User::whereIn('role', ['student', 'alumni'])->get(['id', 'role']);
+            $studentUserIds = User::where('role', 'student')->pluck('id')->toArray();
+            $alumniUserIds = User::where('role', 'alumni')->pluck('id')->toArray();
+
+            // Ensure alumni do not retain old student role
+            if (! empty($alumniUserIds)) {
+                DB::table('model_has_roles')
+                    ->where('model_type', User::class)
+                    ->whereIn('model_id', $alumniUserIds)
+                    ->where('role_id', $studentRole->id)
+                    ->delete();
+            }
+
+            // Ensure active students do not retain alumni role
+            if (! empty($studentUserIds)) {
+                DB::table('model_has_roles')
+                    ->where('model_type', User::class)
+                    ->whereIn('model_id', $studentUserIds)
+                    ->where('role_id', $alumniRole->id)
+                    ->delete();
+            }
+
             $pivotData = [];
-            foreach ($syncedUsers as $u) {
-                $rId = ($u->role === 'alumni') ? $alumniRole->id : $studentRole->id;
+            foreach ($studentUserIds as $uId) {
                 $pivotData[] = [
-                    'role_id' => $rId,
+                    'role_id' => $studentRole->id,
                     'model_type' => User::class,
-                    'model_id' => $u->id,
+                    'model_id' => $uId,
+                ];
+            }
+            foreach ($alumniUserIds as $uId) {
+                $pivotData[] = [
+                    'role_id' => $alumniRole->id,
+                    'model_type' => User::class,
+                    'model_id' => $uId,
                 ];
             }
 

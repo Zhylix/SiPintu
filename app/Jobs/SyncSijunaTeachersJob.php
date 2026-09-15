@@ -92,8 +92,8 @@ class SyncSijunaTeachersJob implements ShouldQueue
             foreach (array_chunk($userRows, 500) as $chunk) {
                 User::upsert(
                     $chunk,
-                    ['email'],
-                    ['external_id', 'name', 'username', 'phone', 'status', 'role', 'updated_at']
+                    ['external_id'],
+                    ['name', 'email', 'username', 'phone', 'status', 'role', 'updated_at']
                 );
             }
 

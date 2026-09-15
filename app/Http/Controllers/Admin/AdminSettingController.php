@@ -18,11 +18,11 @@ class AdminSettingController extends Controller
     {
         $siteLogo = Setting::get('site_logo');
         $siteLogoUrl = Setting::getLogoUrl();
-        $isCustomLogo = !empty($siteLogo) && Storage::disk('public')->exists($siteLogo);
+        $isCustomLogo = ! empty($siteLogo) && Storage::disk('public')->exists($siteLogo);
 
         $loginBg = Setting::get('login_background');
         $loginBgUrl = Setting::getLoginBgUrl();
-        $isCustomLoginBg = !empty($loginBg) && Storage::disk('public')->exists($loginBg);
+        $isCustomLoginBg = ! empty($loginBg) && Storage::disk('public')->exists($loginBg);
 
         return view('admin.settings.index', compact(
             'siteLogo',

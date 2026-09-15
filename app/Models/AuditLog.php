@@ -69,4 +69,3 @@ class AuditLog extends Model
             || ! empty($this->metadata['via_sso']);
     }
 }
-

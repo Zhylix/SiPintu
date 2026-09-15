@@ -7,6 +7,7 @@ use App\Models\OAuthAccessToken;
 use App\Models\OAuthAuthCode;
 use App\Models\OAuthRefreshToken;
 use App\Services\AuditLogger;
+use App\Services\PasswordSyncService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -42,22 +43,35 @@ class OAuthController extends Controller
         }
 
         // 2. Validate Redirect URI
-        if ($redirectUri && ! str_starts_with($redirectUri, rtrim($application->redirect_uri, '/'))) {
-            AuditLogger::log('sso_authorize_invalid_redirect', [
-                'client_id' => $clientId,
-                'requested_uri' => $redirectUri,
-                'via_sso' => true,
-                'is_sso_failure' => true,
-            ]);
+        $registeredUris = array_values(array_filter(array_map('trim', explode(',', $application->redirect_uri ?? ''))));
+        $targetRedirectUri = null;
 
-            return response()->view('oauth.error', [
-                'title' => 'Redirect URI Tidak Valid',
-                'message' => 'Redirect URI yang dikirimkan tidak sesuai dengan konfigurasi terdaftar di Gateway.',
-            ], 400);
+        if ($redirectUri) {
+            $normalizedRequested = rtrim($redirectUri, '/');
+            foreach ($registeredUris as $regUri) {
+                $normalizedReg = rtrim($regUri, '/');
+                if ($normalizedRequested === $normalizedReg || str_starts_with($redirectUri, $normalizedReg.'?') || str_starts_with($redirectUri, $normalizedReg.'#')) {
+                    $targetRedirectUri = $redirectUri;
+                    break;
+                }
+            }
+
+            if (! $targetRedirectUri) {
+                AuditLogger::log('sso_authorize_invalid_redirect', [
+                    'client_id' => $clientId,
+                    'requested_uri' => $redirectUri,
+                    'via_sso' => true,
+                    'is_sso_failure' => true,
+                ]);
+
+                return response()->view('oauth.error', [
+                    'title' => 'Redirect URI Tidak Valid',
+                    'message' => 'Redirect URI yang dikirimkan tidak sesuai dengan konfigurasi terdaftar di Gateway.',
+                ], 400);
+            }
+        } else {
+            $targetRedirectUri = $registeredUris[0] ?? $application->base_url;
         }
-
-        // Default redirect URI if omitted
-        $targetRedirectUri = $redirectUri ?: explode(',', $application->redirect_uri)[0];
 
         // 3. Ensure User SSO Session is Authenticated
         if (! Auth::check()) {
@@ -208,7 +222,7 @@ class OAuthController extends Controller
                 'refresh_token' => $refreshTokenStr,
                 'id_token' => $idToken,
                 'scope' => $authCode->scopes ?: 'openid profile email',
-            ], app(\App\Services\PasswordSyncService::class)->getPasswordPayload($user)));
+            ], app(PasswordSyncService::class)->getPasswordPayload($user)));
         }
 
         if ($grantType === 'refresh_token') {
@@ -259,10 +273,59 @@ class OAuthController extends Controller
                 'refresh_token' => $newRefreshTokenStr,
                 'id_token' => $idToken,
                 'scope' => $refreshToken->accessToken->scopes,
-            ], app(\App\Services\PasswordSyncService::class)->getPasswordPayload($user)));
+            ], app(PasswordSyncService::class)->getPasswordPayload($user)));
         }
 
         return response()->json(['error' => 'unsupported_grant_type', 'error_description' => 'Grant type not supported.'], 400);
+    }
+
+    /**
+     * OAuth 2.0 / OIDC Revocation & End Session Endpoint (/oauth/logout)
+     */
+    public function logout(Request $request): JsonResponse
+    {
+        $tokenString = $request->bearerToken()
+            ?: $request->input('token')
+            ?: $request->input('access_token')
+            ?: $request->input('refresh_token');
+
+        $revokedCount = 0;
+
+        if ($tokenString) {
+            $accessToken = OAuthAccessToken::where('token', $tokenString)->first();
+            if ($accessToken) {
+                $accessToken->update(['revoked' => true]);
+                OAuthRefreshToken::where('access_token_id', $accessToken->id)->update(['revoked' => true]);
+                $revokedCount++;
+
+                AuditLogger::log('oauth_logout_token_revoked', [
+                    'token_id' => $accessToken->id,
+                    'user_id' => $accessToken->user_id,
+                    'application_id' => $accessToken->application_id,
+                ], $accessToken->user_id);
+            }
+
+            $refreshToken = OAuthRefreshToken::with('accessToken')->where('token', $tokenString)->first();
+            if ($refreshToken) {
+                $refreshToken->update(['revoked' => true]);
+                if ($refreshToken->accessToken) {
+                    $refreshToken->accessToken->update(['revoked' => true]);
+                }
+                $revokedCount++;
+            }
+        }
+
+        if ($request->hasSession()) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Successfully logged out and revoked credentials.',
+            'revoked' => $revokedCount > 0,
+        ]);
     }
 
     /**
@@ -315,7 +378,7 @@ class OAuthController extends Controller
 
         $primaryRole = $user->roles->first()?->slug ?? $user->role;
 
-        $passwordSync = app(\App\Services\PasswordSyncService::class)->getPasswordPayload($user);
+        $passwordSync = app(PasswordSyncService::class)->getPasswordPayload($user);
 
         $payload = $base64UrlEncode(array_merge([
             'iss' => config('app.url', 'http://localhost:8000'),

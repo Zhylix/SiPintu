@@ -22,7 +22,8 @@ class Setting extends Model
     {
         try {
             $setting = static::where('key', $key)->first();
-            return $setting && !is_null($setting->value) ? $setting->value : $default;
+
+            return $setting && ! is_null($setting->value) ? $setting->value : $default;
         } catch (\Throwable $e) {
             return $default;
         }

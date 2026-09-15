@@ -3,7 +3,6 @@
 namespace App\Jobs;
 
 use App\Models\Application;
-use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -23,13 +22,15 @@ class CheckApplicationHealthJob implements ShouldQueue
 
     public function handle(): void
     {
-        $applications = Application::whereNotNull('health_check_url')->get();
+        $applications = Application::whereNotNull('health_check_url')
+            ->where('health_check_url', '!=', '')
+            ->get();
 
         foreach ($applications as $app) {
             try {
                 $response = Http::timeout(5)->get($app->health_check_url);
                 $status = $response->successful() ? 'online' : 'warning';
-            } catch (Exception $e) {
+            } catch (\Throwable $e) {
                 $status = 'offline';
                 Log::warning("Health check failed for application {$app->name}: ".$e->getMessage());
             }

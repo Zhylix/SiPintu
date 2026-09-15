@@ -10,7 +10,6 @@ use App\Services\AuditLogger;
 use Exception;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -106,7 +105,7 @@ class AdminApplicationController extends Controller
             'icon' => $validated['icon'] ?? 'app-symbol',
             'logo' => $logoPath,
             'client_id' => $validated['client_id'],
-            'client_secret' => Hash::make($plainSecret),
+            'client_secret' => $plainSecret,
             'redirect_uri' => $validated['redirect_uri'],
             'logout_uri' => $validated['logout_uri'] ?? null,
             'scopes' => $validated['scopes'],
@@ -218,7 +217,7 @@ class AdminApplicationController extends Controller
     {
         $newSecret = 'sec_'.Str::random(32);
         $application->update([
-            'client_secret' => Hash::make($newSecret),
+            'client_secret' => $newSecret,
         ]);
 
         AuditLogger::log('admin_regenerate_client_secret', [
@@ -270,4 +269,3 @@ class AdminApplicationController extends Controller
         return redirect()->route('admin.applications.index')->with('success', "Aplikasi {$appName} telah dihapus dari registry.");
     }
 }
-

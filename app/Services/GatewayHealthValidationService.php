@@ -92,7 +92,7 @@ class GatewayHealthValidationService
 
         if ($clientSecret !== null) {
             $secretValid = ($clientSecret === $app->client_secret);
-            if (! $secretValid && (str_starts_with($app->client_secret, '$2y$') || str_starts_with($app->client_secret, '$2a$'))) {
+            if (! $secretValid && is_string($app->client_secret) && ! empty($app->client_secret) && (str_starts_with($app->client_secret, '$2y$') || str_starts_with($app->client_secret, '$2a$'))) {
                 try {
                     $secretValid = Hash::check($clientSecret, $app->client_secret);
                 } catch (Throwable $e) {

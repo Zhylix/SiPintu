@@ -142,7 +142,7 @@ class DiagnoseSsoCommand extends Command
                 }
 
                 if (! empty($issue['solution_code'])) {
-                    $this->line("     Contoh Kode / Perintah:");
+                    $this->line('     Contoh Kode / Perintah:');
                     $this->line("     <fg=green;bg=black>  {$issue['solution_code']}  </>");
                 }
             }

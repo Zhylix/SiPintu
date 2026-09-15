@@ -25,7 +25,7 @@ dotenv.config({ path: path.join(__dirname, '.env') });
 dotenv.config();
 
 const app = express();
-const PORT = process.env.WA_BOT_PORT || process.env.PORT || 3000;
+const PORT = process.env.WA_BOT_PORT || process.env.PORT || 3789;
 const API_KEY = process.env.WA_BOT_API_KEY || process.env.API_KEY || 'sipintu_wa_secret_key_2026';
 const AUTH_DIR = path.join(__dirname, 'auth_info_baileys');
 
@@ -249,7 +249,9 @@ async function connectToWhatsApp() {
         console.error('[WhatsApp Bot] Error inisialisasi socket Baileys:', err.message);
         const retryDelay = Math.min(30000, Math.round(3000 * Math.pow(1.3, Math.min(reconnectAttempts, 6))));
         setTimeout(() => {
-            connectToWhatsApp();
+            if (isBotEnabled) {
+                connectToWhatsApp();
+            }
         }, retryDelay);
     }
 }
@@ -273,8 +275,8 @@ app.get('/status', (req, res) => {
     const botPhone = rawId ? rawId.split(':')[0] : null;
     const isConnected = connectionState === 'open' && Boolean(botPhone);
 
-    // Jika bot tidak terhubung dengan nomor HP & tidak sedang connecting & belum ada QR Code, picu regenerasi QR Code HANYA jika bot aktif
-    if (isBotEnabled && !isConnected && !lastQrImage && !isConnecting && connectionState === 'close') {
+    // Jika bot tidak terhubung dengan nomor HP & tidak sedang connecting & belum ada QR Code, picu regenerasi QR Code HANYA jika bot aktif dan tidak sedang menunggu backoff
+    if (isBotEnabled && !isConnected && !lastQrImage && !isConnecting && connectionState === 'close' && reconnectAttempts === 0) {
         console.log('[WhatsApp Bot] Bot tidak terhubung dengan nomor dan QR code belum aktif. Memulai pembuatan QR Code...');
         connectToWhatsApp();
     }

@@ -661,15 +661,21 @@ class AuthController extends Controller
     {
         $request->validate([
             'email' => ['required', 'email'],
+        ], [
+            'email.required' => 'Alamat email wajib diisi.',
+            'email.email' => 'Format email tidak valid.',
         ]);
 
-        $user = User::where('email', $request->email)->first();
-        if (! $user) {
-            return back()->with('error', 'Alamat email tidak terdaftar dalam Gateway.');
+        $status = Password::sendResetLink(
+            $request->only('email')
+        );
+
+        if ($status === Password::RESET_LINK_SENT) {
+            AuditLogger::log('forgot_password_request_sent', ['email' => $request->email]);
+
+            return back()->with('status', 'Instruksi pemulihan kata sandi telah dikirim ke email Anda.');
         }
 
-        AuditLogger::log('forgot_password_request', ['email' => $request->email]);
-
-        return back()->with('status', 'Instruksi pemulihan kata sandi telah dikirim ke email Anda.');
+        return back()->withErrors(['email' => __($status)]);
     }
 }

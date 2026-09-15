@@ -17,7 +17,7 @@ class WhatsAppService
 
     public function __construct()
     {
-        $this->botUrl = rtrim(config('services.whatsapp.bot_url', 'http://127.0.0.1:3000'), '/');
+        $this->botUrl = rtrim(config('services.whatsapp.bot_url', 'http://127.0.0.1:3789'), '/');
         $this->apiKey = config('services.whatsapp.api_key', '');
     }
 
