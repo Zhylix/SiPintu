@@ -1,9 +1,9 @@
 @extends('layouts.app', ['headerTitle' => 'Kelola Pengguna Gateway'])
 
 @section('content')
-<div class="space-y-6">
+<div class="space-y-6 min-w-0 max-w-full">
     <!-- Header Section -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-sm min-w-0 max-w-full">
         <div>
             <h2 class="text-xl font-black text-emerald-950 tracking-tight">Manajemen Pengguna Gateway</h2>
             <p class="text-xs text-slate-600 font-medium mt-1">Kelola data pengguna, peran akses (roles), serta status nomor WhatsApp.</p>
@@ -28,7 +28,7 @@
     @endif
 
     <!-- Filter & Search Bar -->
-    <div class="p-4 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-4 justify-between items-center">
+    <div class="p-4 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-4 justify-between items-center min-w-0 max-w-full">
         <form method="GET" action="{{ route('admin.users.index') }}" class="flex flex-col sm:flex-row gap-3 w-full">
             <!-- Search Input -->
             <div class="relative flex-1 flex items-center gap-2">
@@ -61,11 +61,11 @@
     </div>
 
     <!-- Mobile View Cards -->
-    <div class="block md:hidden space-y-4">
+    <div class="block md:hidden space-y-4 min-w-0 max-w-full">
         @forelse($users as $user)
-            <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center space-x-3">
+            <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3 min-w-0 max-w-full">
+                <div class="flex items-center justify-between gap-2 min-w-0">
+                    <div class="flex items-center space-x-3 min-w-0 flex-1">
                         @if($user->avatar_url)
                             <img src="{{ $user->avatar_url }}" alt="{{ $user->name }}" loading="lazy" decoding="async" class="w-10 h-10 rounded-full object-cover border border-emerald-300 shrink-0">
                         @else
@@ -73,15 +73,15 @@
                                 {{ $user->initials() }}
                             </div>
                         @endif
-                        <div>
-                            <div class="font-bold text-slate-900 text-sm">{{ $user->name }}</div>
-                            <div class="text-slate-600 text-xs font-medium">{{ $user->email }}</div>
+                        <div class="min-w-0 flex-1">
+                            <div class="font-bold text-slate-900 text-sm truncate">{{ $user->name }}</div>
+                            <div class="text-slate-600 text-xs font-medium truncate">{{ $user->email }}</div>
                             @if($user->classroom)
                                 <div class="mt-0.5"><span class="font-extrabold text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 text-[10px]">Kelas {{ $user->classroom }}</span></div>
                             @endif
                         </div>
                     </div>
-                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase {{ $user->status === 'active' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-rose-100 text-rose-800 border border-rose-300' }}">
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase shrink-0 {{ $user->status === 'active' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-rose-100 text-rose-800 border border-rose-300' }}">
                         {{ $user->status }}
                     </span>
                 </div>
@@ -152,9 +152,9 @@
     </div>
 
     <!-- Desktop Table View -->
-    <div class="hidden md:block bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-        <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs">
+    <div class="hidden md:block bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm min-w-0 max-w-full">
+        <div class="overflow-x-auto w-full max-w-full">
+            <table class="w-full text-left text-xs min-w-[750px]">
                 <thead class="bg-emerald-50 text-emerald-900 uppercase font-black text-[10px] border-b border-slate-200">
                     <tr>
                         <th class="px-5 py-4">Pengguna</th>

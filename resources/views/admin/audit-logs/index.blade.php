@@ -1,8 +1,8 @@
 @extends('layouts.app', ['headerTitle' => 'Audit Log Aktivitas'])
 
 @section('content')
-<div class="space-y-6">
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+<div class="space-y-6 min-w-0 max-w-full">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-sm min-w-0 max-w-full">
         <div>
             <h2 class="text-xl font-black text-emerald-950">Catatan Audit Log & Aktivitas Keamanan</h2>
             <p class="text-xs text-slate-600 font-medium mt-1">Audit log mencatat login, SSO exchange, kegagalan autentikasi SSO, pembuatan user, dan perubahan hak akses secara permanen</p>
@@ -10,9 +10,9 @@
     </div>
 
     <!-- Filter & Search Bar -->
-    <div class="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-4">
+    <div class="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-4 min-w-0 max-w-full">
         <!-- Quick Filter Category Tabs -->
-        <div class="flex items-center gap-2 overflow-x-auto pb-1 text-xs font-extrabold no-scrollbar">
+        <div class="flex items-center gap-2 overflow-x-auto pb-1 text-xs font-extrabold no-scrollbar w-full max-w-full min-w-0">
             <a href="{{ route('admin.audit-logs.index', array_merge(request()->except('type', 'page'), ['type' => 'all'])) }}"
                class="px-3.5 py-1.5 rounded-xl border transition-all flex items-center gap-1.5 shrink-0 {{ !request('type') || request('type') === 'all' ? 'bg-emerald-800 text-white border-emerald-800 shadow-sm' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100' }}">
                 <span>Semua Log</span>
@@ -38,7 +38,7 @@
             @if(request('type'))
                 <input type="hidden" name="type" value="{{ request('type') }}">
             @endif
-            <div class="flex-1 min-w-[240px]">
+            <div class="flex-1 min-w-0 sm:min-w-[240px] w-full">
                 <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari berdasarkan Aktivitas, Pengguna, atau IP Address..."
                     class="w-full px-4 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 font-semibold placeholder-slate-400 focus:outline-none focus:border-emerald-600 focus:bg-white transition-all">
             </div>
@@ -55,9 +55,9 @@
     </div>
 
     <!-- Audit Logs Table -->
-    <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-        <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs">
+    <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm min-w-0 max-w-full">
+        <div class="overflow-x-auto w-full max-w-full">
+            <table class="w-full text-left text-xs min-w-[700px]">
                 <thead class="bg-emerald-50 text-emerald-900 uppercase font-black text-[10px] border-b border-slate-200">
                     <tr>
                         <th class="px-6 py-4">Waktu (Timestamp)</th>

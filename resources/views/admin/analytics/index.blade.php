@@ -3,9 +3,9 @@
 @section('title', 'Laporan Analitik & Statistik Gateway')
 
 @section('content')
-<div class="space-y-8">
+<div class="space-y-6 sm:space-y-8 min-w-0 max-w-full">
     <!-- Top Header Banner - Bright Emerald & Teal Gradient -->
-    <div class="relative bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white rounded-3xl p-6 sm:p-8 overflow-hidden shadow-xl shadow-emerald-900/10 border border-emerald-500/30">
+    <div class="relative bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white rounded-3xl p-4 sm:p-8 overflow-hidden shadow-xl shadow-emerald-900/10 border border-emerald-500/30 min-w-0 max-w-full">
         <!-- Ambient Decorative Circles -->
         <div class="absolute -right-10 -bottom-10 w-72 h-72 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
         <div class="absolute right-1/3 -top-10 w-60 h-60 bg-emerald-400/20 rounded-full blur-2xl pointer-events-none"></div>
@@ -23,7 +23,7 @@
             </div>
 
             <!-- Time Range Filter Pills -->
-            <div class="flex items-center bg-white/20 backdrop-blur-md p-1.5 rounded-2xl border border-white/30 shrink-0 self-start md:self-auto shadow-sm">
+            <div class="flex items-center bg-white/20 backdrop-blur-md p-1.5 rounded-2xl border border-white/30 shrink-0 self-start md:self-auto shadow-sm max-w-full overflow-x-auto no-scrollbar">
                 <a href="{{ route('admin.analytics.index', ['range' => '7']) }}"
                    class="px-4 py-2 rounded-xl text-xs font-bold transition-all {{ $range === '7' ? 'bg-white text-emerald-900 shadow-md shadow-emerald-900/20 font-black' : 'text-emerald-100 hover:text-white hover:bg-white/10' }}">
                     7 Hari
@@ -41,7 +41,7 @@
     </div>
 
     <!-- Summary Metrics Grid -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 min-w-0 max-w-full">
         <!-- Metric 1: Total Login & Activity -->
         <div class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs hover:shadow-md transition-shadow relative overflow-hidden group">
             <div class="flex items-center justify-between">

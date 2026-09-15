@@ -1,17 +1,17 @@
-@extends('layouts.app', ['headerTitle' => 'Manajemen Role & Hak Akses'])
+@extends('layouts.app', ['headerTitle' => 'Manajemen Role'])
 
 @section('content')
-<div class="space-y-6">
-    <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
-        <h2 class="text-xl font-black text-emerald-950">Manajemen Role & Hak Akses (Permissions)</h2>
+<div class="space-y-6 min-w-0 max-w-full">
+    <div class="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-sm min-w-0 max-w-full">
+        <h2 class="text-xl font-black text-emerald-950">Manajemen Role</h2>
         <p class="text-xs text-slate-600 font-medium mt-1">Konfigurasikan hak akses internal Gateway untuk setiap peran pengguna (Siswa, Alumni, Guru, Mitra DUDI, Administrator)</p>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 min-w-0 max-w-full">
         @foreach($roles as $role)
             @php $isAdminRole = in_array(strtolower($role->name), ['admin', 'administrator']); @endphp
-            <div class="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-4">
-                <div class="flex items-center justify-between">
+            <div class="p-4 sm:p-6 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-4 min-w-0 max-w-full">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div>
                         <span class="text-xs font-black text-emerald-700 uppercase tracking-widest block">PERAN / ROLE</span>
                         <h3 class="text-lg font-black text-slate-900 uppercase">{{ $role->getDisplayName() }}</h3>

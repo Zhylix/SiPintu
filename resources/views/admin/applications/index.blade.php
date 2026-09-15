@@ -1,7 +1,7 @@
 @extends('layouts.app', ['headerTitle' => 'Application Registry'])
 
 @section('content')
-<div class="space-y-6" x-data="{
+<div class="space-y-6 min-w-0 max-w-full" x-data="{
     viewMode: localStorage.getItem('sipintu_apps_view_mode') || 'grid',
     showInfoBanner: localStorage.getItem('sipintu_apps_infobanner') !== 'closed',
     copiedKey: null,
@@ -532,8 +532,8 @@
     <!-- 2. TAMPILAN TABEL RAPI & KOMPAK (COMPACT TABLE VIEW) -->
     <!-- Solusi: Sticky nama aplikasi di kiri, role horizontal, aksi kompak -->
     <!-- ========================================================================= -->
-    <div x-show="viewMode === 'table'" x-transition class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-2xs">
-        <div class="overflow-x-auto w-full">
+    <div x-show="viewMode === 'table'" x-transition class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-2xs min-w-0 max-w-full">
+        <div class="overflow-x-auto w-full max-w-full">
             <table class="w-full text-left text-xs min-w-[850px] border-collapse">
                 <thead class="bg-emerald-50/70 text-emerald-950 uppercase font-black text-[10px] border-b border-slate-200 tracking-wider">
                     <tr>

@@ -2,7 +2,7 @@
 @php
     $siteLogoUrl = \App\Models\Setting::getLogoUrl();
 @endphp
-<html lang="id" class="h-full bg-slate-100 text-slate-800">
+<html lang="id" class="h-full bg-slate-100 text-slate-800 overflow-x-hidden">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -63,11 +63,11 @@
         [x-cloak] { display: none !important; }
     </style>
 </head>
-<body class="h-full font-sans antialiased bg-slate-100 text-slate-800 selection:bg-emerald-700 selection:text-white relative" x-data="{ mobileMenuOpen: false }">
+<body class="h-full font-sans antialiased bg-slate-100 text-slate-800 selection:bg-emerald-700 selection:text-white relative overflow-x-hidden w-full max-w-full" x-data="{ mobileMenuOpen: false }">
     
     <!-- Watermark Logo Sekolah di Background Aplikasi -->
-    <div class="fixed inset-0 flex items-center justify-center opacity-[0.04] pointer-events-none z-0">
-        <img src="{{ $siteLogoUrl }}" alt="Watermark SMKN 1 Bangsri" class="w-[750px] h-[750px] object-contain">
+    <div class="fixed inset-0 overflow-hidden flex items-center justify-center opacity-[0.04] pointer-events-none z-0 select-none">
+        <img src="{{ $siteLogoUrl }}" alt="Watermark SMKN 1 Bangsri" class="w-[750px] max-w-[90vw] h-[750px] max-h-[90vh] object-contain pointer-events-none select-none">
     </div>
 
     <!-- Mobile Slide-over Drawer Backdrop & Overlay -->
@@ -227,9 +227,9 @@
         </div>
     </div>
 
-    <div class="min-h-full flex flex-col relative z-10">
+    <div class="min-h-full flex flex-col relative z-10 w-full max-w-full overflow-x-hidden">
         <!-- Top Institutional Ministry Bar -->
-        <div class="bg-emerald-800 text-white text-xs font-bold h-9 border-b-2 border-emerald-600 relative z-20 overflow-hidden select-none whitespace-nowrap flex items-center shrink-0">
+        <div class="bg-emerald-800 text-white text-xs font-bold h-9 border-b-2 border-emerald-600 relative z-20 overflow-hidden select-none whitespace-nowrap flex items-center shrink-0 w-full max-w-full">
             <div class="animate-marquee flex items-center">
                 <div class="flex items-center space-x-6 shrink-0 px-4 whitespace-nowrap">
                     <img src="{{ $siteLogoUrl }}" class="w-4 h-4 object-contain shrink-0" alt="Logo">
@@ -256,7 +256,7 @@
             </div>
         </div>
 
-        <div class="flex-1 flex flex-col md:flex-row">
+        <div class="flex-1 flex flex-col md:flex-row w-full min-w-0 max-w-full">
             <!-- Desktop Sidebar Navigation (Hidden on Mobile) -->
             <aside class="hidden md:flex md:w-64 bg-white border-r border-slate-200 flex-col shrink-0">
                 <!-- Brand Logo Header -->
@@ -401,42 +401,42 @@
             </aside>
 
             <!-- Main Content Body -->
-            <main class="flex-1 flex flex-col min-w-0 bg-slate-50/80">
+            <main class="flex-1 flex flex-col min-w-0 max-w-full bg-slate-50/80 overflow-x-hidden">
                 <!-- Top Header Bar -->
-                <header class="h-16 bg-white border-b border-slate-200 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-30 shadow-xs">
-                    <div class="flex items-center space-x-3">
+                <header class="h-16 bg-white border-b border-slate-200 px-3 sm:px-6 flex items-center justify-between sticky top-0 z-30 shadow-xs w-full max-w-full">
+                    <div class="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1 mr-2">
                         <!-- Mobile Hamburger Button (Only visible on mobile) -->
-                        <button @click="mobileMenuOpen = !mobileMenuOpen" class="p-2 rounded-xl text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 md:hidden border border-slate-200 transition-colors" title="Buka Menu">
+                        <button @click="mobileMenuOpen = !mobileMenuOpen" class="p-2 rounded-xl text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 md:hidden border border-slate-200 transition-colors shrink-0" title="Buka Menu">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
                         </button>
 
-                        <div class="flex items-center space-x-2">
-                            <img src="{{ $siteLogoUrl }}" class="w-7 h-7 object-contain md:hidden" alt="Logo">
-                            <h1 class="text-sm font-extrabold sm:font-black text-emerald-950 tracking-tight whitespace-nowrap">{{ $headerTitle ?? 'Dashboard Gateway' }}</h1>
+                        <div class="flex items-center space-x-2 min-w-0">
+                            <img src="{{ $siteLogoUrl }}" class="w-7 h-7 object-contain md:hidden shrink-0" alt="Logo">
+                            <h1 class="text-xs sm:text-sm font-extrabold sm:font-black text-emerald-950 tracking-tight truncate">{{ $headerTitle ?? 'Dashboard Gateway' }}</h1>
                         </div>
                     </div>
 
-                    <div class="flex items-center space-x-3 sm:space-x-4">
+                    <div class="flex items-center space-x-2 sm:space-x-4 shrink-0">
                         <span class="hidden sm:inline-flex items-center px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300">
                             <span class="w-2 h-2 rounded-full bg-emerald-600 mr-2 animate-pulse"></span>
                             Aktif
                         </span>
 
-                        <a href="{{ route('profile') }}" class="flex items-center space-x-2 text-xs font-bold text-slate-700 hover:text-emerald-800 transition-colors whitespace-nowrap group">
+                        <a href="{{ route('profile') }}" class="flex items-center space-x-1.5 sm:space-x-2 text-xs font-bold text-slate-700 hover:text-emerald-800 transition-colors whitespace-nowrap group shrink-0">
                             @if(auth()->user()->avatar_url)
-                                <img src="{{ auth()->user()->avatar_url }}" loading="lazy" decoding="async" class="w-7 h-7 rounded-full object-cover ring-2 ring-emerald-600/30 shadow-xs group-hover:scale-105 transition-transform" alt="{{ auth()->user()->name }}">
+                                <img src="{{ auth()->user()->avatar_url }}" loading="lazy" decoding="async" class="w-7 h-7 rounded-full object-cover ring-2 ring-emerald-600/30 shadow-xs group-hover:scale-105 transition-transform shrink-0" alt="{{ auth()->user()->name }}">
                             @else
-                                <div class="w-7 h-7 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-black text-[10px] ring-1 ring-emerald-300">
+                                <div class="w-7 h-7 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-black text-[10px] ring-1 ring-emerald-300 shrink-0">
                                     {{ auth()->user()->initials() }}
                                 </div>
                             @endif
-                            <span>Profil Saya</span>
+                            <span class="hidden xs:inline sm:inline">Profil Saya</span>
                         </a>
                     </div>
                 </header>
 
                 <!-- Alerts Banner -->
-                <div class="px-4 sm:px-6 pt-4 sm:pt-6">
+                <div class="px-3 sm:px-6 pt-3 sm:pt-6 w-full max-w-full min-w-0">
                     @if(session('success'))
                         <div class="p-4 mb-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 flex items-center justify-between">
                             <div class="flex items-center space-x-3">
@@ -502,13 +502,13 @@
                 </div>
 
                 <!-- Page Content -->
-                <div class="p-4 sm:p-6 flex-1 min-w-0 max-w-full">
+                <div class="p-3 sm:p-6 flex-1 min-w-0 max-w-full">
                     {{ $slot ?? '' }}
                     @yield('content')
                 </div>
 
                 <!-- Official Footer -->
-                <footer class="bg-white border-t border-slate-200 py-3 px-4 sm:px-6 text-center md:text-left text-xs text-slate-500 font-medium flex flex-col md:flex-row items-center justify-between">
+                <footer class="bg-white border-t border-slate-200 py-3 px-3 sm:px-6 text-center md:text-left text-xs text-slate-500 font-medium flex flex-col md:flex-row items-center justify-between w-full max-w-full gap-2">
                     <div>&copy; {{ date('Y') }} SMK Negeri 1 Bangsri. Hak Cipta Dilindungi Undang-Undang.</div>
                     <div class="text-emerald-800 font-bold mt-1 md:mt-0 font-mono text-[11px]">SiPintu SMKN 1 BANGSRI</div>
                 </footer>

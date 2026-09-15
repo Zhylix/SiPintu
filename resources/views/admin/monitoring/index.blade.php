@@ -1,7 +1,7 @@
-@extends('layouts.app', ['headerTitle' => 'Monitoring API Downstream'])
+@extends('layouts.app', ['headerTitle' => 'Monitoring API'])
 
 @section('content')
-<div class="space-y-6" x-data="{
+<div class="space-y-6 min-w-0 max-w-full" x-data="{
     activeTab: 'all',
     viewMode: 'grid',
     testingClient: false,
@@ -175,7 +175,7 @@
     }
 }">
     <!-- Bright & Vibrant Header Hero Banner-->
-    <div class="relative overflow-hidden bg-white border border-emerald-200 rounded-3xl p-6 sm:p-8 shadow-sm">
+    <div class="relative overflow-hidden bg-white border border-emerald-200 rounded-3xl p-4 sm:p-8 shadow-sm min-w-0 max-w-full">
         <!-- Background Soft Accents -->
         <div class="absolute top-0 right-0 w-96 h-96 bg-emerald-100/50 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20"></div>
         <div class="absolute bottom-0 left-0 w-80 h-80 bg-teal-100/40 rounded-full blur-3xl pointer-events-none -ml-20 -mb-20"></div>
@@ -214,7 +214,7 @@
     </div>
 
     <!-- Top Key Metric -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 min-w-0 max-w-full">
         <!-- Metric 1: Total Apps -->
         <div class="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-3 relative overflow-hidden group hover:border-emerald-300 transition-all">
             <div class="flex items-center justify-between">
@@ -499,8 +499,8 @@
 
         <!-- 2. VISUAL TABLE VIEW -->
         <template x-if="viewMode === 'table'">
-            <div class="overflow-x-auto border border-slate-200 rounded-xl">
-                <table class="w-full text-left text-xs">
+            <div class="overflow-x-auto border border-slate-200 rounded-xl w-full max-w-full">
+                <table class="w-full text-left text-xs min-w-[650px]">
                     <thead class="bg-emerald-50 text-emerald-900 uppercase font-black text-[10px] border-b border-slate-200">
                         <tr>
                             <th class="px-4 py-3">Nama Aplikasi</th>
@@ -928,8 +928,8 @@
                         </div>
 
                         <!-- Table Results -->
-                        <div class="overflow-x-auto border border-slate-200 rounded-2xl">
-                            <table class="w-full text-left text-xs">
+                        <div class="overflow-x-auto border border-slate-200 rounded-2xl w-full max-w-full">
+                            <table class="w-full text-left text-xs min-w-[600px]">
                                 <thead class="bg-slate-50 text-slate-700 uppercase font-black text-[10px] border-b border-slate-200">
                                     <tr>
                                         <th class="px-4 py-3">Nama Aplikasi</th>

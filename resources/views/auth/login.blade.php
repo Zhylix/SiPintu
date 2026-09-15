@@ -92,7 +92,7 @@
                 Nomor Induk Siswa (NIS) / Email NIS
             </label>
             <input type="text" id="nis" name="nis" :required="accountType === 'siswa'" :disabled="accountType !== 'siswa'"
-                value="{{ old('nis', old('identity')) }}" placeholder="NIS atau Email NIS (contoh: 4439)"
+                value="{{ old('nis', old('identity')) }}" placeholder="NIS atau Email NIS"
                 class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-all text-sm font-semibold">
             <p class="text-[11px] text-slate-600 mt-1 font-medium">Gunakan nomor NIS resmi atau Email NIS siswa.</p>
         </div>

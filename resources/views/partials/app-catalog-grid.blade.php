@@ -43,9 +43,9 @@ x-on:favorite-updated.window="
     }
 ">
     <!-- Search Bar & Category Filter Pills -->
-    <div class="flex flex-col lg:flex-row items-center justify-between gap-4 bg-white border border-slate-200 rounded-2xl p-4 shadow-sm text-left">
+    <div class="flex flex-col lg:flex-row items-center justify-between gap-4 bg-white border border-slate-200 rounded-2xl p-4 shadow-sm text-left min-w-0 max-w-full">
         <!-- Category Pills Navigation  -->
-        <div class="flex items-center justify-start space-x-2 overflow-x-auto pb-2 lg:pb-0 no-scrollbar max-w-full w-full">
+        <div class="flex items-center justify-start space-x-2 overflow-x-auto pb-2 lg:pb-0 no-scrollbar max-w-full w-full min-w-0">
             <button @click="selectedCategory = 'all'"
                     :class="selectedCategory === 'all' ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20 font-extrabold' : 'bg-slate-100 text-slate-700 hover:text-emerald-700 hover:bg-emerald-50'"
                     class="px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center justify-center space-x-1.5 border border-slate-200 shrink-0">
@@ -81,7 +81,7 @@ x-on:favorite-updated.window="
         </div>
 
         <!-- Search Input -->
-        <div class="relative w-full lg:w-auto min-w-[220px]">
+        <div class="relative w-full lg:w-auto min-w-0 sm:min-w-[220px]">
             <input type="text" x-model="searchQuery" placeholder="Cari nama aplikasi..."
                    class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-emerald-600 transition-all font-semibold whitespace-nowrap">
             <svg class="w-4 h-4 text-slate-400 absolute left-3 top-2.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -91,14 +91,14 @@ x-on:favorite-updated.window="
     </div>
 
     <!-- Applications Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 min-w-0 max-w-full">
         @forelse($applications as $app)
             @php
                 $catId = $app->category_id ? 'cat-' . $app->category_id : 'unassigned';
             @endphp
             <div x-show="(selectedCategory === 'all' || (selectedCategory === 'favorites' && favoriteIds.includes({{ $app->id }})) || selectedCategory === '{{ $catId }}') && (searchQuery.trim() === '' || @js(strtolower($app->name)).includes(searchQuery.trim().toLowerCase()))"
                  x-transition
-                 class="group relative bg-white border border-slate-200 hover:border-emerald-500 rounded-2xl p-5 transition-all duration-300 hover:shadow-xl hover:shadow-emerald-900/5 flex flex-col justify-between space-y-4 text-left items-start overflow-hidden">
+                 class="group relative bg-white border border-slate-200 hover:border-emerald-500 rounded-2xl p-4 sm:p-5 transition-all duration-300 hover:shadow-xl hover:shadow-emerald-900/5 flex flex-col justify-between space-y-4 text-left items-start overflow-hidden min-w-0 max-w-full">
                 
                 <div class="w-full space-y-3 flex flex-col items-start min-w-0">
                     <!-- Card Top Header -->
@@ -145,7 +145,7 @@ x-on:favorite-updated.window="
                 <!-- Footer Launch Button -->
                 <div class="pt-3 border-t border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 w-full text-left">
                     <span class="inline-flex items-center gap-1 text-[10px] font-extrabold text-emerald-800 bg-emerald-100 px-2.5 py-0.5 rounded-full border border-emerald-300 whitespace-nowrap shrink-0 self-start">
-                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span> Terintegrasi
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span> Connected
                     </span>
 
                     <a href="{{ route('oauth.authorize', ['client_id' => $app->client_id, 'redirect_uri' => $app->redirect_uri, 'response_type' => 'code', 'scope' => 'openid profile email']) }}"

@@ -1,7 +1,7 @@
 @extends('layouts.app', ['headerTitle' => auth()->user()->isAlumni() ? 'Portal Alumni' : 'Portal Siswa'])
 
 @section('content')
-<div class="space-y-8">
+<div class="space-y-6 sm:space-y-8 min-w-0 max-w-full">
     <!-- Welcome Header Card -->
     <div class="p-5 sm:p-8 rounded-3xl bg-gradient-to-r from-emerald-50 via-white to-teal-50/40 border border-emerald-200/80 relative overflow-hidden shadow-xs">
         <!-- Background Accent -->

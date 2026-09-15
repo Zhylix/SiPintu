@@ -1,15 +1,15 @@
-@extends('layouts.app', ['headerTitle' => 'Pengaturan Logo & Background'])
+@extends('layouts.app', ['headerTitle' => 'Pengaturan Logo'])
 
 @section('content')
-<div class="space-y-6">
+<div class="space-y-6 min-w-0 max-w-full">
     <!-- Header Section -->
-    <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+    <div class="bg-white border border-slate-200 rounded-2xl p-4 sm:p-6 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4 min-w-0 max-w-full">
         <div>
             <div class="flex items-center space-x-2">
                 <span class="p-2 bg-emerald-100 text-emerald-800 rounded-xl flex items-center justify-center">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                 </span>
-                <h2 class="text-xl font-black text-emerald-950 tracking-tight">Pengaturan Logo Website & Background Login</h2>
+                <h2 class="text-xl font-black text-emerald-950 tracking-tight">Pengaturan Logo</h2>
             </div>
             <p class="text-xs text-slate-600 font-medium mt-1">
                 Kelola identitas visual Gateway SMKN 1 Bangsri. Anda dapat mengubah logo website serta membedakan gambar background khusus untuk halaman login portal.
@@ -50,19 +50,19 @@
     @endif
 
     <!-- Main Grid: Logo Website & Background Login Forms -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 min-w-0 max-w-full">
         
         <!-- CARD 1: LOGO WEBSITE (CRUD) -->
-        <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm flex flex-col justify-between space-y-6" x-data="{ logoPreview: '{{ $siteLogoUrl }}' }">
+        <div class="bg-white border border-slate-200 rounded-3xl p-4 sm:p-6 shadow-sm flex flex-col justify-between space-y-6 min-w-0 max-w-full" x-data="{ logoPreview: '{{ $siteLogoUrl }}' }">
             <div>
-                <div class="flex items-center justify-between pb-4 border-b border-slate-100">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-10 h-10 rounded-2xl bg-emerald-100 border border-emerald-300 flex items-center justify-center font-black text-emerald-800">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 gap-3">
+                    <div class="flex items-center space-x-3 min-w-0 flex-1">
+                        <div class="w-10 h-10 rounded-2xl bg-emerald-100 border border-emerald-300 flex items-center justify-center font-black text-emerald-800 shrink-0">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5m0 0h4m-4 0V11m0 0h4m-4 0H9m4 0V5m-4 6V5m0 0H7m2 0h4"></path></svg>
                         </div>
-                        <div>
-                            <h3 class="font-extrabold text-slate-900 text-sm">Logo Website & Favicon Tab Browser</h3>
-                            <p class="text-[11px] text-slate-600 font-medium">Header, Navigation, Sidebar, Tab Browser (Favicon) & Branding</p>
+                        <div class="min-w-0 flex-1">
+                            <h3 class="font-extrabold text-slate-900 text-sm truncate">Logo Website & Favicon Tab Browser</h3>
+                            <p class="text-[11px] text-slate-600 font-medium truncate">Header, Navigation, Sidebar, Tab Browser (Favicon) & Branding</p>
                         </div>
                     </div>
 
@@ -126,16 +126,16 @@
         </div>
 
         <!-- CARD 2: BACKGROUND LOGIN (CRUD) -->
-        <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm flex flex-col justify-between space-y-6" x-data="{ bgPreview: '{{ $loginBgUrl }}' }">
+        <div class="bg-white border border-slate-200 rounded-3xl p-4 sm:p-6 shadow-sm flex flex-col justify-between space-y-6 min-w-0 max-w-full" x-data="{ bgPreview: '{{ $loginBgUrl }}' }">
             <div>
-                <div class="flex items-center justify-between pb-4 border-b border-slate-100">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-10 h-10 rounded-2xl bg-emerald-100 border border-emerald-300 flex items-center justify-center font-black text-emerald-800">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 gap-3">
+                    <div class="flex items-center space-x-3 min-w-0 flex-1">
+                        <div class="w-10 h-10 rounded-2xl bg-emerald-100 border border-emerald-300 flex items-center justify-center font-black text-emerald-800 shrink-0">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                         </div>
-                        <div>
-                            <h3 class="font-extrabold text-slate-900 text-sm">Background Login (Kustom)</h3>
-                            <p class="text-[11px] text-slate-600 font-medium">Tampilan Latar Belakang Halaman Login Portal</p>
+                        <div class="min-w-0 flex-1">
+                            <h3 class="font-extrabold text-slate-900 text-sm truncate">Background Login (Kustom)</h3>
+                            <p class="text-[11px] text-slate-600 font-medium truncate">Tampilan Latar Belakang Halaman Login Portal</p>
                         </div>
                     </div>
 
@@ -208,7 +208,7 @@
     </div>
 
     <!-- Info Section / Live Simulation Card -->
-    <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4">
+    <div class="bg-white border border-slate-200 rounded-3xl p-4 sm:p-6 shadow-sm space-y-4 min-w-0 max-w-full">
         <div class="flex items-center space-x-3 pb-3 border-b border-slate-100">
             <div class="p-2 bg-emerald-100 text-emerald-800 rounded-xl flex items-center justify-center shrink-0">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>

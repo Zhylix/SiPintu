@@ -1,16 +1,16 @@
-@extends('layouts.app', ['headerTitle' => 'Kelola Pengumuman Sistem'])
+@extends('layouts.app', ['headerTitle' => 'Pengumuman'])
 
 @section('content')
-<div class="space-y-6">
+<div class="space-y-6 min-w-0 max-w-full">
     <!-- Header Section -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-sm min-w-0 max-w-full">
         <div>
-            <h2 class="text-xl font-black text-emerald-950 tracking-tight">Kelola Pengumuman Gateway</h2>
+            <h2 class="text-xl font-black text-emerald-950 tracking-tight">Pengumuman</h2>
             <p class="text-xs text-slate-600 font-medium mt-1">Pengumuman yang dibuat di sini akan tampil secara eksklusif bagi pengguna dan dapat dikirim via WhatsApp.</p>
         </div>
         <a href="{{ route('admin.announcements.create') }}" class="inline-flex items-center justify-center px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-extrabold rounded-xl transition-all shadow-md shadow-emerald-700/20">
             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-            Tambah Pengumuman Baru
+            Tambah Pengumuman
         </a>
     </div>
 
@@ -81,7 +81,7 @@
             this.fetchStatus();
             setInterval(() => this.fetchStatus(), 3000);
         }
-    }" x-init="init()" class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-4">
+    }" x-init="init()" class="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-sm space-y-4 min-w-0 max-w-full">
         <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div class="flex items-center space-x-3">
                 <div class="w-10 h-10 rounded-full bg-emerald-100 border border-emerald-300 flex items-center justify-center text-emerald-700 shrink-0">
@@ -294,7 +294,7 @@
     </div>
 
     <!-- Filter & Search Bar -->
-    <div class="p-4 bg-white rounded-2xl border border-slate-200 shadow-sm">
+    <div class="p-4 bg-white rounded-2xl border border-slate-200 shadow-sm min-w-0 max-w-full">
         <form method="GET" action="{{ route('admin.announcements.index') }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 w-full">
             <!-- Search (Spans 2 columns on lg screens) -->
             <div class="sm:col-span-2 relative flex items-center gap-2">
@@ -345,9 +345,9 @@
     </div>
 
     <!-- Announcement Table -->
-    <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-        <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs">
+    <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm min-w-0 max-w-full">
+        <div class="overflow-x-auto w-full max-w-full">
+            <table class="w-full text-left text-xs min-w-[750px]">
                 <thead class="bg-emerald-50 text-emerald-900 uppercase font-black text-[10px] border-b border-slate-200">
                     <tr>
                         <th class="px-5 py-4">Judul & Isi</th>

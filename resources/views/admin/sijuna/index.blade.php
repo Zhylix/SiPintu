@@ -1,8 +1,8 @@
 @extends('layouts.app', ['headerTitle' => 'Integrasi API SIJUNA'])
 
 @section('content')
-<div class="space-y-6">
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+<div class="space-y-6 min-w-0 max-w-full">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-sm min-w-0 max-w-full">
         <div>
             <h2 class="text-xl font-black text-emerald-950">Integrasi & Sinkronisasi API SIJUNA</h2>
             <p class="text-xs text-slate-600 font-medium mt-1">Konfigurasi koneksi backend Gateway dengan SIJUNA External API</p>
@@ -20,7 +20,7 @@
     </div>
 
     <!-- Configuration Summary Box -->
-    <div class="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-4">
+    <div class="p-4 sm:p-6 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-4 min-w-0 max-w-full">
         <h3 class="text-xs font-black text-emerald-950 uppercase tracking-wider">Parameter Konfigurasi Backend (config/services.php)</h3>
         
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 text-xs">
@@ -59,11 +59,11 @@
     </div>
 
     <!-- Sync Logs History Table -->
-    <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm space-y-4 p-6">
+    <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm space-y-4 p-4 sm:p-6 min-w-0 max-w-full">
         <h3 class="text-base font-black text-emerald-950">Riwayat Sinkronisasi (Sync Logs)</h3>
 
-        <div class="overflow-x-auto border border-slate-200 rounded-xl">
-            <table class="w-full text-left text-xs">
+        <div class="overflow-x-auto border border-slate-200 rounded-xl w-full max-w-full">
+            <table class="w-full text-left text-xs min-w-[650px]">
                 <thead class="bg-emerald-50 text-emerald-900 uppercase font-black text-[10px] border-b border-slate-200">
                     <tr>
                         <th class="px-4 py-3">ID Log</th>
