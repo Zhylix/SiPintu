@@ -437,7 +437,19 @@ Gunakan implementasi cerdas dengan resolusi konflik (conflict resolution) beriku
     }
 ```
 
-### 3. Struktur Payload JSON Webhook yang Dikirim SiPintu
+### 4. Tabel Aturan Resolusi Konflik (Conflict Resolution Matrix)
+
+| Kondisi Data di Downstream | Status Perubahan Lokal | Kolom Utama (`email`, `role`, `status`, `password`) | Kolom Profil (`name`, `phone`, `classroom`, `avatar_url`) | Logika Penyimpanan & Timestamp |
+| :--- | :--- | :--- | :--- | :--- |
+| **User Belum Terdaftar** | Akun Baru | **Dibuat Baru** | **Dibuat Baru** | Dibuat dengan data SiPintu, `sipintu_last_synced_at = now()`, `updated_at = now()`. |
+| **`sipintu_last_synced_at == null`** | Belum Pernah Sync | **Ditimpa** dari SiPintu | **Ditimpa** dari SiPintu | Ditimpa seluruhnya, `sipintu_last_synced_at = now()`, `updated_at = now()`. |
+| **`updated_at > sipintu_last_synced_at`** | **User Mengubah Profil Lokal** | **Ditimpa** dari SiPintu | **DIPROTEKSI (SKIP)** — Nilai lokal tetap dipertahankan | Kolom lokal diabaikan, `sipintu_last_synced_at = now()`, `updated_at = now()`, log `skipped_fields`. |
+| **`updated_at <= sipintu_last_synced_at`** | **Tidak Ada Perubahan Lokal** | **Ditimpa** dari SiPintu | **Ditimpa** dari SiPintu | Ditimpa seluruhnya, `sipintu_last_synced_at = now()`, `updated_at = now()`. |
+
+> 💡 **PENTING TENTANG TIMESTAMP:** 
+> Perhatikan baris `$user->sipintu_last_synced_at = $syncTime; $user->updated_at = $syncTime;`. Menyelaraskan kedua nilai timestamp pada saat penyimpanan sangat krusial agar pembaruan oleh sistem webhook ini **tidak keliru dideteksi sebagai perubahan lokal oleh pengguna** pada sinkronisasi berikutnya!
+
+### 5. Struktur Payload JSON Webhook yang Dikirim SiPintu
 ```json
 {
   "event": "user.updated",

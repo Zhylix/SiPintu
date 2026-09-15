@@ -173,11 +173,103 @@ sequenceDiagram
     
     loop Setiap Aplikasi Hilir Aktif
         SyncService->>Downstream: HTTP POST /api/sipintu/sync-user
-        Downstream->>Downstream: Verifikasi HMAC Signature & Update Database Lokal
-        Downstream-->>SyncService: HTTP 200 OK (status: success)
+        Note over Downstream: Smart Conflict Resolution Engine
+        Downstream->>Downstream: 1. Verifikasi HMAC SHA-256 (X-SiPintu-Signature)
+        Downstream->>Downstream: 2. Evaluasi Timestamp: updated_at vs sipintu_last_synced_at
+        Downstream->>Downstream: 3. Timpa Source of Truth (email, role, status, password)
+        Downstream->>Downstream: 4. Proteksi Field Lokal (name, phone, classroom, avatar)
+        Downstream->>Downstream: 5. Update sipintu_last_synced_at & sinkronkan updated_at
+        Downstream->>Downstream: 6. Catat Log (updated_fields & skipped_fields)
+        Downstream-->>SyncService: HTTP 200 OK (status: success, action: updated/created)
     end
 
     SyncService->>SiPintu: Catat audit_logs (user_data_sync_broadcast)
+```
+
+### 4.3 Arsitektur Smart Conflict Resolution pada Webhook Sinkronisasi
+
+Ketika aplikasi downstream menerima pembaruan dari SiPintu Gateway via endpoint `POST /api/sipintu/sync-user`, aplikasi menerapkan mekanisme **Smart Conflict Resolution** untuk mencegah terhapusnya data yang telah diubah secara mandiri oleh user di aplikasi downstream.
+
+#### 1. Kolom Pelacak Timestamp: `sipintu_last_synced_at`
+Tabel `users` di aplikasi downstream dilengkapi dengan kolom baru:
+```sql
+ALTER TABLE users ADD COLUMN sipintu_last_synced_at TIMESTAMP NULL AFTER updated_at;
+```
+Kolom ini mencatat waktu persis ketika data dari SiPintu berhasil diterapkan.
+
+#### 2. Klasifikasi & Aturan Sinkronisasi Field
+
+| Kategori Field | Daftar Kolom | Aturan Sinkronisasi | Rasional |
+| :--- | :--- | :--- | :--- |
+| **Source of Truth SiPintu** | `email`, `role`, `status`, `password` *(hanya jika ada di payload)* | **Selalu ditimpa tanpa syarat** dari SiPintu. | Data kepemilikan akun, otoritas role, status aktif, dan keamanan kredensial dikontrol penuh secara terpusat oleh Gateway SiPintu. |
+| **Field Editable Lokal** | `name`, `phone`, `classroom`, `avatar_url` | **Diproteksi dari overwrite** jika pengguna pernah mengeditnya secara lokal setelah sinkronisasi terakhir. | Memberikan fleksibilitas bagi user untuk menyesuaikan profil lokal (misal nama panggilan, kontak darurat, atau foto profil khusus). |
+
+#### 3. Matriks Keputusan Resolusi Konflik
+
+```text
+                                       ┌───────────────────────────────┐
+                                       │ Webhook Masuk dari SiPintu    │
+                                       │ (POST /api/sipintu/sync-user) │
+                                       └──────────────┬────────────────┘
+                                                      │
+                                           [Verifikasi HMAC SHA-256]
+                                                      │
+                                     ┌────────────────┴────────────────┐
+                                     ▼                                 ▼
+                              [User Belum Ada]                  [User Sudah Ada]
+                                     │                                 │
+                         ┌───────────┴──────────┐            [Periksa Timestamp]
+                         │ Auto-Provisioning:   │                      │
+                         │ - Buat User Baru     │         ┌────────────┴────────────┐
+                         │ - Isi Semua Field    │         ▼                         ▼
+                         │ - Set sipintu_       │   updated_at >              updated_at <=
+                         │   last_synced_at=now │   sipintu_last_synced_at    sipintu_last_synced_at
+                         └──────────────────────┘         │                         │
+                                                          ▼                         ▼
+                                                  [Ada Perubahan Lokal]     [Tidak Ada Editan Lokal]
+                                                  - Timpa: email, role,     - Timpa SEMUA field
+                                                    status, password          dari SiPintu
+                                                  - SKIP & PERTAHANKAN:     - Set sipintu_last_
+                                                    name, phone, class,       synced_at = now()
+                                                    avatar_url              - Sinkronkan updated_at
+                                                  - Catat skipped_fields
+```
+
+| Kondisi Database Lokal | Status Perubahan Lokal | Tindakan pada Field Lokal (`name`, `phone`, `classroom`, `avatar`) | Tindakan pada Field Utama (`email`, `role`, `status`, `password`) |
+| :--- | :--- | :--- | :--- |
+| `sipintu_last_synced_at == null` | Belum pernah sync sebelumnya | Ditimpa seluruhnya dengan data SiPintu | Ditimpa dengan data SiPintu |
+| `user.updated_at > user.sipintu_last_synced_at` | **Ada editan lokal oleh pengguna** | **DIPROTEKSI (SKIP)** — Nilai lokal tetap dipertahankan | Ditimpa dengan data SiPintu |
+| `user.updated_at <= user.sipintu_last_synced_at` | **Tidak ada editan lokal** sejak sync terakhir | Ditimpa dengan data SiPintu | Ditimpa dengan data SiPintu |
+| Record user tidak ditemukan | Pengguna baru | Dibuat akun baru dengan seluruh data SiPintu | Dibuat akun baru |
+
+#### 4. Penanganan Timestamp Presisi (Mencegah False Positive)
+Setiap kali pembaruan berhasil diterapkan di downstream:
+1. `sipintu_last_synced_at` di-update ke timestamp saat ini (`now()`).
+2. Atribut `updated_at` pada model Eloquent diselaraskan ke timestamp yang persis sama (`$user->updated_at = $syncTime`).
+3. Langkah ini menjamin bahwa operasi simpan (*save*) pada proses sinkronisasi **tidak akan dianggap sebagai perubahan lokal buatan user** pada siklus webhook berikutnya (`updated_at <= sipintu_last_synced_at` bernilai `true`).
+
+#### 5. Format Logging & Respons
+Setiap aktivitas sinkronisasi mencatat log informatif ke `storage/logs/laravel.log`:
+```json
+{
+  "event": "SiPintu webhook user sync: user updated",
+  "user_id": 14,
+  "updated_fields": ["email", "role", "status"],
+  "skipped_fields": ["name", "phone", "classroom", "avatar_url"],
+  "has_local_edits": true
+}
+```
+Respons JSON yang dikembalikan ke SiPintu Gateway:
+```json
+{
+  "status": "success",
+  "action": "updated",
+  "message": "User budi@smkn1bangsri.sch.id berhasil disinkronkan.",
+  "user_id": 14,
+  "updated_fields": ["email", "role", "status"],
+  "skipped_fields": ["name", "phone", "classroom", "avatar_url"],
+  "sipintu_last_synced_at": "2026-09-15T08:57:32+07:00"
+}
 ```
 
 ---

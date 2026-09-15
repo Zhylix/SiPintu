@@ -26,8 +26,8 @@ Siswa Buka Web Downstream ──▶ Ketik NIS & Password di Form ──▶ Masuk
 ---
 
 ## 🛠️ Langkah Integrasi di Aplikasi Downstream
-
-Hanya ada **3 langkah cepat** di aplikasi downstream (contoh berbasis Laravel):
+ 
+Terdapat **4 langkah praktis** integrasi di aplikasi downstream (contoh berbasis Laravel):
 
 ### Langkah 1: Pasang Kredensial di `.env` Downstream
 Dapatkan `client_id` dan `client_secret` dari SiPintu (lihat [Langkah Registrasi](#-langkah-registrasi-di-sipintu)), lalu tambahkan ke file `.env` downstream:
@@ -139,6 +139,92 @@ class OAuthController extends Controller
 ```
 
 ---
+
+### Langkah 4: Pasang Webhook Sinkronisasi Real-Time & Smart Conflict Resolution
+
+Ketika admin SiPintu atau user mengubah email, peran, status, atau password, SiPintu otomatis mengirimkan webhook `POST /api/sipintu/sync-user`. Agar data editan profil lokal pengguna di downstream (nama panggilan, no HP, kelas, avatar) **tidak terhapus**, pasang resolusi konflik cerdas:
+
+#### A. Buat Migration Tambah Kolom `sipintu_last_synced_at`
+```bash
+php artisan make:migration add_sipintu_last_synced_at_to_users_table
+```
+```php
+Schema::table('users', function (Blueprint $table) {
+    $table->timestamp('sipintu_last_synced_at')->nullable()->after('updated_at');
+});
+```
+Tambahkan `'sipintu_last_synced_at'` ke `$fillable` dan casts `'datetime'` pada model `User.php`.
+
+#### B. Daftarkan Route Webhook di `routes/api.php`
+```php
+Route::post('/sipintu/sync-user', [OAuthController::class, 'syncUser']);
+```
+
+#### C. Tambahkan Method `syncUser` di `OAuthController.php`
+```php
+    public function syncUser(Request $request)
+    {
+        // 1. Verifikasi Signature HMAC SHA-256
+        $signature = $request->header('X-SiPintu-Signature');
+        $secret = env('SIPINTU_CLIENT_SECRET');
+        if ($secret && (! $signature || ! hash_equals(hash_hmac('sha256', $request->getContent(), $secret), $signature))) {
+            return response()->json(['status' => 'error', 'message' => 'Invalid signature.'], 401);
+        }
+
+        $userData = $request->input('user') ?? $request->all();
+        $previous = $request->input('previous', []);
+
+        // 2. Cari User
+        $user = User::where('email', $userData['email'])
+            ->when(! empty($previous['email']), fn ($q) => $q->orWhere('email', $previous['email']))
+            ->first();
+
+        $syncTime = now();
+
+        // 3. Jika belum ada: Auto-provision akun baru
+        if (! $user) {
+            $user = User::create([
+                'name' => $userData['name'] ?? 'User',
+                'email' => $userData['email'],
+                'role' => $userData['role'] ?? 'student',
+                'status' => $userData['status'] ?? 'active',
+                'password' => $userData['password'] ?? bcrypt(Str::random(32)),
+                'sipintu_last_synced_at' => $syncTime,
+            ]);
+            return response()->json(['status' => 'success', 'action' => 'created', 'user_id' => $user->id]);
+        }
+
+        // 4. Deteksi Perubahan Lokal Pengguna
+        $hasLocalEdits = $user->sipintu_last_synced_at !== null && $user->updated_at->gt($user->sipintu_last_synced_at);
+
+        // Field Selalu Mengikuti SiPintu (Source of Truth)
+        $updateFields = [
+            'email'  => $userData['email'],
+            'role'   => $userData['role'] ?? $user->role,
+            'status' => $userData['status'] ?? $user->status,
+        ];
+        if (! empty($userData['password'])) {
+            $updateFields['password'] = $userData['password'];
+        }
+
+        // Field Lokal: Hanya ditimpa jika TIDAK ADA perubahan lokal
+        if (! $hasLocalEdits) {
+            if (isset($userData['name'])) $updateFields['name'] = $userData['name'];
+            if (isset($userData['phone'])) $updateFields['phone'] = $userData['phone'];
+            if (isset($userData['classroom'])) $updateFields['classroom'] = $userData['classroom'];
+        }
+
+        // 5. Update & Selaraskan Timestamp (mencegah false positive di sync berikutnya)
+        $updateFields['sipintu_last_synced_at'] = $syncTime;
+        $user->fill($updateFields);
+        $user->sipintu_last_synced_at = $syncTime;
+        $user->updated_at = $syncTime;
+        $user->save();
+
+        return response()->json(['status' => 'success', 'action' => 'updated', 'user_id' => $user->id]);
+    }
+```
+
 
 ## 🔑 Langkah Registrasi di SiPintu
 

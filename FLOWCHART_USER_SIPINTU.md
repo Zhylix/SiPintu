@@ -11,6 +11,7 @@ Dokumen ini memuat **Flowchart User** secara komprehensif, mencakup seluruh alur
 4. [Flowchart Detail: Portal User Non-Admin (Guru, Siswa, DUDI)](#4-flowchart-detail-portal-user-non-admin-guru-siswa-dudi)
 5. [Flowchart Detail: Single Sign-On (SSO) ke Aplikasi Hilir](#5-flowchart-detail-single-sign-on-sso-ke-aplikasi-hilir)
 6. [Flowchart Detail: Manajemen Profil & Keamanan](#6-flowchart-detail-manajemen-profil--keamanan)
+7. [Flowchart Detail: Webhook Sinkronisasi Real-Time & Resolusi Konflik](#7-flowchart-detail-webhook-sinkronisasi-real-time--resolusi-konflik)
 
 ---
 
@@ -255,4 +256,76 @@ flowchart TD
 
 ---
 
+## 7. Flowchart Detail: Webhook Sinkronisasi Real-Time & Resolusi Konflik
+
+Diagram di bawah ini menggambarkan alur pengambilan keputusan di aplikasi downstream saat menerima webhook pembaruan pengguna dari SiPintu Gateway via endpoint `POST /api/sipintu/sync-user`.
+
+```mermaid
+flowchart TD
+    StartWebhook(["SiPintu Kirim Webhook (POST /api/sipintu/sync-user)"]) --> RecvHeader["Baca Header X-SiPintu-Signature & Payload"]
+    
+    RecvHeader --> CheckSecret{"Apakah SIPINTU_CLIENT_SECRET Dikonfigurasi?"}
+    CheckSecret -- "Ya" --> CheckSig{"Apakah Signature Valid? (hash_hmac SHA-256)"}
+    CheckSig -- "Header Kosong / Signature Beda" --> Ret401["Return HTTP 401 Unauthorized (Invalid signature)"]
+    Ret401 --> EndWebhook(["Webhook Ditolak"])
+    
+    CheckSecret -- "Tidak (Dev Mode)" --> ExtractPayload["Ekstrak Data User & Riwayat Email Sebelumnya"]
+    CheckSig -- "Valid (Cocok)" --> ExtractPayload
+
+    ExtractPayload --> ValidateEmail{"Payload Memiliki Field email?"}
+    ValidateEmail -- "Tidak" --> Ret400["Return HTTP 400 Bad Request (Invalid payload)"]
+    Ret400 --> EndWebhook
+
+    ValidateEmail -- "Ya" --> FindUser{"Cari User di Database Downstream
+    (by external_id OR email OR previous.email)"}
+
+    FindUser -- "User Belum Ada" --> ProvisionUser["Buat User Baru (Auto-Provisioning):
+    - Name, Email, Role, Status, Password
+    - Classroom, Phone, Username, Avatar
+    - email_verified_at = now()
+    - sipintu_last_synced_at = now()"]
+    ProvisionUser --> LogCreated["Log::info: User Created"]
+    LogCreated --> Ret201["Return HTTP 200 OK (action: created)"]
+    Ret201 --> SuccessWebhook(["Selesai"])
+
+    FindUser -- "User Ditemukan" --> CheckSyncHistory{"Apakah User Pernah Sync Sebelumnya?
+    (sipintu_last_synced_at == null)"}
+
+    CheckSyncHistory -- "Belum Pernah (null)" --> OverwriteAll["Tandai Aman Ditimpa (No Local Edits)"]
+    
+    CheckSyncHistory -- "Sudah Pernah" --> CompareTimestamp{"Apakah updated_at > sipintu_last_synced_at?"}
+    
+    CompareTimestamp -- "Ya (Pernah Diedit Lokal)" --> LocalEditsDetected["Mode Proteksi Data Lokal Aktif:
+    1. Timpa Source of Truth: email, role, status, password
+    2. SKIP & Pertahankan Lokal: name, phone, classroom, avatar_url
+    3. Catat skipped_fields"]
+
+    CompareTimestamp -- "Tidak (<=)" --> OverwriteAll
+
+    OverwriteAll --> FullSyncPrep["Mode Sinkronisasi Penuh:
+    1. Timpa Source of Truth: email, role, status, password
+    2. Timpa Field Profil: name, phone, classroom, avatar_url
+    3. skipped_fields = []"]
+
+    LocalEditsDetected --> SaveDB["Simpan Pembaruan ke Database:
+    - user.fill(fieldsToUpdate)
+    - user.sipintu_last_synced_at = now()
+    - user.updated_at = now() (Selaraskan timestamp!)
+    - user.save()"]
+
+    FullSyncPrep --> SaveDB
+
+    SaveDB --> LogUpdated["Log::info: User Updated:
+    - user_id
+    - updated_fields
+    - skipped_fields
+    - has_local_edits"]
+
+    LogUpdated --> Ret200["Return HTTP 200 OK (action: updated, timestamp)"]
+    Ret200 --> SuccessWebhook
+```
+
+---
+
 *Dokumen Flowchart User ini disusun secara mendalam untuk acuan developer, Design System, maupun panduan pengguna SiPintu.*
+
