@@ -8,6 +8,7 @@ use App\Models\Role;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class GatewaySeeder extends Seeder
 {
@@ -20,10 +21,10 @@ class GatewaySeeder extends Seeder
         foreach ($rolesData as $roleName) {
             $rolesMap[$roleName] = Role::firstOrCreate(
                 ['name' => $roleName, 'guard_name' => 'web'],
-                ['slug' => \Illuminate\Support\Str::slug($roleName)]
+                ['slug' => Str::slug($roleName)]
             );
             if (empty($rolesMap[$roleName]->slug)) {
-                $rolesMap[$roleName]->update(['slug' => \Illuminate\Support\Str::slug($roleName)]);
+                $rolesMap[$roleName]->update(['slug' => Str::slug($roleName)]);
             }
         }
 

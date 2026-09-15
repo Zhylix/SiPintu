@@ -15,6 +15,7 @@ class AdminApplicationLogoTest extends TestCase
     use RefreshDatabase;
 
     protected User $admin;
+
     protected Role $adminRole;
 
     protected function setUp(): void

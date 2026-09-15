@@ -48,4 +48,9 @@ return [
         'api_key' => env('WA_BOT_API_KEY', 'sipintu_wa_secret_key_2026'),
     ],
 
+    'sipintu' => [
+        'client_id' => env('SIPINTU_CLIENT_ID'),
+        'client_secret' => env('SIPINTU_CLIENT_SECRET'),
+    ],
+
 ];

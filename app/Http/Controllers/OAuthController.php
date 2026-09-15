@@ -6,12 +6,15 @@ use App\Models\Application;
 use App\Models\OAuthAccessToken;
 use App\Models\OAuthAuthCode;
 use App\Models\OAuthRefreshToken;
+use App\Models\User;
 use App\Services\AuditLogger;
 use App\Services\PasswordSyncService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 class OAuthController extends Controller
@@ -397,5 +400,240 @@ class OAuthController extends Controller
         $encodedSignature = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($signature));
 
         return "{$header}.{$payload}.{$encodedSignature}";
+    }
+
+    /**
+     * Webhook receiver: Synchronize user profile from SiPintu SSO with local conflict resolution.
+     */
+    public function syncUser(Request $request): JsonResponse
+    {
+        // 1. Security: HMAC SHA-256 Signature Verification
+        $signature = $request->header('X-SiPintu-Signature');
+        $clientSecret = config('services.sipintu.client_secret') ?: env('SIPINTU_CLIENT_SECRET');
+
+        if ($clientSecret) {
+            if (! $signature) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Missing X-SiPintu-Signature header.',
+                ], 401);
+            }
+
+            $computed = hash_hmac('sha256', $request->getContent(), $clientSecret);
+            if (! hash_equals($computed, $signature)) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Invalid signature.',
+                ], 401);
+            }
+        }
+
+        // 2. Extract and Normalize Payload
+        $userData = $request->input('user');
+        if (! is_array($userData)) {
+            $userData = $request->all();
+        }
+        if (isset($userData['user']) && is_array($userData['user'])) {
+            $userData = $userData['user'];
+        }
+
+        $previous = $request->input('previous', []);
+
+        if (! is_array($userData) || empty($userData['email'])) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Invalid user payload: email is required.',
+            ], 400);
+        }
+
+        // 3. Locate User by external_id, new email, or previous email
+        $user = null;
+        if (! empty($userData['external_id'])) {
+            $user = User::where('external_id', $userData['external_id'])->first();
+        }
+
+        if (! $user && ! empty($userData['email'])) {
+            $user = User::where('email', $userData['email'])
+                ->when(! empty($previous['email']), function ($q) use ($previous) {
+                    $q->orWhere('email', $previous['email']);
+                })
+                ->first();
+        }
+
+        $syncTime = now();
+
+        // 4. If User does not exist locally, create new user with all data from SiPintu (Rule 7)
+        if (! $user) {
+            $createFields = [
+                'name' => $userData['name'] ?? 'User',
+                'email' => $userData['email'],
+                'role' => $userData['role'] ?? 'student',
+                'status' => $userData['status'] ?? 'active',
+                'email_verified_at' => $syncTime,
+                'sipintu_last_synced_at' => $syncTime,
+            ];
+
+            if (! empty($userData['password'])) {
+                $createFields['password'] = $userData['password'];
+            } else {
+                $createFields['password'] = Str::random(32);
+            }
+
+            if (isset($userData['classroom'])) {
+                $createFields['classroom'] = $userData['classroom'];
+            }
+            if (isset($userData['phone'])) {
+                $createFields['phone'] = $userData['phone'];
+            }
+            if (isset($userData['username'])) {
+                $createFields['username'] = $userData['username'];
+            }
+            if (isset($userData['external_id'])) {
+                $createFields['external_id'] = $userData['external_id'];
+            }
+            if (isset($userData['avatar_url']) || isset($userData['avatar'])) {
+                $avatarVal = $userData['avatar_url'] ?? $userData['avatar'];
+                if (Schema::hasColumn('users', 'avatar_url')) {
+                    $createFields['avatar_url'] = $avatarVal;
+                }
+                if (Schema::hasColumn('users', 'avatar')) {
+                    $createFields['avatar'] = $avatarVal;
+                }
+            }
+
+            $user = new User;
+            $user->fill($createFields);
+            $user->created_at = $syncTime;
+            $user->updated_at = $syncTime;
+            $user->sipintu_last_synced_at = $syncTime;
+            $user->save();
+
+            $appliedFields = array_values(array_unique(array_merge(
+                ['email', 'role', 'status'],
+                isset($userData['name']) ? ['name'] : [],
+                isset($userData['phone']) ? ['phone'] : [],
+                isset($userData['classroom']) ? ['classroom'] : [],
+                (isset($userData['avatar_url']) || isset($userData['avatar'])) ? ['avatar_url'] : [],
+                ! empty($userData['password']) ? ['password'] : []
+            )));
+            $skippedFields = [];
+
+            Log::info('SiPintu webhook user sync: user created', [
+                'user_id' => $user->id,
+                'updated_fields' => $appliedFields,
+                'skipped_fields' => $skippedFields,
+            ]);
+
+            return response()->json([
+                'status' => 'success',
+                'action' => 'created',
+                'message' => "User {$user->email} berhasil disinkronkan dan dibuat.",
+                'user_id' => $user->id,
+                'updated_fields' => $appliedFields,
+                'skipped_fields' => $skippedFields,
+                'sipintu_last_synced_at' => $syncTime->toIso8601String(),
+            ]);
+        }
+
+        // 5. Check if user has local edits since last sync (Rule 3)
+        // - sipintu_last_synced_at == null -> overwrite all
+        // - updated_at > sipintu_last_synced_at -> user edited profile locally after last sync -> DO NOT overwrite local fields
+        // - updated_at <= sipintu_last_synced_at -> no local edits since last sync -> safe to overwrite with SiPintu data
+        $hasLocalEdits = false;
+        if ($user->sipintu_last_synced_at === null) {
+            $hasLocalEdits = false;
+        } elseif ($user->updated_at && $user->updated_at->gt($user->sipintu_last_synced_at)) {
+            $hasLocalEdits = true;
+        }
+
+        $updateFields = [];
+        $appliedFields = [];
+        $skippedFields = [];
+
+        // 6. Fields that ALWAYS follow SiPintu (Rule 2: email, role, status, password)
+        $updateFields['email'] = $userData['email'];
+        $appliedFields[] = 'email';
+
+        if (isset($userData['role'])) {
+            $updateFields['role'] = $userData['role'];
+            $appliedFields[] = 'role';
+        }
+
+        if (isset($userData['status'])) {
+            $updateFields['status'] = $userData['status'];
+            $appliedFields[] = 'status';
+        }
+
+        if (! empty($userData['password'])) {
+            $updateFields['password'] = $userData['password'];
+            $appliedFields[] = 'password';
+        }
+
+        // 7. Fields protected against local edits (Rule 3: name, phone, classroom, avatar_url)
+        $candidateLocalFields = [
+            'name' => $userData['name'] ?? null,
+            'phone' => $userData['phone'] ?? null,
+            'classroom' => $userData['classroom'] ?? null,
+        ];
+
+        foreach ($candidateLocalFields as $field => $val) {
+            if ($val !== null) {
+                if ($hasLocalEdits) {
+                    $skippedFields[] = $field;
+                } else {
+                    $updateFields[$field] = $val;
+                    $appliedFields[] = $field;
+                }
+            }
+        }
+
+        if (isset($userData['avatar_url']) || isset($userData['avatar'])) {
+            $avatarVal = $userData['avatar_url'] ?? $userData['avatar'];
+            if ($hasLocalEdits) {
+                $skippedFields[] = 'avatar_url';
+            } else {
+                if (Schema::hasColumn('users', 'avatar_url')) {
+                    $updateFields['avatar_url'] = $avatarVal;
+                }
+                if (Schema::hasColumn('users', 'avatar')) {
+                    $updateFields['avatar'] = $avatarVal;
+                }
+                $appliedFields[] = 'avatar_url';
+            }
+        }
+
+        // Keep external_id / username synced if provided
+        if (isset($userData['external_id']) && Schema::hasColumn('users', 'external_id')) {
+            $updateFields['external_id'] = $userData['external_id'];
+        }
+        if (isset($userData['username']) && Schema::hasColumn('users', 'username')) {
+            $updateFields['username'] = $userData['username'];
+        }
+
+        // 8. Update user and ensure updated_at does not exceed sipintu_last_synced_at (Rule 4)
+        $updateFields['sipintu_last_synced_at'] = $syncTime;
+
+        $user->fill($updateFields);
+        $user->sipintu_last_synced_at = $syncTime;
+        $user->updated_at = $syncTime;
+        $user->save();
+
+        // 9. Logging (Rule 6)
+        Log::info('SiPintu webhook user sync: user updated', [
+            'user_id' => $user->id,
+            'updated_fields' => $appliedFields,
+            'skipped_fields' => $skippedFields,
+            'has_local_edits' => $hasLocalEdits,
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'action' => 'updated',
+            'message' => "User {$user->email} berhasil disinkronkan.",
+            'user_id' => $user->id,
+            'updated_fields' => $appliedFields,
+            'skipped_fields' => $skippedFields,
+            'sipintu_last_synced_at' => $syncTime->toIso8601String(),
+        ]);
     }
 }

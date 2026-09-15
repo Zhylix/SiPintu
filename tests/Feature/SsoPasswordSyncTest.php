@@ -8,6 +8,7 @@ use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class SsoPasswordSyncTest extends TestCase
@@ -26,9 +27,9 @@ class SsoPasswordSyncTest extends TestCase
             'status' => 'active',
         ]);
 
-        $tokenStr = 'test_access_token_'.\Illuminate\Support\Str::random(40);
+        $tokenStr = 'test_access_token_'.Str::random(40);
         OAuthAccessToken::create([
-            'id' => (string) \Illuminate\Support\Str::uuid(),
+            'id' => (string) Str::uuid(),
             'user_id' => $user->id,
             'application_id' => $app->id,
             'token' => $tokenStr,

@@ -28,6 +28,7 @@ class User extends Authenticatable
         'avatar',
         'wa_notify',
         'status',
+        'sipintu_last_synced_at',
     ];
 
     protected $hidden = [
@@ -41,6 +42,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'wa_notify' => 'boolean',
+            'sipintu_last_synced_at' => 'datetime',
         ];
     }
 

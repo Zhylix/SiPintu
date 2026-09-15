@@ -235,82 +235,204 @@ Route::post('/api/sipintu/sync-user', [OAuthController::class, 'syncUser'])
     ->withoutMiddleware([PreventRequestForgery::class]);
 ```
 
-### 2. Tambahkan Method `syncUser` di `OAuthController.php`
+### 2. Tambahkan Kolom `sipintu_last_synced_at` di Tabel Users Downstream
 
-Tambahkan method berikut ke dalam `app/Http/Controllers/OAuthController.php` aplikasi downstream Anda:
+Jalankan migration untuk menambahkan kolom timestamp pencatatan sinkronisasi agar aplikasi dapat membedakan perubahan lokal vs sync:
+
+```bash
+php artisan make:migration add_sipintu_last_synced_at_to_users_table
+```
+
+```php
+Schema::table('users', function (Blueprint $table) {
+    $table->timestamp('sipintu_last_synced_at')->nullable()->after('updated_at');
+});
+```
+
+Pastikan juga menambahkan `'sipintu_last_synced_at'` ke dalam `$fillable` dan `$casts` di model `User`.
+
+### 3. Tambahkan Method `syncUser` di `OAuthController.php`
+
+Gunakan implementasi cerdas dengan resolusi konflik (conflict resolution) berikut:
+- **Field yang selalu ikut SiPintu**: `email`, `role`, `status`, `password` (jika ada).
+- **Field yang dilindungi jika diedit lokal**: `name`, `phone`, `classroom`, `avatar_url`.
 
 ```php
     /**
-     * Menerima payload pembaruan data pengguna realtime dari SiPintu Gateway
+     * Menerima payload pembaruan data pengguna realtime dari SiPintu Gateway dengan Smart Conflict Resolution
      */
     public function syncUser(Request $request)
     {
         // 1. Verifikasi Keamanan Signature HMAC SHA-256
         $signature = $request->header('X-SiPintu-Signature');
-        $clientSecret = env('SIPINTU_CLIENT_SECRET');
+        $clientSecret = config('services.sipintu.client_secret') ?: env('SIPINTU_CLIENT_SECRET');
 
-        if ($signature && $clientSecret) {
+        if ($clientSecret) {
+            if (! $signature) {
+                return response()->json(['status' => 'error', 'message' => 'Missing X-SiPintu-Signature header.'], 401);
+            }
+
             $computed = hash_hmac('sha256', $request->getContent(), $clientSecret);
             if (! hash_equals($computed, $signature)) {
-                return response()->json(['status' => 'error', 'message' => 'Invalid signature'], 401);
+                return response()->json(['status' => 'error', 'message' => 'Invalid signature.'], 401);
             }
         }
 
-        $userData = $request->input('user');
+        $userData = $request->input('user') ?? $request->all();
+        if (isset($userData['user']) && is_array($userData['user'])) {
+            $userData = $userData['user'];
+        }
         $previous = $request->input('previous', []);
 
-        if (! $userData) {
-            return response()->json(['status' => 'error', 'message' => 'Missing user payload'], 400);
+        if (! is_array($userData) || empty($userData['email'])) {
+            return response()->json(['status' => 'error', 'message' => 'User payload missing or invalid email.'], 400);
         }
 
-        // 2. Temukan user berdasarkan email baru atau email lama jika user mengubah emailnya
-        $user = User::where('email', $userData['email'])
-            ->when(! empty($previous['email']), function ($q) use ($previous) {
-                $q->orWhere('email', $previous['email']);
-            })
-            ->first();
+        // 2. Temukan user berdasarkan external_id atau email (termasuk riwayat email lama)
+        $user = null;
+        if (! empty($userData['external_id'])) {
+            $user = User::where('external_id', $userData['external_id'])->first();
+        }
 
-        // 3. Siapkan data pembaruan
-        $updateFields = [
-            'name'  => $userData['name'],
-            'email' => $userData['email'],
-            'role'  => $userData['role'] ?? 'user',
-        ];
+        if (! $user && ! empty($userData['email'])) {
+            $user = User::where('email', $userData['email'])
+                ->when(! empty($previous['email']), function ($q) use ($previous) {
+                    $q->orWhere('email', $previous['email']);
+                })
+                ->first();
+        }
 
-        // Sinkronkan password hash jika ada (khusus non-admin)
+        $syncTime = now();
+
+        // 3. Jika user belum ada di database downstream: Buat baru
+        if (! $user) {
+            $createFields = [
+                'name' => $userData['name'] ?? 'User',
+                'email' => $userData['email'],
+                'role' => $userData['role'] ?? 'student',
+                'status' => $userData['status'] ?? 'active',
+                'email_verified_at' => $syncTime,
+                'sipintu_last_synced_at' => $syncTime,
+            ];
+
+            if (! empty($userData['password'])) {
+                $createFields['password'] = $userData['password'];
+            } else {
+                $createFields['password'] = \Illuminate\Support\Str::random(32);
+            }
+
+            if (isset($userData['classroom'])) $createFields['classroom'] = $userData['classroom'];
+            if (isset($userData['phone'])) $createFields['phone'] = $userData['phone'];
+            if (isset($userData['username'])) $createFields['username'] = $userData['username'];
+            if (isset($userData['external_id'])) $createFields['external_id'] = $userData['external_id'];
+            if (isset($userData['avatar_url']) || isset($userData['avatar'])) {
+                $avatar = $userData['avatar_url'] ?? $userData['avatar'];
+                if (\Illuminate\Support\Facades\Schema::hasColumn('users', 'avatar_url')) $createFields['avatar_url'] = $avatar;
+                if (\Illuminate\Support\Facades\Schema::hasColumn('users', 'avatar')) $createFields['avatar'] = $avatar;
+            }
+
+            $user = new User();
+            $user->fill($createFields);
+            $user->created_at = $syncTime;
+            $user->updated_at = $syncTime;
+            $user->sipintu_last_synced_at = $syncTime;
+            $user->save();
+
+            \Illuminate\Support\Facades\Log::info('SiPintu webhook user sync: user created', [
+                'user_id' => $user->id,
+                'updated_fields' => array_keys($createFields),
+                'skipped_fields' => [],
+            ]);
+
+            return response()->json([
+                'status'  => 'success',
+                'action'  => 'created',
+                'message' => "User {$user->email} berhasil dibuat dari sinkronisasi SiPintu.",
+                'user_id' => $user->id,
+            ]);
+        }
+
+        // 4. Deteksi apakah user telah melakukan pengeditan profil secara lokal
+        $hasLocalEdits = false;
+        if ($user->sipintu_last_synced_at === null) {
+            $hasLocalEdits = false;
+        } elseif ($user->updated_at && $user->updated_at->gt($user->sipintu_last_synced_at)) {
+            $hasLocalEdits = true;
+        }
+
+        $updateFields = [];
+        $appliedFields = [];
+        $skippedFields = [];
+
+        // Field yang selalu mengikuti SiPintu (source of truth)
+        $updateFields['email'] = $userData['email'];
+        $appliedFields[] = 'email';
+
+        if (isset($userData['role'])) {
+            $updateFields['role'] = $userData['role'];
+            $appliedFields[] = 'role';
+        }
+        if (isset($userData['status'])) {
+            $updateFields['status'] = $userData['status'];
+            $appliedFields[] = 'status';
+        }
         if (! empty($userData['password'])) {
             $updateFields['password'] = $userData['password'];
+            $appliedFields[] = 'password';
         }
 
-        // Sinkronkan kolom opsional jika tabel users Anda memilikinya
-        if (\Illuminate\Support\Facades\Schema::hasColumn('users', 'phone') && isset($userData['phone'])) {
-            $updateFields['phone'] = $userData['phone'];
-        }
-        if (\Illuminate\Support\Facades\Schema::hasColumn('users', 'classroom') && isset($userData['classroom'])) {
-            $updateFields['classroom'] = $userData['classroom'];
-        }
-        if (\Illuminate\Support\Facades\Schema::hasColumn('users', 'status') && isset($userData['status'])) {
-            $updateFields['status'] = $userData['status'];
-        }
+        // Field lokal yang diproteksi jika user pernah mengubahnya secara lokal
+        $localCandidateFields = [
+            'name' => $userData['name'] ?? null,
+            'phone' => $userData['phone'] ?? null,
+            'classroom' => $userData['classroom'] ?? null,
+        ];
 
-        // 4. Update jika user sudah ada, atau buat baru jika belum pernah login
-        if ($user) {
-            $user->update($updateFields);
-            $action = 'updated';
-        } else {
-            $updateFields['email_verified_at'] = now();
-            if (empty($updateFields['password'])) {
-                $updateFields['password'] = bcrypt(\Illuminate\Support\Str::random(24));
+        foreach ($localCandidateFields as $field => $val) {
+            if ($val !== null) {
+                if ($hasLocalEdits) {
+                    $skippedFields[] = $field;
+                } else {
+                    $updateFields[$field] = $val;
+                    $appliedFields[] = $field;
+                }
             }
-            $user = User::create($updateFields);
-            $action = 'created';
         }
+
+        if (isset($userData['avatar_url']) || isset($userData['avatar'])) {
+            $avatarVal = $userData['avatar_url'] ?? $userData['avatar'];
+            if ($hasLocalEdits) {
+                $skippedFields[] = 'avatar_url';
+            } else {
+                if (\Illuminate\Support\Facades\Schema::hasColumn('users', 'avatar_url')) $updateFields['avatar_url'] = $avatarVal;
+                if (\Illuminate\Support\Facades\Schema::hasColumn('users', 'avatar')) $updateFields['avatar'] = $avatarVal;
+                $appliedFields[] = 'avatar_url';
+            }
+        }
+
+        // 5. Simpan pembaruan dan sinkronkan timestamp agar tidak dianggap perubahan lokal pada sync berikutnya
+        $updateFields['sipintu_last_synced_at'] = $syncTime;
+        $user->fill($updateFields);
+        $user->sipintu_last_synced_at = $syncTime;
+        $user->updated_at = $syncTime;
+        $user->save();
+
+        // 6. Logging aktivitas sinkronisasi
+        \Illuminate\Support\Facades\Log::info('SiPintu webhook user sync: user updated', [
+            'user_id' => $user->id,
+            'updated_fields' => $appliedFields,
+            'skipped_fields' => $skippedFields,
+            'has_local_edits' => $hasLocalEdits,
+        ]);
 
         return response()->json([
             'status'  => 'success',
-            'action'  => $action,
-            'message' => "User {$user->email} berhasil disinkronkan di aplikasi downstream.",
+            'action'  => 'updated',
+            'message' => "User {$user->email} berhasil disinkronkan.",
             'user_id' => $user->id,
+            'updated_fields' => $appliedFields,
+            'skipped_fields' => $skippedFields,
+            'sipintu_last_synced_at' => $syncTime->toIso8601String(),
         ]);
     }
 ```

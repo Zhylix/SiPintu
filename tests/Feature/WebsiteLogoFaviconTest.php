@@ -38,7 +38,7 @@ class WebsiteLogoFaviconTest extends TestCase
         $response = $this->get(route('login'));
 
         $response->assertStatus(200);
-        $response->assertSee('<link rel="icon" href="' . $defaultLogo . '"', false);
+        $response->assertSee('<link rel="icon" href="'.$defaultLogo.'"', false);
     }
 
     public function test_custom_logo_crud_updates_favicon_in_tab()
@@ -52,7 +52,7 @@ class WebsiteLogoFaviconTest extends TestCase
         ]);
 
         $response->assertRedirect();
-        
+
         $logoPath = Setting::get('site_logo');
         $this->assertNotNull($logoPath);
         Storage::disk('public')->assertExists($logoPath);
@@ -61,7 +61,7 @@ class WebsiteLogoFaviconTest extends TestCase
 
         $pageResponse = $this->actingAs($this->admin)->get(route('admin.settings.index'));
         $pageResponse->assertStatus(200);
-        $pageResponse->assertSee('<link rel="icon" href="' . $customLogoUrl . '"', false);
+        $pageResponse->assertSee('<link rel="icon" href="'.$customLogoUrl.'"', false);
     }
 
     public function test_resetting_custom_logo_reverts_favicon_to_default()

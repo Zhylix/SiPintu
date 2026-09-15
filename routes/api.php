@@ -1,7 +1,15 @@
 <?php
 
 use App\Http\Controllers\Api\ApiIdentityController;
+use App\Http\Controllers\OAuthController;
 use Illuminate\Support\Facades\Route;
+
+/*
+|--------------------------------------------------------------------------
+| Downstream Webhook User Sync Route (SiPintu SSO)
+|--------------------------------------------------------------------------
+*/
+Route::post('/sipintu/sync-user', [OAuthController::class, 'syncUser'])->name('api.sipintu.sync_user');
 
 /*
 |--------------------------------------------------------------------------
