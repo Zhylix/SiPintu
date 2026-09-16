@@ -70,7 +70,7 @@
         <img src="{{ $siteLogoUrl }}" alt="Watermark SMKN 1 Bangsri" class="w-[750px] max-w-[90vw] h-[750px] max-h-[90vh] object-contain pointer-events-none select-none">
     </div>
 
-    <!-- Mobile Slide-over Drawer Backdrop & Overlay -->
+    <!-- Mobile -->
     <div x-show="mobileMenuOpen"
          x-transition:enter="transition ease-out duration-300"
          x-transition:enter-start="opacity-0"
@@ -257,7 +257,7 @@
         </div>
 
         <div class="flex-1 flex flex-col md:flex-row w-full min-w-0 max-w-full">
-            <!-- Desktop Sidebar Navigation (Hidden on Mobile) -->
+            <!-- Desktop Sidebar Navigation -->
             <aside class="hidden md:flex md:w-64 bg-white border-r border-slate-200 flex-col shrink-0">
                 <!-- Brand Logo Header -->
                 <div class="h-20 flex items-center px-5 border-b border-slate-200 bg-white">
@@ -405,7 +405,7 @@
                 <!-- Top Header Bar -->
                 <header class="h-16 bg-white border-b border-slate-200 px-3 sm:px-6 flex items-center justify-between sticky top-0 z-30 shadow-xs w-full max-w-full">
                     <div class="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1 mr-2">
-                        <!-- Mobile Hamburger Button (Only visible on mobile) -->
+                        <!-- Mobile Hamburger Button -->
                         <button @click="mobileMenuOpen = !mobileMenuOpen" class="p-2 rounded-xl text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 md:hidden border border-slate-200 transition-colors shrink-0" title="Buka Menu">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
                         </button>
@@ -516,7 +516,7 @@
         </div>
     </div>
 
-    <!-- Popup Notifikasi Toast -->
+    <!-- Popup Notifikasi -->
     @include('partials.toast-notification')
 </body>
 </html>

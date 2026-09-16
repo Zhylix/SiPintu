@@ -63,7 +63,7 @@ class SyncSijunaStudentsJob implements ShouldQueue
                 $phone = $student['hp'] ?? $student['phone'] ?? null;
                 $username = $nis ?? ($student['user']['name'] ?? $externalId);
 
-                // Classroom null/empty means Alumni, classroom filled means active Student
+                // Classroom
                 $rawClassroom = $student['classroom'] ?? $student['kelas'] ?? $student['classroom_name'] ?? $student['class'] ?? null;
                 if (is_array($rawClassroom)) {
                     $classroom = $rawClassroom['name'] ?? $rawClassroom['nama'] ?? $rawClassroom['title'] ?? null;
@@ -71,7 +71,14 @@ class SyncSijunaStudentsJob implements ShouldQueue
                     $classroom = $rawClassroom;
                 }
 
-                $isAlumni = is_null($classroom) || trim((string) $classroom) === '' || strtolower(trim((string) $classroom)) === 'null';
+                // Filter Alumni: jika graduated = true maka alumni. Jika field graduated tidak tersedia, fallback ke pengecekan classroom.
+                $graduatedRaw = $student['graduated'] ?? $student['is_graduated'] ?? null;
+                if (! is_null($graduatedRaw)) {
+                    $isAlumni = filter_var($graduatedRaw, FILTER_VALIDATE_BOOLEAN);
+                } else {
+                    $isAlumni = is_null($classroom) || trim((string) $classroom) === '' || strtolower(trim((string) $classroom)) === 'null';
+                }
+
                 $assignedRole = $isAlumni ? 'alumni' : 'student';
 
                 $userRows[] = [
