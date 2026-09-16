@@ -3,27 +3,48 @@
 @section('content')
 <div class="space-y-6 sm:space-y-8 min-w-0 max-w-full">
     <!-- Top Stats Overview Grid -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+    <!-- Top Stats Overview Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-5">
         <!-- Total Users Stat -->
-        <div class="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200 shadow-md relative overflow-hidden group hover:border-emerald-500 transition-all">
+        <div class="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200 shadow-md relative overflow-hidden group hover:border-emerald-500 transition-all flex flex-col justify-between">
             <div class="flex items-center justify-between gap-2">
                 <div class="min-w-0">
-                    <span class="text-xs font-extrabold text-slate-500 uppercase tracking-wider block truncate">Total Pengguna Gateway</span>
+                    <span class="text-xs font-extrabold text-slate-500 uppercase tracking-wider block truncate">Total Pengguna</span>
                     <div class="text-2xl sm:text-3xl font-black text-emerald-950 mt-1">{{ number_format($stats['total_users']) }}</div>
                 </div>
                 <div class="w-12 h-12 rounded-xl bg-emerald-100 border border-emerald-300 text-emerald-800 flex items-center justify-center font-bold shrink-0">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                 </div>
             </div>
-            <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600 font-semibold flex-wrap gap-1">
-                <span>Siswa: <strong class="text-emerald-700 font-black">{{ $stats['students_count'] }}</strong></span>
-                <span>Guru: <strong class="text-emerald-700 font-black">{{ $stats['teachers_count'] }}</strong></span>
-                <span>DUDI: <strong class="text-emerald-700 font-black">{{ $stats['dudi_count'] }}</strong></span>
+            <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600 font-semibold flex-wrap gap-x-2 gap-y-1">
+                <span>Siswa: <strong class="text-emerald-700 font-black">{{ number_format($stats['students_count']) }}</strong></span>
+                <span>Guru: <strong class="text-emerald-700 font-black">{{ number_format($stats['teachers_count']) }}</strong></span>
+                <span>DUDI: <strong class="text-emerald-700 font-black">{{ number_format($stats['dudi_count']) }}</strong></span>
+            </div>
+        </div>
+
+        <!-- Total Alumni Stat (Dedikasi Khusus Alumni) -->
+        <div class="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200 shadow-md relative overflow-hidden group hover:border-teal-500 transition-all flex flex-col justify-between">
+            <div class="flex items-center justify-between gap-2">
+                <div class="min-w-0">
+                    <div class="flex items-center gap-1.5">
+                        <span class="text-xs font-extrabold text-teal-800 uppercase tracking-wider block truncate">Total Alumni</span>
+                        <span class="px-1.5 py-0.5 text-[9px] font-black rounded bg-teal-50 text-teal-700 border border-teal-200 uppercase">Lulus</span>
+                    </div>
+                    <div class="text-2xl sm:text-3xl font-black text-teal-950 mt-1">{{ number_format($stats['alumni_count'] ?? 0) }}</div>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-teal-100 border border-teal-300 text-teal-800 flex items-center justify-center font-bold shrink-0">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14v7"></path></svg>
+                </div>
+            </div>
+            <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600 font-semibold">
+                <span>Status: <strong class="text-teal-700 font-black">Alumni Terdata</strong></span>
+                <span class="text-[10px] text-teal-700 font-bold bg-teal-50 px-2 py-0.5 rounded border border-teal-200">Graduated</span>
             </div>
         </div>
 
         <!-- Registered External Apps -->
-        <div class="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200 shadow-md relative overflow-hidden group hover:border-emerald-500 transition-all">
+        <div class="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200 shadow-md relative overflow-hidden group hover:border-emerald-500 transition-all flex flex-col justify-between">
             <div class="flex items-center justify-between gap-2">
                 <div class="min-w-0">
                     <span class="text-xs font-extrabold text-slate-500 uppercase tracking-wider block truncate">Aplikasi Terdaftar</span>
@@ -40,7 +61,7 @@
         </div>
 
         <!-- SIJUNA Identity Sync -->
-        <div class="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200 shadow-md relative overflow-hidden group hover:border-emerald-500 transition-all">
+        <div class="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200 shadow-md relative overflow-hidden group hover:border-emerald-500 transition-all flex flex-col justify-between">
             <div class="flex items-center justify-between gap-2">
                 <div class="min-w-0">
                     <span class="text-xs font-extrabold text-slate-500 uppercase tracking-wider block truncate">Status Sinkron SIJUNA</span>
@@ -52,20 +73,24 @@
             </div>
             <div class="mt-4 pt-3 border-t border-slate-100 text-xs text-slate-600 font-semibold flex items-center justify-between flex-wrap gap-1">
                 <span>Terakhir: {{ $latestSync?->completed_at?->diffForHumans() ?? 'Baru Saja' }}</span>
-                <span class="font-bold text-emerald-950">{{ $stats['students_count'] }} Siswa</span>
+                <span class="font-bold text-emerald-950">{{ number_format($stats['students_count']) }} Siswa &bull; {{ number_format($stats['alumni_count'] ?? 0) }} Alumni</span>
             </div>
         </div>
 
         <!-- SSO Active Tokens -->
-        <div class="p-5 rounded-2xl bg-white border border-slate-200 shadow-md relative overflow-hidden group hover:border-amber-500 transition-all">
-            <div class="flex items-center justify-between">
-                <div>
-                    <span class="text-xs font-extrabold text-slate-500 uppercase tracking-wider">Token SiPintu Aktif</span>
-                    <div class="text-3xl font-black text-emerald-950 mt-1">{{ number_format($stats['sso_tokens_count']) }}</div>
+        <div class="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200 shadow-md relative overflow-hidden group hover:border-amber-500 transition-all flex flex-col justify-between">
+            <div class="flex items-center justify-between gap-2">
+                <div class="min-w-0">
+                    <span class="text-xs font-extrabold text-slate-500 uppercase tracking-wider block truncate">Token SiPintu Aktif</span>
+                    <div class="text-2xl sm:text-3xl font-black text-emerald-950 mt-1">{{ number_format($stats['sso_tokens_count']) }}</div>
                 </div>
-                <div class="w-12 h-12 rounded-xl bg-amber-100 border border-amber-300 text-amber-800 flex items-center justify-center font-bold">
+                <div class="w-12 h-12 rounded-xl bg-amber-100 border border-amber-300 text-amber-800 flex items-center justify-center font-bold shrink-0">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
                 </div>
+            </div>
+            <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600 font-semibold">
+                <span>Keamanan: <strong class="text-amber-700 font-black">OAuth 2.0</strong></span>
+                <span class="text-[10px] text-slate-400">Bearer Sessions</span>
             </div>
         </div>
     </div>

@@ -22,6 +22,7 @@ class AdminDashboardController extends Controller
             return [
                 'total_users' => User::count(),
                 'students_count' => User::where('role', 'student')->count(),
+                'alumni_count' => User::where('role', 'alumni')->count(),
                 'teachers_count' => User::where('role', 'teacher')->count(),
                 'dudi_count' => User::where('role', 'dudi')->count(),
                 'admin_count' => User::where('role', 'admin')->count(),
