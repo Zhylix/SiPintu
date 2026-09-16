@@ -107,6 +107,9 @@
                     <div>
                         <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Role</span>
                         <span class="font-bold text-slate-800 capitalize">{{ $user->getUserTypeName() }}</span>
+                        @if($user->isAlumni())
+                            <span class="text-[9px] text-teal-700 block font-mono font-bold mt-0.5">M: {{ $user->tahun_masuk }} • L: {{ $user->tahun_lulus }}</span>
+                        @endif
                     </div>
                     <div>
                         @if($user->isStudent() || $user->isAlumni())
@@ -156,8 +159,10 @@
                 </div>
             </div>
         @empty
-            <div class="p-8 text-center bg-white rounded-2xl border border-slate-200 text-slate-500 font-medium text-xs">
-                Tidak ada pengguna yang ditemukan.
+            <div class="p-8 text-center text-slate-400 bg-white rounded-2xl border border-slate-200">
+                <svg class="w-12 h-12 mx-auto mb-2 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                <div class="font-bold text-slate-700 text-sm">Tidak ada data pengguna</div>
+                <div class="text-xs text-slate-400 mt-1">Coba ubah kata kunci pencarian atau filter peran</div>
             </div>
         @endforelse
 
@@ -233,6 +238,12 @@
                                     @endif
                                     @if($user->jurusan)
                                         <span class="text-[10px] font-extrabold text-teal-800 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200 font-mono">Jurusan: {{ $user->jurusan->kode_jurusan }}</span>
+                                    @endif
+                                    @if($user->isAlumni())
+                                        <div class="flex items-center gap-1 mt-0.5">
+                                            <span class="text-[9px] font-black text-emerald-800 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200 font-mono" title="Tahun Masuk: {{ $user->created_at?->translatedFormat('d F Y') }}">Masuk: {{ $user->tahun_masuk }}</span>
+                                            <span class="text-[9px] font-black text-teal-800 bg-teal-50 px-1.5 py-0.2 rounded border border-teal-200 font-mono" title="Tahun Lulus: {{ $user->updated_at?->translatedFormat('d F Y') }}">Lulus: {{ $user->tahun_lulus }}</span>
+                                        </div>
                                     @endif
                                 </div>
                             </td>

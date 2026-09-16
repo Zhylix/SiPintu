@@ -272,12 +272,50 @@ Endpoint untuk mengambil daftar 5 konsentrasi keahlian beserta jumlah alumni & s
 
 ### 3. Data Alumni Terkelompokkan (`GET /api/v1/alumni`)
 Endpoint terlindungi OAuth Bearer Token / Client Credentials untuk mengambil data alumni terkelompokkan:
-- **URL**: `GET /api/v1/alumni?jurusan=PPLG&per_page=20`
+- **URL**: `GET /api/v1/alumni?jurusan=PPLG&tahun_masuk=2023&tahun_lulus=2026&per_page=20`
 - **Query Parameter**:
   - `jurusan`: `PPLG`, `TO`, `AKL`, `PM`, `MPLB`, atau `all`
+  - `tahun_masuk`: Filter tahun masuk / pembuatan siswa (contoh: `2023`)
+  - `tahun_lulus`: Filter tahun kelulusan alumni (contoh: `2026`)
   - `search`: Kata kunci nama, email, NIS, atau kelas
   - `per_page`: Jumlah data per halaman (1–100)
 - **Header**: `Authorization: Bearer <access_token>` atau `X-Client-ID` & `X-Client-Secret`
+- **Contoh Response JSON**:
+```json
+{
+  "status": "success",
+  "meta": {
+    "current_page": 1,
+    "last_page": 1,
+    "per_page": 20,
+    "total": 1
+  },
+  "data": [
+    {
+      "id": "4",
+      "external_id": "2023001",
+      "nis": "2023001",
+      "name": "AFRILLIA FIFA ANANTA",
+      "email": "afrillia@smkn1bangsri.sch.id",
+      "phone": "081234567890",
+      "role": "alumni",
+      "classroom": "XII AKL 1",
+      "jurusan": {
+        "id": 3,
+        "kode_jurusan": "AKL",
+        "nama_jurusan": "Akuntansi dan Keuangan Lembaga"
+      },
+      "kode_jurusan": "AKL",
+      "nama_jurusan": "Akuntansi dan Keuangan Lembaga",
+      "tahun_masuk": 2023,
+      "tahun_lulus": 2026,
+      "created_at": "2023-07-15T08:00:00.000000Z",
+      "updated_at": "2026-05-10T10:30:00.000000Z",
+      "status": "active"
+    }
+  ]
+}
+```
 
 ---
 

@@ -236,6 +236,23 @@
                         <p class="text-[11px] text-slate-500 font-medium mt-1">Status kelas disinkronkan secara otomatis dari SIJUNA / Dapodik.</p>
                     </div>
                     @endif
+
+                    @if($user->isAlumni())
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-extrabold text-slate-700 mb-2">Tahun Masuk (Siswa Baru)</label>
+                            <input type="text" value="{{ $user->tahun_masuk ? $user->tahun_masuk . ' (' . $user->tahun_masuk_tanggal . ')' : '-' }}" readonly disabled
+                                class="w-full px-4 py-3 rounded-xl bg-slate-100 border border-slate-200 text-emerald-900 font-mono text-sm font-bold cursor-not-allowed">
+                            <p class="text-[11px] text-slate-500 font-medium mt-1">Dihitung dari waktu registrasi akun awal di sistem.</p>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-extrabold text-slate-700 mb-2">Tahun Lulus (Alumni)</label>
+                            <input type="text" value="{{ $user->tahun_lulus ? $user->tahun_lulus . ' (' . $user->tahun_lulus_tanggal . ')' : '-' }}" readonly disabled
+                                class="w-full px-4 py-3 rounded-xl bg-slate-100 border border-slate-200 text-teal-900 font-mono text-sm font-bold cursor-not-allowed">
+                            <p class="text-[11px] text-slate-500 font-medium mt-1">Dihitung dari waktu pembaruan kelulusan alumni.</p>
+                        </div>
+                    </div>
+                    @endif
                     <button type="submit" class="px-6 py-3 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-extrabold rounded-xl transition-all shadow-md shadow-emerald-700/20 flex items-center space-x-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                         <span>Simpan</span>

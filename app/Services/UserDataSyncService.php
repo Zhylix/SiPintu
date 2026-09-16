@@ -33,6 +33,12 @@ class UserDataSyncService
             'phone' => $user->phone,
             'status' => $user->status,
             'avatar_url' => $user->avatar_url,
+            'jurusan_id' => $user->jurusan_id,
+            'kode_jurusan' => $user->jurusan?->kode_jurusan,
+            'nama_jurusan' => $user->jurusan?->nama_jurusan,
+            'tahun_masuk' => $user->tahun_masuk,
+            'tahun_lulus' => $user->tahun_lulus,
+            'created_at' => $user->created_at?->toIso8601String(),
             'updated_at' => $user->updated_at?->toIso8601String() ?? now()->toIso8601String(),
         ];
 

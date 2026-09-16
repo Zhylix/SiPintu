@@ -56,6 +56,14 @@ class ApiIdentityController extends Controller
             $response['phone'] = $user->phone;
         }
 
+        if ($user->isAlumni() || $user->role === 'alumni') {
+            $response['tahun_masuk'] = $user->tahun_masuk;
+            $response['tahun_lulus'] = $user->tahun_lulus;
+        }
+
+        $response['created_at'] = $user->created_at?->toIso8601String();
+        $response['updated_at'] = $user->updated_at?->toIso8601String();
+
         return response()->json($response);
     }
 
@@ -103,6 +111,8 @@ class ApiIdentityController extends Controller
                 'nama_jurusan' => $user->jurusan->nama_jurusan,
                 'deskripsi' => $user->jurusan->deskripsi,
             ] : null,
+            'tahun_masuk' => $user->tahun_masuk,
+            'tahun_lulus' => $user->tahun_lulus,
             'roles' => $user->roles->pluck('name'),
             'sijuna_data' => $sijunaData,
             'accessed_via_app' => $app ? [
@@ -110,6 +120,7 @@ class ApiIdentityController extends Controller
                 'client_id' => $app->client_id,
             ] : null,
             'created_at' => $user->created_at?->toIso8601String(),
+            'updated_at' => $user->updated_at?->toIso8601String(),
         ], $passwordSyncService->getPasswordPayload($user)));
     }
 
@@ -542,6 +553,18 @@ class ApiIdentityController extends Controller
             });
         }
 
+        // Filter berdasarkan Tahun Masuk (dibuat siswa / created_at)
+        $tahunMasuk = $request->query('tahun_masuk') ?: $request->query('angkatan');
+        if ($tahunMasuk && is_numeric($tahunMasuk)) {
+            $query->whereYear('created_at', (int) $tahunMasuk);
+        }
+
+        // Filter berdasarkan Tahun Lulus (diperbarui status kelulusan / updated_at)
+        $tahunLulus = $request->query('tahun_lulus') ?: $request->query('lulus');
+        if ($tahunLulus && is_numeric($tahunLulus)) {
+            $query->whereYear('updated_at', (int) $tahunLulus);
+        }
+
         // Pencarian nama, email, NIS, atau kelas
         $search = trim((string) $request->query('search', ''));
         if (! empty($search)) {
@@ -582,6 +605,10 @@ class ApiIdentityController extends Controller
                     ] : null,
                     'kode_jurusan' => $u->jurusan?->kode_jurusan,
                     'nama_jurusan' => $u->jurusan?->nama_jurusan,
+                    'tahun_masuk' => $u->tahun_masuk,
+                    'tahun_lulus' => $u->tahun_lulus,
+                    'created_at' => $u->created_at?->toIso8601String(),
+                    'updated_at' => $u->updated_at?->toIso8601String(),
                     'status' => $u->status,
                 ];
             }),

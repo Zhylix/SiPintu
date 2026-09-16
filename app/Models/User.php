@@ -38,6 +38,11 @@ class User extends Authenticatable
         'remember_token',
     ];
 
+    protected $appends = [
+        'tahun_masuk',
+        'tahun_lulus',
+    ];
+
     protected function casts(): array
     {
         return [
@@ -238,4 +243,37 @@ class User extends Authenticatable
 
         return $jurusan;
     }
+
+    /**
+     * Tahun Masuk (dihitung dari tahun akun dibuat / created_at)
+     */
+    public function getTahunMasukAttribute(): ?int
+    {
+        return $this->created_at ? (int) $this->created_at->format('Y') : null;
+    }
+
+    /**
+     * Tahun Lulus (dihitung dari tahun pembaruan status kelulusan / updated_at)
+     */
+    public function getTahunLulusAttribute(): ?int
+    {
+        return $this->updated_at ? (int) $this->updated_at->format('Y') : null;
+    }
+
+    /**
+     * Format tanggal masuk siswa
+     */
+    public function getTahunMasukTanggalAttribute(): ?string
+    {
+        return $this->created_at ? $this->created_at->translatedFormat('d M Y') : null;
+    }
+
+    /**
+     * Format tanggal lulus alumni
+     */
+    public function getTahunLulusTanggalAttribute(): ?string
+    {
+        return $this->updated_at ? $this->updated_at->translatedFormat('d M Y') : null;
+    }
 }
+

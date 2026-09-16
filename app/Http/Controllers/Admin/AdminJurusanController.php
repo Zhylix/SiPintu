@@ -36,8 +36,10 @@ class AdminJurusanController extends Controller
             ->get()
             ->groupBy('jurusan_id');
 
-        // 3. Query daftar rinci alumni sesuai filter jurusan & pencarian
+        // 3. Query daftar rinci alumni sesuai filter jurusan, tahun, & pencarian
         $selectedJurusanKode = $request->query('jurusan', 'all');
+        $selectedTahunMasuk = $request->query('tahun_masuk');
+        $selectedTahunLulus = $request->query('tahun_lulus');
         $search = trim((string) $request->query('search', ''));
 
         $alumniQuery = User::where('role', 'alumni')
@@ -48,6 +50,14 @@ class AdminJurusanController extends Controller
             if ($jurusan) {
                 $alumniQuery->where('jurusan_id', $jurusan->id);
             }
+        }
+
+        if (! empty($selectedTahunMasuk) && is_numeric($selectedTahunMasuk)) {
+            $alumniQuery->whereYear('created_at', (int) $selectedTahunMasuk);
+        }
+
+        if (! empty($selectedTahunLulus) && is_numeric($selectedTahunLulus)) {
+            $alumniQuery->whereYear('updated_at', (int) $selectedTahunLulus);
         }
 
         if (! empty($search)) {
@@ -66,6 +76,29 @@ class AdminJurusanController extends Controller
             ->paginate(15)
             ->withQueryString();
 
+        // Ambil daftar tahun masuk & tahun lulus yang unik untuk filter UI
+        $driver = DB::connection()->getDriverName();
+        $yearMasukExp = $driver === 'sqlite' ? "strftime('%Y', created_at)" : 'YEAR(created_at)';
+        $yearLulusExp = $driver === 'sqlite' ? "strftime('%Y', updated_at)" : 'YEAR(updated_at)';
+
+        $availableYearsMasuk = User::where('role', 'alumni')
+            ->whereNotNull('created_at')
+            ->selectRaw("DISTINCT {$yearMasukExp} as year")
+            ->pluck('year')
+            ->map(fn ($y) => (int) $y)
+            ->filter()
+            ->sortDesc()
+            ->values();
+
+        $availableYearsLulus = User::where('role', 'alumni')
+            ->whereNotNull('updated_at')
+            ->selectRaw("DISTINCT {$yearLulusExp} as year")
+            ->pluck('year')
+            ->map(fn ($y) => (int) $y)
+            ->filter()
+            ->sortDesc()
+            ->values();
+
         return view('admin.jurusan.index', compact(
             'jurusans',
             'totalAlumni',
@@ -73,6 +106,10 @@ class AdminJurusanController extends Controller
             'classroomDistribution',
             'alumniList',
             'selectedJurusanKode',
+            'selectedTahunMasuk',
+            'selectedTahunLulus',
+            'availableYearsMasuk',
+            'availableYearsLulus',
             'search'
         ));
     }

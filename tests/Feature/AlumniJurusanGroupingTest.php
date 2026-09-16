@@ -443,5 +443,164 @@ class AlumniJurusanGroupingTest extends TestCase
         $this->assertEquals('Alumni TO 1', $responseTo->json('data.0.name'));
         $this->assertEquals('TO', $responseTo->json('data.0.kode_jurusan'));
     }
+
+    /**
+     * Test User model memiliki accessor tahun_masuk dan tahun_lulus
+     */
+    public function test_user_model_has_tahun_masuk_and_tahun_lulus_attributes(): void
+    {
+        $user = User::factory()->create([
+            'role' => 'alumni',
+            'created_at' => '2023-07-15 08:30:00',
+            'updated_at' => '2026-05-20 11:45:00',
+        ]);
+
+        $this->assertEquals(2023, $user->tahun_masuk);
+        $this->assertEquals(2026, $user->tahun_lulus);
+        $this->assertNotEmpty($user->tahun_masuk_tanggal);
+        $this->assertNotEmpty($user->tahun_lulus_tanggal);
+
+        // Pastikan append ke array/json
+        $array = $user->toArray();
+        $this->assertArrayHasKey('tahun_masuk', $array);
+        $this->assertArrayHasKey('tahun_lulus', $array);
+        $this->assertEquals(2023, $array['tahun_masuk']);
+        $this->assertEquals(2026, $array['tahun_lulus']);
+    }
+
+    /**
+     * Test endpoint GET /api/v1/alumni mengembalikan tahun_masuk dan tahun_lulus untuk aplikasi downstream
+     */
+    public function test_downstream_api_alumni_endpoint_returns_tahun_masuk_and_tahun_lulus(): void
+    {
+        $ppl = Jurusan::where('kode_jurusan', 'PPLG')->first();
+
+        $alumni = User::factory()->create([
+            'name' => 'Budi Santoso Alumni',
+            'email' => 'budialumni@skansaba.sch.id',
+            'role' => 'alumni',
+            'classroom' => 'XII PPLG 2',
+            'jurusan_id' => $ppl->id,
+            'created_at' => '2022-07-10 09:00:00',
+            'updated_at' => '2025-06-15 10:00:00',
+        ]);
+
+        $app = Application::create([
+            'name' => 'Aplikasi Tracer Study',
+            'slug' => 'tracer-study',
+            'client_id' => 'tracer_study_client',
+            'client_secret' => 'tracer_study_secret',
+            'base_url' => 'http://tracer.sch.id',
+            'redirect_uri' => 'http://tracer.sch.id/callback',
+            'status' => 'active',
+        ]);
+
+        $tokenStr = 'bearer_token_tracer_'.Str::random(32);
+        OAuthAccessToken::create([
+            'id' => (string) Str::uuid(),
+            'user_id' => $this->admin->id,
+            'application_id' => $app->id,
+            'token' => $tokenStr,
+            'scopes' => 'openid profile email',
+            'expires_at' => now()->addHours(24),
+            'revoked' => false,
+        ]);
+
+        $response = $this->withToken($tokenStr)->getJson(route('api.v1.alumni', ['search' => 'Budi Santoso Alumni']));
+        $response->assertStatus(200);
+
+        $data = $response->json('data.0');
+        $this->assertEquals('Budi Santoso Alumni', $data['name']);
+        $this->assertEquals(2022, $data['tahun_masuk']);
+        $this->assertEquals(2025, $data['tahun_lulus']);
+        $this->assertNotNull($data['created_at']);
+        $this->assertNotNull($data['updated_at']);
+    }
+
+    /**
+     * Test downstream API GET /api/v1/alumni dapat difilter berdasarkan tahun_masuk dan tahun_lulus
+     */
+    public function test_downstream_api_alumni_endpoint_filterable_by_tahun_masuk_and_lulus(): void
+    {
+        $ppl = Jurusan::where('kode_jurusan', 'PPLG')->first();
+
+        User::factory()->create([
+            'name' => 'Alumni Angkatan 2021',
+            'email' => 'alumni2021@skansaba.sch.id',
+            'role' => 'alumni',
+            'classroom' => 'XII PPLG 1',
+            'jurusan_id' => $ppl->id,
+            'created_at' => '2021-07-10 09:00:00',
+            'updated_at' => '2024-06-15 10:00:00',
+        ]);
+
+        User::factory()->create([
+            'name' => 'Alumni Angkatan 2023',
+            'email' => 'alumni2023@skansaba.sch.id',
+            'role' => 'alumni',
+            'classroom' => 'XII PPLG 2',
+            'jurusan_id' => $ppl->id,
+            'created_at' => '2023-07-10 09:00:00',
+            'updated_at' => '2026-06-15 10:00:00',
+        ]);
+
+        $app = Application::create([
+            'name' => 'Portal Alumni External',
+            'slug' => 'portal-alumni-ext',
+            'client_id' => 'portal_alumni_ext_client',
+            'client_secret' => 'portal_alumni_ext_secret',
+            'base_url' => 'http://portalalumni.sch.id',
+            'redirect_uri' => 'http://portalalumni.sch.id/callback',
+            'status' => 'active',
+        ]);
+
+        $tokenStr = 'bearer_token_portal_'.Str::random(32);
+        OAuthAccessToken::create([
+            'id' => (string) Str::uuid(),
+            'user_id' => $this->admin->id,
+            'application_id' => $app->id,
+            'token' => $tokenStr,
+            'scopes' => 'openid profile email',
+            'expires_at' => now()->addHours(24),
+            'revoked' => false,
+        ]);
+
+        // Filter tahun masuk 2021
+        $res2021 = $this->withToken($tokenStr)->getJson(route('api.v1.alumni', ['tahun_masuk' => 2021]));
+        $res2021->assertStatus(200);
+        $this->assertEquals(1, count($res2021->json('data')));
+        $this->assertEquals('Alumni Angkatan 2021', $res2021->json('data.0.name'));
+
+        // Filter tahun lulus 2026
+        $res2026 = $this->withToken($tokenStr)->getJson(route('api.v1.alumni', ['tahun_lulus' => 2026]));
+        $res2026->assertStatus(200);
+        $this->assertEquals(1, count($res2026->json('data')));
+        $this->assertEquals('Alumni Angkatan 2023', $res2026->json('data.0.name'));
+    }
+
+    /**
+     * Test admin halaman pengelompokan alumni menampilkan kolom Tahun Masuk & Lulus
+     */
+    public function test_admin_jurusan_view_displays_tahun_masuk_and_lulus_columns(): void
+    {
+        $ppl = Jurusan::where('kode_jurusan', 'PPLG')->first();
+
+        User::factory()->create([
+            'name' => 'Siswa Lulus 2026',
+            'email' => 'lulus2026@skansaba.sch.id',
+            'role' => 'alumni',
+            'classroom' => 'XII PPLG 1',
+            'jurusan_id' => $ppl->id,
+            'created_at' => '2023-07-01 08:00:00',
+            'updated_at' => '2026-06-01 09:00:00',
+        ]);
+
+        $response = $this->actingAs($this->admin)->get(route('admin.jurusan.index'));
+        $response->assertStatus(200);
+        $response->assertSee('Tahun Masuk');
+        $response->assertSee('Tahun Lulus');
+        $response->assertSee('2023');
+        $response->assertSee('2026');
+    }
 }
 

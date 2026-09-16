@@ -21,7 +21,12 @@
                         <span class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[11px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300">
                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span> {{ auth()->user()->isAlumni() ? 'Alumni' : 'Siswa Aktif' }}
                         </span>
-@if(auth()->user()->classroom)
+                        @if(auth()->user()->isAlumni())
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-teal-50 text-teal-900 border border-teal-200" title="Tahun Masuk: {{ auth()->user()->tahun_masuk_tanggal }} • Tahun Lulus: {{ auth()->user()->tahun_lulus_tanggal }}">
+                                Masuk {{ auth()->user()->tahun_masuk }} &bull; Lulus {{ auth()->user()->tahun_lulus }}
+                            </span>
+                        @endif
+                        @if(auth()->user()->classroom)
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-white text-emerald-900 border border-emerald-200">
                                 Kelas {{ auth()->user()->classroom }}
                             </span>
