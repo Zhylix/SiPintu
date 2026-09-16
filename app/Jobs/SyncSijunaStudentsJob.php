@@ -8,6 +8,7 @@ use App\Models\SyncLog;
 use App\Models\User;
 use App\Services\AuditLogger;
 use App\Services\SijunaApiService;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -117,6 +118,27 @@ class SyncSijunaStudentsJob implements ShouldQueue
                     $studentsCount++;
                 }
 
+                $rawCreatedAt = $student['created_at'] ?? $student['user']['created_at'] ?? null;
+                $rawUpdatedAt = $student['updated_at'] ?? $student['user']['updated_at'] ?? null;
+
+                $studentCreatedAt = $now;
+                if (! empty($rawCreatedAt)) {
+                    try {
+                        $studentCreatedAt = Carbon::parse($rawCreatedAt)->format('Y-m-d H:i:s');
+                    } catch (\Throwable) {
+                        $studentCreatedAt = $now;
+                    }
+                }
+
+                $studentUpdatedAt = $now;
+                if (! empty($rawUpdatedAt)) {
+                    try {
+                        $studentUpdatedAt = Carbon::parse($rawUpdatedAt)->format('Y-m-d H:i:s');
+                    } catch (\Throwable) {
+                        $studentUpdatedAt = $now;
+                    }
+                }
+
                 $userRows[] = [
                     'external_id' => $externalId,
                     'name' => $name,
@@ -128,8 +150,8 @@ class SyncSijunaStudentsJob implements ShouldQueue
                     'phone' => $phone,
                     'status' => 'active',
                     'password' => $defaultPasswordHash,
-                    'created_at' => $now,
-                    'updated_at' => $now,
+                    'created_at' => $studentCreatedAt,
+                    'updated_at' => $studentUpdatedAt,
                 ];
 
                 Cache::put("user:{$externalId}", [
@@ -152,7 +174,7 @@ class SyncSijunaStudentsJob implements ShouldQueue
                 User::upsert(
                     $chunk,
                     ['external_id'],
-                    ['name', 'email', 'username', 'classroom', 'jurusan_id', 'phone', 'status', 'role', 'updated_at']
+                    ['name', 'email', 'username', 'classroom', 'jurusan_id', 'phone', 'status', 'role', 'created_at', 'updated_at']
                 );
             }
 

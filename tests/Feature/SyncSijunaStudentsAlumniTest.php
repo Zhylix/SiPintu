@@ -32,6 +32,8 @@ class SyncSijunaStudentsAlumniTest extends TestCase
                 'classroom' => 'XII PPLG 1', // even if classroom is filled
                 'email' => 'budi9901@siswa.sekolah.id',
                 'graduated' => true,
+                'created_at' => '2023-09-13T00:31:57.000000Z',
+                'updated_at' => '2025-05-05T03:44:01.000000Z',
             ],
             [
                 'id' => '1002',
@@ -69,6 +71,8 @@ class SyncSijunaStudentsAlumniTest extends TestCase
         $this->assertTrue($budi->hasRole('alumni'));
         $this->assertFalse($budi->hasRole('student'));
         $this->assertEquals('XII PPLG 1', $budi->classroom);
+        $this->assertEquals(2023, $budi->tahun_masuk);
+        $this->assertEquals(2025, $budi->tahun_lulus);
 
         // 2. Check Rina (graduated = false) -> Student
         $rina = User::where('external_id', '9902')->first();
