@@ -25,9 +25,9 @@ return new class extends Migration
         $now = now();
         $initialJurusans = [
             [
-                'kode_jurusan' => 'PPL',
-                'nama_jurusan' => 'Pengembangan Perangkat Lunak',
-                'deskripsi' => 'Konsentrasi keahlian Pengembangan Perangkat Lunak dan Gim (PPLG / RPL) berfokus pada rekayasa perangkat lunak, pemrograman web, mobile, dan gim.',
+                'kode_jurusan' => 'PPLG',
+                'nama_jurusan' => 'Pengembangan Perangkat Lunak dan Gim',
+                'deskripsi' => 'Konsentrasi keahlian Pengembangan Perangkat Lunak dan Gim (PPLG) berfokus pada rekayasa perangkat lunak, pemrograman web, mobile, dan gim.',
                 'created_at' => $now,
                 'updated_at' => $now,
             ],
@@ -89,7 +89,7 @@ return new class extends Migration
             if (preg_match('/^(?:(?:X|XI|XII|\d+)\s+)?([A-Za-z\s]+?)(?:\s+\d+)?$/i', trim($cleaned), $matches)) {
                 $code = strtoupper(trim($matches[1]));
                 if (in_array($code, ['PPL', 'PPLG', 'RPL', 'SIJA'])) {
-                    $matchedCode = 'PPL';
+                    $matchedCode = 'PPLG';
                 } elseif (in_array($code, ['TO', 'TBSM', 'TKRO'])) {
                     $matchedCode = 'TO';
                 } elseif (in_array($code, ['AKL', 'AK'])) {

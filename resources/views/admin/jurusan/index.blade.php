@@ -13,7 +13,7 @@
             </div>
             <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Pengelompokan Alumni per Jurusan</h1>
             <p class="text-xs sm:text-sm text-slate-500 font-medium mt-1">
-                Pengelompokan data alumni secara otomatis menggunakan regex berdasarkan kelas SIJUNA ke 5 konsentrasi keahlian resmi: <strong>PPL, TO, AKL, PM, dan MPLB</strong>.
+                Pengelompokan data alumni secara otomatis menggunakan regex berdasarkan kelas SIJUNA ke 5 konsentrasi keahlian resmi: <strong>PPLG, TO, AKL, PM, dan MPLB</strong>.
             </p>
         </div>
         <div class="flex items-center gap-3 shrink-0">

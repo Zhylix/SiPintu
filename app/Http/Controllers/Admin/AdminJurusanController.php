@@ -19,7 +19,7 @@ class AdminJurusanController extends Controller
     {
         // 1. Data 5 Jurusan dengan hitungan alumni & siswa
         $jurusans = Jurusan::withCount(['alumni', 'students'])
-            ->orderByRaw("FIELD(kode_jurusan, 'PPL', 'TO', 'AKL', 'PM', 'MPLB')")
+            ->orderByRaw("FIELD(kode_jurusan, 'PPLG', 'TO', 'AKL', 'PM', 'MPLB')")
             ->get();
 
         $totalAlumni = User::where('role', 'alumni')->count();
@@ -87,7 +87,7 @@ class AdminJurusanController extends Controller
 
         $updatedCount = 0;
         $statsByJurusan = [
-            'PPL' => 0,
+            'PPLG' => 0,
             'TO' => 0,
             'AKL' => 0,
             'PM' => 0,
@@ -120,7 +120,7 @@ class AdminJurusanController extends Controller
             'stats_by_jurusan' => $statsByJurusan,
         ]);
 
-        $detailMsg = "PPL: {$statsByJurusan['PPL']}, TO: {$statsByJurusan['TO']}, AKL: {$statsByJurusan['AKL']}, PM: {$statsByJurusan['PM']}, MPLB: {$statsByJurusan['MPLB']}";
+        $detailMsg = "PPLG: {$statsByJurusan['PPLG']}, TO: {$statsByJurusan['TO']}, AKL: {$statsByJurusan['AKL']}, PM: {$statsByJurusan['PM']}, MPLB: {$statsByJurusan['MPLB']}";
 
         return redirect()->route('admin.jurusan.index')->with(
             'success',

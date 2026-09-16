@@ -476,7 +476,7 @@ class ApiIdentityController extends Controller
     public function jurusans(): JsonResponse
     {
         $jurusans = Jurusan::withCount(['alumni', 'students'])
-            ->orderByRaw("FIELD(kode_jurusan, 'PPL', 'TO', 'AKL', 'PM', 'MPLB')")
+            ->orderByRaw("FIELD(kode_jurusan, 'PPLG', 'TO', 'AKL', 'PM', 'MPLB')")
             ->get()
             ->map(function ($j) {
                 return [

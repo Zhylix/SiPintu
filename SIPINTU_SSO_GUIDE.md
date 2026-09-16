@@ -28,12 +28,12 @@ Ketika pengguna berhasil melakukan login SSO melalui SiPintu Gateway, aplikasi k
     "role": "alumni",
     "classroom": "XII PPLG 1",
     "jurusan_id": 1,
-    "kode_jurusan": "PPL",
-    "nama_jurusan": "Pengembangan Perangkat Lunak",
+    "kode_jurusan": "PPLG",
+    "nama_jurusan": "Pengembangan Perangkat Lunak dan Gim",
     "jurusan": {
         "id": 1,
-        "kode_jurusan": "PPL",
-        "nama_jurusan": "Pengembangan Perangkat Lunak"
+        "kode_jurusan": "PPLG",
+        "nama_jurusan": "Pengembangan Perangkat Lunak dan Gim"
     },
     "phone": "081234567890",
     "password": "$2y$12$eXaMpLeHaShPaSsWoRdStrInG...",
@@ -237,7 +237,7 @@ class OAuthController extends Controller
 
 ## 🎓 Endpoint API Jurusan & Data Alumni (Untuk Aplikasi Downstream)
 
-Aplikasi downstream (seperti Tracer Study, Portal Alumni, BKK, E-Learning, dsb.) dapat mengakses pengelompokan 5 jurusan resmi (`PPL`, `TO`, `AKL`, `PM`, `MPLB`) dan data alumni melalui REST API Gateway:
+Aplikasi downstream (seperti Tracer Study, Portal Alumni, BKK, E-Learning, dsb.) dapat mengakses pengelompokan 5 jurusan resmi (`PPLG`, `TO`, `AKL`, `PM`, `MPLB`) dan data alumni melalui REST API Gateway:
 
 ### 1. Daftar 5 Jurusan Resmi (`GET /api/v1/jurusans`)
 Endpoint untuk mengambil daftar 5 konsentrasi keahlian beserta jumlah alumni & siswa:
@@ -250,8 +250,8 @@ Endpoint untuk mengambil daftar 5 konsentrasi keahlian beserta jumlah alumni & s
     "data": [
         {
             "id": 1,
-            "kode_jurusan": "PPL",
-            "nama_jurusan": "Pengembangan Perangkat Lunak",
+            "kode_jurusan": "PPLG",
+            "nama_jurusan": "Pengembangan Perangkat Lunak dan Gim",
             "deskripsi": "Konsentrasi keahlian PPLG / RPL...",
             "total_alumni": 140,
             "total_siswa": 280
@@ -268,13 +268,13 @@ Endpoint untuk mengambil daftar 5 konsentrasi keahlian beserta jumlah alumni & s
 ```
 
 ### 2. Detail Jurusan Berdasarkan Kode (`GET /api/v1/jurusans/{kode}`)
-- **URL**: `GET /api/v1/jurusans/PPL` (atau `TO`, `AKL`, `PM`, `MPLB`)
+- **URL**: `GET /api/v1/jurusans/PPLG` (atau `TO`, `AKL`, `PM`, `MPLB`)
 
 ### 3. Data Alumni Terkelompokkan (`GET /api/v1/alumni`)
 Endpoint terlindungi OAuth Bearer Token / Client Credentials untuk mengambil data alumni terkelompokkan:
-- **URL**: `GET /api/v1/alumni?jurusan=PPL&per_page=20`
+- **URL**: `GET /api/v1/alumni?jurusan=PPLG&per_page=20`
 - **Query Parameter**:
-  - `jurusan`: `PPL`, `TO`, `AKL`, `PM`, `MPLB`, atau `all`
+  - `jurusan`: `PPLG`, `TO`, `AKL`, `PM`, `MPLB`, atau `all`
   - `search`: Kata kunci nama, email, NIS, atau kelas
   - `per_page`: Jumlah data per halaman (1–100)
 - **Header**: `Authorization: Bearer <access_token>` atau `X-Client-ID` & `X-Client-Secret`

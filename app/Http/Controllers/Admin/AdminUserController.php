@@ -67,7 +67,7 @@ class AdminUserController extends Controller
             ->withQueryString();
 
         $roles = Role::all();
-        $jurusans = Jurusan::orderByRaw("FIELD(kode_jurusan, 'PPL', 'TO', 'AKL', 'PM', 'MPLB')")->get();
+        $jurusans = Jurusan::orderByRaw("FIELD(kode_jurusan, 'PPLG', 'TO', 'AKL', 'PM', 'MPLB')")->get();
 
         return view('admin.users.index', compact('users', 'roles', 'jurusans'));
     }

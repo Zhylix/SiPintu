@@ -44,7 +44,7 @@ class Jurusan extends Model
 
     /**
      * Ekstraksi kode jurusan dengan regex dan normalisasi ke 5 Jurusan Resmi:
-     * - PPL (Pengembangan Perangkat Lunak)
+     * - PPLG (Pengembangan Perangkat Lunak dan Gim)
      * - TO (Teknik Otomotif)
      * - AKL (Akuntansi dan Keuangan Lembaga)
      * - PM (Pemasaran)
@@ -68,8 +68,8 @@ class Jurusan extends Model
             $extracted = strtoupper(trim($matches[1]));
 
             // Pemetaan normalisasi ke 5 Jurusan Resmi
-            if (in_array($extracted, ['PPL', 'PPLG', 'RPL', 'SIJA', 'REKAYASA PERANGKAT LUNAK', 'PENGEMBANGAN PERANGKAT LUNAK'])) {
-                return 'PPL';
+            if (in_array($extracted, ['PPL', 'PPLG', 'RPL', 'SIJA', 'REKAYASA PERANGKAT LUNAK', 'PENGEMBANGAN PERANGKAT LUNAK', 'PENGEMBANGAN PERANGKAT LUNAK DAN GIM'])) {
+                return 'PPLG';
             }
             if (in_array($extracted, ['TO', 'TBSM', 'TKRO', 'OTOMOTIF', 'TEKNIK OTOMOTIF'])) {
                 return 'TO';

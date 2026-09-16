@@ -32,16 +32,16 @@ class AlumniJurusanGroupingTest extends TestCase
     }
 
     /**
-     * Test akurasi ekstraksi regex normalisasi ke 5 Jurusan Resmi (PPL, TO, AKL, PM, MPLB)
+     * Test akurasi ekstraksi regex normalisasi ke 5 Jurusan Resmi (PPLG, TO, AKL, PM, MPLB)
      */
     public function test_regex_extracts_and_normalizes_to_five_canonical_jurusans(): void
     {
-        // PPL (PPLG, RPL, SIJA)
-        $this->assertEquals('PPL', Jurusan::extractKodeJurusan('XII PPLG 1'));
-        $this->assertEquals('PPL', Jurusan::extractKodeJurusan('XII PPL 2'));
-        $this->assertEquals('PPL', Jurusan::extractKodeJurusan('XII RPL 1'));
-        $this->assertEquals('PPL', Jurusan::extractKodeJurusan('X PPLG 2'));
-        $this->assertEquals('PPL', Jurusan::extractKodeJurusan('12 PPLG 1'));
+        // PPLG (PPLG, PPL, RPL, SIJA)
+        $this->assertEquals('PPLG', Jurusan::extractKodeJurusan('XII PPLG 1'));
+        $this->assertEquals('PPLG', Jurusan::extractKodeJurusan('XII PPL 2'));
+        $this->assertEquals('PPLG', Jurusan::extractKodeJurusan('XII RPL 1'));
+        $this->assertEquals('PPLG', Jurusan::extractKodeJurusan('X PPLG 2'));
+        $this->assertEquals('PPLG', Jurusan::extractKodeJurusan('12 PPLG 1'));
 
         // TO (TO, TBSM, TKRO)
         $this->assertEquals('TO', Jurusan::extractKodeJurusan('XII TO 1'));
@@ -66,8 +66,8 @@ class AlumniJurusanGroupingTest extends TestCase
         $this->assertEquals('MPLB', Jurusan::extractKodeJurusan('XII OTKP 1'));
 
         // Format dengan tanda kurung dan awalan
-        $this->assertEquals('PPL', Jurusan::extractKodeJurusan('XII PPLG 1 (Lulus)'));
-        $this->assertEquals('PPL', Jurusan::extractKodeJurusan('Alumni RPL'));
+        $this->assertEquals('PPLG', Jurusan::extractKodeJurusan('XII PPLG 1 (Lulus)'));
+        $this->assertEquals('PPLG', Jurusan::extractKodeJurusan('Alumni RPL'));
 
         // Null atau string kosong
         $this->assertNull(Jurusan::extractKodeJurusan(null));
@@ -79,7 +79,7 @@ class AlumniJurusanGroupingTest extends TestCase
      */
     public function test_jurusan_and_user_eloquent_relationships(): void
     {
-        $ppl = Jurusan::where('kode_jurusan', 'PPL')->firstOrFail();
+        $ppl = Jurusan::where('kode_jurusan', 'PPLG')->firstOrFail();
         $akl = Jurusan::where('kode_jurusan', 'AKL')->firstOrFail();
 
         $alumniPpl = User::factory()->create([
@@ -102,7 +102,7 @@ class AlumniJurusanGroupingTest extends TestCase
 
         // Verifikasi belongsTo
         $this->assertEquals($ppl->id, $alumniPpl->jurusan->id);
-        $this->assertEquals('Pengembangan Perangkat Lunak', $alumniPpl->jurusan->nama_jurusan);
+        $this->assertEquals('Pengembangan Perangkat Lunak dan Gim', $alumniPpl->jurusan->nama_jurusan);
 
         // Verifikasi hasMany alumni
         $this->assertTrue($ppl->alumni->contains($alumniPpl));
@@ -177,7 +177,7 @@ class AlumniJurusanGroupingTest extends TestCase
         $job = new SyncSijunaStudentsJob();
         $job->handle($mockSijuna);
 
-        $pplJurusan = Jurusan::where('kode_jurusan', 'PPL')->first();
+        $pplJurusan = Jurusan::where('kode_jurusan', 'PPLG')->first();
         $toJurusan = Jurusan::where('kode_jurusan', 'TO')->first();
         $aklJurusan = Jurusan::where('kode_jurusan', 'AKL')->first();
         $pmJurusan = Jurusan::where('kode_jurusan', 'PM')->first();
@@ -213,7 +213,7 @@ class AlumniJurusanGroupingTest extends TestCase
      */
     public function test_admin_can_view_jurusan_grouping_page(): void
     {
-        $ppl = Jurusan::where('kode_jurusan', 'PPL')->first();
+        $ppl = Jurusan::where('kode_jurusan', 'PPLG')->first();
 
         User::factory()->create([
             'name' => 'Alumni PPL Test',
@@ -226,7 +226,7 @@ class AlumniJurusanGroupingTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee('Pengelompokan Alumni per Jurusan');
-        $response->assertSee('PPL');
+        $response->assertSee('PPLG');
         $response->assertSee('TO');
         $response->assertSee('AKL');
         $response->assertSee('PM');
@@ -239,7 +239,7 @@ class AlumniJurusanGroupingTest extends TestCase
      */
     public function test_admin_can_filter_alumni_by_jurusan(): void
     {
-        $ppl = Jurusan::where('kode_jurusan', 'PPL')->first();
+        $ppl = Jurusan::where('kode_jurusan', 'PPLG')->first();
         $akl = Jurusan::where('kode_jurusan', 'AKL')->first();
 
         User::factory()->create([
@@ -256,8 +256,8 @@ class AlumniJurusanGroupingTest extends TestCase
             'jurusan_id' => $akl->id,
         ]);
 
-        // Filter PPL
-        $responsePpl = $this->actingAs($this->admin)->get(route('admin.jurusan.index', ['jurusan' => 'PPL']));
+        // Filter PPLG
+        $responsePpl = $this->actingAs($this->admin)->get(route('admin.jurusan.index', ['jurusan' => 'PPLG']));
         $responsePpl->assertStatus(200);
         $responsePpl->assertSee('Budi Siswa PPL');
         $responsePpl->assertDontSee('Siti Siswa AKL');
@@ -312,7 +312,7 @@ class AlumniJurusanGroupingTest extends TestCase
 
         $this->assertEquals(5, $response->json('count'));
         $kodes = collect($response->json('data'))->pluck('kode_jurusan')->all();
-        $this->assertEquals(['PPL', 'TO', 'AKL', 'PM', 'MPLB'], $kodes);
+        $this->assertEquals(['PPLG', 'TO', 'AKL', 'PM', 'MPLB'], $kodes);
     }
 
     /**
@@ -320,14 +320,14 @@ class AlumniJurusanGroupingTest extends TestCase
      */
     public function test_downstream_api_can_get_jurusan_detail(): void
     {
-        $response = $this->getJson(route('api.v1.jurusan_detail', ['kode' => 'PPL']));
+        $response = $this->getJson(route('api.v1.jurusan_detail', ['kode' => 'PPLG']));
 
         $response->assertStatus(200);
         $response->assertJson([
             'status' => 'success',
             'data' => [
-                'kode_jurusan' => 'PPL',
-                'nama_jurusan' => 'Pengembangan Perangkat Lunak',
+                'kode_jurusan' => 'PPLG',
+                'nama_jurusan' => 'Pengembangan Perangkat Lunak dan Gim',
             ],
         ]);
     }
@@ -337,7 +337,7 @@ class AlumniJurusanGroupingTest extends TestCase
      */
     public function test_downstream_api_user_endpoint_includes_jurusan(): void
     {
-        $ppl = Jurusan::where('kode_jurusan', 'PPL')->first();
+        $ppl = Jurusan::where('kode_jurusan', 'PPLG')->first();
 
         $alumniUser = User::factory()->create([
             'name' => 'Alumni PPL SSO',
@@ -374,12 +374,12 @@ class AlumniJurusanGroupingTest extends TestCase
         $response->assertJson([
             'email' => 'alumni.ppl.sso@skansaba.sch.id',
             'classroom' => 'XII PPLG 1',
-            'kode_jurusan' => 'PPL',
-            'nama_jurusan' => 'Pengembangan Perangkat Lunak',
+            'kode_jurusan' => 'PPLG',
+            'nama_jurusan' => 'Pengembangan Perangkat Lunak dan Gim',
             'jurusan' => [
                 'id' => $ppl->id,
-                'kode_jurusan' => 'PPL',
-                'nama_jurusan' => 'Pengembangan Perangkat Lunak',
+                'kode_jurusan' => 'PPLG',
+                'nama_jurusan' => 'Pengembangan Perangkat Lunak dan Gim',
             ],
         ]);
     }
@@ -389,7 +389,7 @@ class AlumniJurusanGroupingTest extends TestCase
      */
     public function test_downstream_api_alumni_endpoint_filterable_by_jurusan(): void
     {
-        $ppl = Jurusan::where('kode_jurusan', 'PPL')->first();
+        $ppl = Jurusan::where('kode_jurusan', 'PPLG')->first();
         $to = Jurusan::where('kode_jurusan', 'TO')->first();
 
         User::factory()->create([
@@ -429,12 +429,12 @@ class AlumniJurusanGroupingTest extends TestCase
             'revoked' => false,
         ]);
 
-        // Query filter jurusan PPL
-        $responsePpl = $this->withToken($tokenStr)->getJson(route('api.v1.alumni', ['jurusan' => 'PPL']));
+        // Query filter jurusan PPLG
+        $responsePpl = $this->withToken($tokenStr)->getJson(route('api.v1.alumni', ['jurusan' => 'PPLG']));
         $responsePpl->assertStatus(200);
         $this->assertEquals(1, count($responsePpl->json('data')));
         $this->assertEquals('Alumni PPL 1', $responsePpl->json('data.0.name'));
-        $this->assertEquals('PPL', $responsePpl->json('data.0.kode_jurusan'));
+        $this->assertEquals('PPLG', $responsePpl->json('data.0.kode_jurusan'));
 
         // Query filter jurusan TO
         $responseTo = $this->withToken($tokenStr)->getJson(route('api.v1.alumni', ['jurusan' => 'TO']));
