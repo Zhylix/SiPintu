@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -24,6 +25,7 @@ class User extends Authenticatable
         'password',
         'role',
         'classroom',
+        'jurusan_id',
         'phone',
         'avatar',
         'wa_notify',
@@ -203,5 +205,37 @@ class User extends Authenticatable
         }
 
         return null;
+    }
+
+    /**
+     * Relasi ke Jurusan (PPL, TO, AKL, PM, MPLB)
+     */
+    public function jurusan(): BelongsTo
+    {
+        return $this->belongsTo(Jurusan::class, 'jurusan_id');
+    }
+
+    /**
+     * Helper statis untuk mengekstrak kode jurusan dari kelas atau raw data
+     */
+    public static function extractJurusanFromClassroom(?string $classroom, ?string $rawJurusan = null): ?string
+    {
+        return Jurusan::extractKodeJurusan($classroom, $rawJurusan);
+    }
+
+    /**
+     * Pasangkan jurusan otomatis ke user ini berdasarkan kelas atau input
+     */
+    public function assignJurusanFromData(?string $classroom = null, ?string $rawJurusan = null): ?Jurusan
+    {
+        $cls = $classroom ?: $this->classroom;
+        $jurusan = Jurusan::findFromClassroom($cls, $rawJurusan);
+
+        if ($jurusan) {
+            $this->jurusan_id = $jurusan->id;
+            $this->save();
+        }
+
+        return $jurusan;
     }
 }

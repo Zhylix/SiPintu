@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Jurusan;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\AuditLogger;
@@ -16,12 +17,20 @@ class AdminUserController extends Controller
 {
     public function index(Request $request)
     {
-        $query = User::with('roles');
+        $query = User::with(['roles', 'jurusan']);
 
         // Role Filter (ignore 'all' or empty)
         $role = $request->input('role', $request->input('type'));
         if ($role && $role !== 'all') {
             $query->where('role', $role);
+        }
+
+        // Jurusan Filter (PPL, TO, AKL, PM, MPLB)
+        if ($request->filled('jurusan') && $request->jurusan !== 'all') {
+            $jurusanKode = $request->jurusan;
+            $query->whereHas('jurusan', function ($q) use ($jurusanKode) {
+                $q->where('kode_jurusan', $jurusanKode);
+            });
         }
 
         // Account Status Filter (ignore 'all' or empty)
@@ -48,6 +57,7 @@ class AdminUserController extends Controller
                     ->orWhere('email', 'like', "%{$search}%")
                     ->orWhere('username', 'like', "%{$search}%")
                     ->orWhere('phone', 'like', "%{$search}%")
+                    ->orWhere('classroom', 'like', "%{$search}%")
                     ->orWhere('external_id', 'like', "%{$search}%");
             });
         }
@@ -57,8 +67,9 @@ class AdminUserController extends Controller
             ->withQueryString();
 
         $roles = Role::all();
+        $jurusans = Jurusan::orderByRaw("FIELD(kode_jurusan, 'PPL', 'TO', 'AKL', 'PM', 'MPLB')")->get();
 
-        return view('admin.users.index', compact('users', 'roles'));
+        return view('admin.users.index', compact('users', 'roles', 'jurusans'));
     }
 
     public function create()

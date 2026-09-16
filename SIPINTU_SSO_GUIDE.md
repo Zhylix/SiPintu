@@ -25,7 +25,16 @@ Ketika pengguna berhasil melakukan login SSO melalui SiPintu Gateway, aplikasi k
     "external_id": "1234567890",
     "name": "Ahmad Fauzi",
     "email": "ahmad@sijuna.sch.id",
-    "role": "student",
+    "role": "alumni",
+    "classroom": "XII PPLG 1",
+    "jurusan_id": 1,
+    "kode_jurusan": "PPL",
+    "nama_jurusan": "Pengembangan Perangkat Lunak",
+    "jurusan": {
+        "id": 1,
+        "kode_jurusan": "PPL",
+        "nama_jurusan": "Pengembangan Perangkat Lunak"
+    },
     "phone": "081234567890",
     "password": "$2y$12$eXaMpLeHaShPaSsWoRdStrInG...",
     "password_hash": "$2y$12$eXaMpLeHaShPaSsWoRdStrInG...",
@@ -226,6 +235,52 @@ class OAuthController extends Controller
 ```
 ---
 
+## 🎓 Endpoint API Jurusan & Data Alumni (Untuk Aplikasi Downstream)
+
+Aplikasi downstream (seperti Tracer Study, Portal Alumni, BKK, E-Learning, dsb.) dapat mengakses pengelompokan 5 jurusan resmi (`PPL`, `TO`, `AKL`, `PM`, `MPLB`) dan data alumni melalui REST API Gateway:
+
+### 1. Daftar 5 Jurusan Resmi (`GET /api/v1/jurusans`)
+Endpoint untuk mengambil daftar 5 konsentrasi keahlian beserta jumlah alumni & siswa:
+- **URL**: `GET /api/v1/jurusans`
+- **Response**:
+```json
+{
+    "status": "success",
+    "count": 5,
+    "data": [
+        {
+            "id": 1,
+            "kode_jurusan": "PPL",
+            "nama_jurusan": "Pengembangan Perangkat Lunak",
+            "deskripsi": "Konsentrasi keahlian PPLG / RPL...",
+            "total_alumni": 140,
+            "total_siswa": 280
+        },
+        {
+            "id": 2,
+            "kode_jurusan": "TO",
+            "nama_jurusan": "Teknik Otomotif",
+            "total_alumni": 130,
+            "total_siswa": 260
+        }
+    ]
+}
+```
+
+### 2. Detail Jurusan Berdasarkan Kode (`GET /api/v1/jurusans/{kode}`)
+- **URL**: `GET /api/v1/jurusans/PPL` (atau `TO`, `AKL`, `PM`, `MPLB`)
+
+### 3. Data Alumni Terkelompokkan (`GET /api/v1/alumni`)
+Endpoint terlindungi OAuth Bearer Token / Client Credentials untuk mengambil data alumni terkelompokkan:
+- **URL**: `GET /api/v1/alumni?jurusan=PPL&per_page=20`
+- **Query Parameter**:
+  - `jurusan`: `PPL`, `TO`, `AKL`, `PM`, `MPLB`, atau `all`
+  - `search`: Kata kunci nama, email, NIS, atau kelas
+  - `per_page`: Jumlah data per halaman (1–100)
+- **Header**: `Authorization: Bearer <access_token>` atau `X-Client-ID` & `X-Client-Secret`
+
+---
+
 ## ❓ Troubleshoot & Solusi Masalah
 
 | Kendala / Error | Penyebab | Solusi |
@@ -234,3 +289,4 @@ class OAuthController extends Controller
 | `Validasi State OAuth gagal` | Cookie/Session terhapus saat berpindah port (`localhost:8000` ke `8001`). | Gunakan metode ganda (Session + Cookie fallback) seperti pada contoh `OAuthController.php` di atas. |
 | `invalid_client` | Client ID atau Client Secret tidak cocok dengan database SiPintu. | Jalankan `php artisan sipintu:sso-list` untuk mencocokkan kredensial. |
 | `invalid_grant` | Authorization Code sudah kadaluarsa (berlaku 5 menit) atau sudah pernah ditukarkan. | Lakukan alur login dari awal untuk mendapatkan `code` baru. |
+

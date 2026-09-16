@@ -67,7 +67,7 @@
 </head>
 <body class="h-full font-sans antialiased bg-slate-100 text-slate-800 flex flex-col justify-between min-h-screen relative overflow-x-hidden selection:bg-emerald-700 selection:text-white">
     
-    <!-- Background Login Page (Default Logo Sekolah / Kustom Wallpaper) -->
+    <!-- Background Login Page -->
     <div class="fixed inset-0 flex items-center justify-center {{ $isCustomLoginBg ? 'opacity-80' : 'opacity-[0.06]' }} pointer-events-none z-0 p-4">
         <img src="{{ $loginBgUrl }}" alt="Background Login SMKN 1 Bangsri" class="w-[650px] h-[650px] object-contain">
     </div>
@@ -108,7 +108,7 @@
                 <img src="{{ $siteLogoUrl }}" alt="Logo SMKN 1 Bangsri" class="w-24 h-24 mx-auto object-contain drop-shadow-md hover:scale-105 transition-transform">
             </a>
             <h1 class="text-2xl font-black text-emerald-950 tracking-tight">
-                SiPintu <span class="text-emerald-700 font-extrabold">SKANSABA</span>
+                SiPintu <span class="text-emerald-700 font-extrabold">ESKASABA</span>
             </h1>
             <p class="text-xs font-bold text-slate-600 tracking-wider uppercase mt-0.5">SMK NEGERI 1 BANGSRI</p>
         </div>

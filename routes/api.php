@@ -21,6 +21,10 @@ Route::prefix('v1')->group(function () {
     Route::get('/ping', [ApiIdentityController::class, 'ping'])->name('api.v1.ping');
     Route::get('/health', [ApiIdentityController::class, 'ping']);
     Route::post('/validate-client', [ApiIdentityController::class, 'validateClientCredentials'])->name('api.v1.validate_client');
+
+    // Jurusan Public Endpoints (Accessible for Downstream Client Applications)
+    Route::get('/jurusans', [ApiIdentityController::class, 'jurusans'])->name('api.v1.jurusans');
+    Route::get('/jurusans/{kode}', [ApiIdentityController::class, 'jurusanDetail'])->name('api.v1.jurusan_detail');
 });
 
 /*
@@ -37,9 +41,13 @@ Route::prefix('v1')->middleware('oauth.bearer')->group(function () {
     Route::get('/user/roles', [ApiIdentityController::class, 'roles'])->name('api.v1.user.roles');
     Route::match(['get', 'post'], '/user/password-sync', [ApiIdentityController::class, 'passwordSync'])->name('api.v1.user.password_sync');
 
+    // Alumni Grouping Endpoint for Downstream Applications
+    Route::get('/alumni', [ApiIdentityController::class, 'alumni'])->name('api.v1.alumni');
+
     // Gateway Proxy API for SIJUNA Data Access
     Route::get('/sijuna/students', [ApiIdentityController::class, 'students'])->name('api.v1.sijuna.students');
     Route::get('/sijuna/students/{externalId}', [ApiIdentityController::class, 'studentDetail'])->name('api.v1.sijuna.student_detail');
     Route::get('/sijuna/teachers', [ApiIdentityController::class, 'teachers'])->name('api.v1.sijuna.teachers');
     Route::get('/sijuna/teachers/{externalId}', [ApiIdentityController::class, 'teacherDetail'])->name('api.v1.sijuna.teacher_detail');
 });
+

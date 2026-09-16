@@ -52,7 +52,17 @@
                 <option value="admin" {{ request('role') === 'admin' ? 'selected' : '' }}>Administrator</option>
             </select>
 
-            @if(request()->anyFilled(['search', 'role', 'phone_status', 'status']))
+            <!-- Jurusan Filter -->
+            <select name="jurusan" onchange="this.form.submit()" class="bg-slate-50 border border-slate-200 text-xs text-slate-900 font-semibold rounded-xl px-3 py-2 focus:outline-none focus:border-emerald-600">
+                <option value="all">Semua Jurusan</option>
+                @foreach($jurusans as $j)
+                    <option value="{{ $j->kode_jurusan }}" {{ request('jurusan') === $j->kode_jurusan ? 'selected' : '' }}>
+                        Jurusan {{ $j->kode_jurusan }}
+                    </option>
+                @endforeach
+            </select>
+
+            @if(request()->anyFilled(['search', 'role', 'jurusan', 'phone_status', 'status']))
                 <a href="{{ route('admin.users.index') }}" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl border border-slate-200 flex items-center justify-center">
                     Reset
                 </a>
@@ -76,8 +86,15 @@
                         <div class="min-w-0 flex-1">
                             <div class="font-bold text-slate-900 text-sm truncate">{{ $user->name }}</div>
                             <div class="text-slate-600 text-xs font-medium truncate">{{ $user->email }}</div>
-                            @if($user->classroom)
-                                <div class="mt-0.5"><span class="font-extrabold text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 text-[10px]">Kelas {{ $user->classroom }}</span></div>
+                            @if($user->classroom || $user->jurusan)
+                                <div class="mt-0.5 flex flex-wrap items-center gap-1">
+                                    @if($user->classroom)
+                                        <span class="font-extrabold text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 text-[10px]">Kelas {{ $user->classroom }}</span>
+                                    @endif
+                                    @if($user->jurusan)
+                                        <span class="font-extrabold text-teal-800 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200 text-[10px]">Jurusan {{ $user->jurusan->kode_jurusan }}</span>
+                                    @endif
+                                </div>
                             @endif
                         </div>
                     </div>
@@ -194,6 +211,9 @@
                                             @if($user->classroom)
                                                 • <span class="font-extrabold text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 text-[10px]">Kelas {{ $user->classroom }}</span>
                                             @endif
+                                            @if($user->jurusan)
+                                                • <span class="font-extrabold text-teal-800 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200 text-[10px]">Jurusan {{ $user->jurusan->kode_jurusan }}</span>
+                                            @endif
                                         </div>
                                     </div>
                                 </div>
@@ -210,6 +230,9 @@
                                     </span>
                                     @if($user->classroom)
                                         <span class="text-[10px] font-bold text-emerald-800 font-mono">Kelas: {{ $user->classroom }}</span>
+                                    @endif
+                                    @if($user->jurusan)
+                                        <span class="text-[10px] font-extrabold text-teal-800 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200 font-mono">Jurusan: {{ $user->jurusan->kode_jurusan }}</span>
                                     @endif
                                 </div>
                             </td>

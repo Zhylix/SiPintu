@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Models\Jurusan;
 use App\Models\Role;
 use App\Models\SyncLog;
 use App\Models\User;
@@ -52,6 +53,8 @@ class SyncSijunaStudentsJob implements ShouldQueue
                 ['name' => 'alumni', 'guard_name' => 'web']
             );
 
+            $jurusanMap = Jurusan::pluck('id', 'kode_jurusan')->toArray();
+
             $userRows = [];
             $now = now()->toDateTimeString();
             $defaultPasswordHash = Hash::make('password');
@@ -86,6 +89,19 @@ class SyncSijunaStudentsJob implements ShouldQueue
                     $classroom = $rawClassroom;
                 }
 
+                // Ekstraksi Jurusan dengan regex SIJUNA (PPL, TO, AKL, PM, MPLB)
+                $rawJurusan = $student['jurusan'] ?? $student['program_keahlian'] ?? $student['major'] ?? null;
+                $kodeJurusan = Jurusan::extractKodeJurusan($classroom, $rawJurusan);
+
+                // Fallback pencarian kode jurusan dari nama jika kelas kosong (misal: "Rian (Alumni RPL)")
+                if (! $kodeJurusan && $name) {
+                    if (preg_match('/\((?:Alumni\s+)?([A-Za-z\s]+?)\)/i', $name, $nameMatches)) {
+                        $kodeJurusan = Jurusan::extractKodeJurusan($nameMatches[1]);
+                    }
+                }
+
+                $jurusanId = ($kodeJurusan && isset($jurusanMap[$kodeJurusan])) ? $jurusanMap[$kodeJurusan] : null;
+
                 // Filter Alumni: jika graduated = true maka alumni. Jika field graduated tidak tersedia, fallback ke pengecekan classroom.
                 $graduatedRaw = $student['graduated'] ?? $student['is_graduated'] ?? null;
                 if (! is_null($graduatedRaw)) {
@@ -108,6 +124,7 @@ class SyncSijunaStudentsJob implements ShouldQueue
                     'username' => $username,
                     'role' => $assignedRole,
                     'classroom' => $classroom,
+                    'jurusan_id' => $jurusanId,
                     'phone' => $phone,
                     'status' => 'active',
                     'password' => $defaultPasswordHash,
@@ -121,6 +138,8 @@ class SyncSijunaStudentsJob implements ShouldQueue
                     'email' => $email,
                     'role' => $assignedRole,
                     'classroom' => $classroom,
+                    'jurusan_id' => $jurusanId,
+                    'kode_jurusan' => $kodeJurusan,
                     'phone' => $phone,
                     'synced_at' => $now,
                 ], 86400);
@@ -133,7 +152,7 @@ class SyncSijunaStudentsJob implements ShouldQueue
                 User::upsert(
                     $chunk,
                     ['external_id'],
-                    ['name', 'email', 'username', 'classroom', 'phone', 'status', 'role', 'updated_at']
+                    ['name', 'email', 'username', 'classroom', 'jurusan_id', 'phone', 'status', 'role', 'updated_at']
                 );
             }
 

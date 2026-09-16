@@ -393,6 +393,10 @@ class OAuthController extends Controller
             'email' => $user->email,
             'role' => $primaryRole,
             'external_id' => $user->external_id,
+            'classroom' => $user->classroom,
+            'jurusan_id' => $user->jurusan_id,
+            'kode_jurusan' => $user->jurusan?->kode_jurusan,
+            'nama_jurusan' => $user->jurusan?->nama_jurusan,
         ], $passwordSync));
 
         $signatureKey = config('app.key', 'secret_gateway_key');

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Jurusan;
 use App\Models\User;
 use App\Services\GatewayHealthValidationService;
 use App\Services\PasswordSyncService;
@@ -35,6 +36,21 @@ class ApiIdentityController extends Controller
             'email' => $user->email,
             'role' => $primaryRole,
         ], $passwordSyncService->getPasswordPayload($user));
+
+        if ($user->classroom) {
+            $response['classroom'] = $user->classroom;
+        }
+
+        if ($user->jurusan) {
+            $response['jurusan_id'] = $user->jurusan->id;
+            $response['kode_jurusan'] = $user->jurusan->kode_jurusan;
+            $response['nama_jurusan'] = $user->jurusan->nama_jurusan;
+            $response['jurusan'] = [
+                'id' => $user->jurusan->id,
+                'kode_jurusan' => $user->jurusan->kode_jurusan,
+                'nama_jurusan' => $user->jurusan->nama_jurusan,
+            ];
+        }
 
         if ($user->phone) {
             $response['phone'] = $user->phone;
@@ -77,6 +93,16 @@ class ApiIdentityController extends Controller
             'role' => $user->role,
             'user_type' => $user->role,
             'status' => $user->status,
+            'classroom' => $user->classroom,
+            'jurusan_id' => $user->jurusan_id,
+            'kode_jurusan' => $user->jurusan?->kode_jurusan,
+            'nama_jurusan' => $user->jurusan?->nama_jurusan,
+            'jurusan' => $user->jurusan ? [
+                'id' => $user->jurusan->id,
+                'kode_jurusan' => $user->jurusan->kode_jurusan,
+                'nama_jurusan' => $user->jurusan->nama_jurusan,
+                'deskripsi' => $user->jurusan->deskripsi,
+            ] : null,
             'roles' => $user->roles->pluck('name'),
             'sijuna_data' => $sijunaData,
             'accessed_via_app' => $app ? [
@@ -443,4 +469,123 @@ class ApiIdentityController extends Controller
 
         return response()->json($diagnosticData);
     }
+
+    /**
+     * Endpoint API untuk aplikasi downstream mengambil daftar 5 Jurusan Resmi SMKN 1 Bangsri
+     */
+    public function jurusans(): JsonResponse
+    {
+        $jurusans = Jurusan::withCount(['alumni', 'students'])
+            ->orderByRaw("FIELD(kode_jurusan, 'PPL', 'TO', 'AKL', 'PM', 'MPLB')")
+            ->get()
+            ->map(function ($j) {
+                return [
+                    'id' => $j->id,
+                    'kode_jurusan' => $j->kode_jurusan,
+                    'nama_jurusan' => $j->nama_jurusan,
+                    'deskripsi' => $j->deskripsi,
+                    'total_alumni' => $j->alumni_count,
+                    'total_siswa' => $j->students_count,
+                ];
+            });
+
+        return response()->json([
+            'status' => 'success',
+            'count' => count($jurusans),
+            'data' => $jurusans,
+        ]);
+    }
+
+    /**
+     * Endpoint API untuk aplikasi downstream mengambil detail jurusan berdasarkan kode
+     */
+    public function jurusanDetail(string $kode): JsonResponse
+    {
+        $normalizedKode = Jurusan::extractKodeJurusan($kode) ?: strtoupper(trim($kode));
+        $jurusan = Jurusan::where('kode_jurusan', $normalizedKode)
+            ->withCount(['alumni', 'students'])
+            ->first();
+
+        if (! $jurusan) {
+            return response()->json([
+                'status' => 'error',
+                'message' => "Jurusan dengan kode '{$kode}' tidak ditemukan.",
+            ], 404);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'id' => $jurusan->id,
+                'kode_jurusan' => $jurusan->kode_jurusan,
+                'nama_jurusan' => $jurusan->nama_jurusan,
+                'deskripsi' => $jurusan->deskripsi,
+                'total_alumni' => $jurusan->alumni_count,
+                'total_siswa' => $jurusan->students_count,
+            ],
+        ]);
+    }
+
+    /**
+     * Endpoint API untuk aplikasi downstream mengakses data alumni yang telah dikelompokkan sesuai jurusan
+     */
+    public function alumni(Request $request): JsonResponse
+    {
+        $query = User::where('role', 'alumni')->with('jurusan');
+
+        // Filter berdasarkan kode jurusan (PPL, TO, AKL, PM, MPLB)
+        $jurusanKode = $request->query('jurusan');
+        if ($jurusanKode && $jurusanKode !== 'all') {
+            $normalized = Jurusan::extractKodeJurusan($jurusanKode) ?: strtoupper(trim($jurusanKode));
+            $query->whereHas('jurusan', function ($q) use ($normalized) {
+                $q->where('kode_jurusan', $normalized);
+            });
+        }
+
+        // Pencarian nama, email, NIS, atau kelas
+        $search = trim((string) $request->query('search', ''));
+        if (! empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('external_id', 'like', "%{$search}%")
+                    ->orWhere('username', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('classroom', 'like', "%{$search}%");
+            });
+        }
+
+        $perPage = min(max((int) $request->query('per_page', 20), 1), 100);
+        $paginated = $query->orderByRaw("COALESCE(classroom, '') ASC, name ASC")->paginate($perPage);
+
+        return response()->json([
+            'status' => 'success',
+            'meta' => [
+                'current_page' => $paginated->currentPage(),
+                'last_page' => $paginated->lastPage(),
+                'per_page' => $paginated->perPage(),
+                'total' => $paginated->total(),
+            ],
+            'data' => $paginated->map(function ($u) {
+                return [
+                    'id' => (string) $u->id,
+                    'external_id' => $u->external_id,
+                    'nis' => $u->nis,
+                    'name' => $u->name,
+                    'email' => $u->email,
+                    'phone' => $u->phone,
+                    'role' => $u->role,
+                    'classroom' => $u->classroom,
+                    'jurusan' => $u->jurusan ? [
+                        'id' => $u->jurusan->id,
+                        'kode_jurusan' => $u->jurusan->kode_jurusan,
+                        'nama_jurusan' => $u->jurusan->nama_jurusan,
+                    ] : null,
+                    'kode_jurusan' => $u->jurusan?->kode_jurusan,
+                    'nama_jurusan' => $u->jurusan?->nama_jurusan,
+                    'status' => $u->status,
+                ];
+            }),
+        ]);
+    }
 }
+
