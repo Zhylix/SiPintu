@@ -46,7 +46,7 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
         @php
             $colorClasses = [
-                'PPL' => [
+                'PPLG' => [
                     'bg' => 'bg-emerald-50/70',
                     'border' => 'border-emerald-200',
                     'badge' => 'bg-emerald-100 text-emerald-800 border-emerald-300',
@@ -161,7 +161,7 @@
                         <tr class="hover:bg-slate-50/80 transition-colors {{ $selectedJurusanKode === $jurusan->kode_jurusan ? 'bg-emerald-50/40' : '' }}">
                             <td class="py-4 px-5 whitespace-nowrap">
                                 <span class="px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-wider
-                                    {{ $jurusan->kode_jurusan === 'PPL' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : '' }}
+                                    {{ $jurusan->kode_jurusan === 'PPLG' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : '' }}
                                     {{ $jurusan->kode_jurusan === 'TO' ? 'bg-blue-100 text-blue-800 border border-blue-300' : '' }}
                                     {{ $jurusan->kode_jurusan === 'AKL' ? 'bg-purple-100 text-purple-800 border border-purple-300' : '' }}
                                     {{ $jurusan->kode_jurusan === 'PM' ? 'bg-amber-100 text-amber-800 border border-amber-300' : '' }}
@@ -303,7 +303,7 @@
                             <td class="py-3.5 px-4 whitespace-nowrap">
                                 @if($user->jurusan)
                                     <span class="px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-wider inline-flex items-center gap-1.5
-                                        {{ $user->jurusan->kode_jurusan === 'PPL' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : '' }}
+                                        {{ $user->jurusan->kode_jurusan === 'PPLG' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : '' }}
                                         {{ $user->jurusan->kode_jurusan === 'TO' ? 'bg-blue-100 text-blue-800 border border-blue-300' : '' }}
                                         {{ $user->jurusan->kode_jurusan === 'AKL' ? 'bg-purple-100 text-purple-800 border border-purple-300' : '' }}
                                         {{ $user->jurusan->kode_jurusan === 'PM' ? 'bg-amber-100 text-amber-800 border border-amber-300' : '' }}

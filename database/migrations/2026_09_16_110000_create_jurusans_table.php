@@ -12,7 +12,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // 1. Buat tabel jurusans
+        // Buat tabel jurusan
         Schema::create('jurusans', function (Blueprint $table) {
             $table->id();
             $table->string('kode_jurusan', 20)->unique()->index();
@@ -21,7 +21,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        // 2. Masukkan 5 Jurusan Resmi (PPL, TO, AKL, PM, MPLB)
+        // Jurusan
         $now = now();
         $initialJurusans = [
             [
@@ -62,7 +62,7 @@ return new class extends Migration
         ];
         DB::table('jurusans')->insert($initialJurusans);
 
-        // 3. Tambahkan kolom jurusan_id pada tabel users
+        // 3. kolom jurusan_id ke user
         Schema::table('users', function (Blueprint $table) {
             $table->foreignId('jurusan_id')
                 ->nullable()
@@ -71,7 +71,7 @@ return new class extends Migration
                 ->nullOnDelete();
         });
 
-        // 4. Backfill data alumni yang sudah ada di users menggunakan regex normalisasi ke 5 jurusan
+        // Backfill data alumni menggunakan regex normalisasi ke 5 jurusan
         $jurusanMap = DB::table('jurusans')->pluck('id', 'kode_jurusan')->toArray();
 
         $users = DB::table('users')
