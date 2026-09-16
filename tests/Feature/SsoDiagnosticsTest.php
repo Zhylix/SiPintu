@@ -222,4 +222,143 @@ class SsoDiagnosticsTest extends TestCase
         $this->artisan('sipintu:sso-diagnose', ['--all' => true])
             ->assertSuccessful();
     }
+
+    public function test_diagnostics_service_detects_domain_origin_mismatch(): void
+    {
+        Http::fake([
+            '*' => Http::response('OK', 200),
+        ]);
+
+        $studentRole = Role::firstOrCreate(['name' => 'student', 'guard_name' => 'web']);
+        $app = Application::create([
+            'name' => 'Mismatch App',
+            'slug' => 'mismatch-app',
+            'client_id' => 'app_testmismatch',
+            'client_secret' => Hash::make('sec_secret123456789'),
+            'base_url' => 'http://localhost:8001',
+            'redirect_uri' => 'http://127.0.0.1:8001/oauth/callback',
+            'status' => 'active',
+        ]);
+        $app->roles()->attach($studentRole);
+
+        $service = new SsoDiagnosticsService;
+        $diagnosis = $service->diagnose($app);
+
+        $this->assertFalse($diagnosis['telemetry']['origin_matched']);
+        $issueIds = array_column($diagnosis['issues'], 'id');
+        $this->assertContains('DOMAIN_ORIGIN_MISMATCH', $issueIds);
+    }
+
+    public function test_diagnostics_service_handles_callback_status_302_and_405(): void
+    {
+        Http::fake([
+            'http://localhost:8001' => Http::response('OK', 200),
+            'http://localhost:8001/health' => Http::response(['status' => 'ok'], 200),
+            'http://localhost:8001/oauth/callback' => Http::response('', 302),
+            'http://localhost:8001/api/sipintu/sync-user' => Http::response(['status' => 'ok'], 200),
+        ]);
+
+        $studentRole = Role::firstOrCreate(['name' => 'student', 'guard_name' => 'web']);
+        $app = Application::create([
+            'name' => 'OAuth Redirect App',
+            'slug' => 'oauth-redirect-app',
+            'client_id' => 'app_testredirect',
+            'client_secret' => Hash::make('sec_secret123456789'),
+            'base_url' => 'http://localhost:8001',
+            'redirect_uri' => 'http://localhost:8001/oauth/callback',
+            'status' => 'active',
+        ]);
+        $app->roles()->attach($studentRole);
+
+        $service = new SsoDiagnosticsService;
+        $diagnosis = $service->diagnose($app);
+
+        // 302 redirect should be recognized as normal PASS
+        $callbackCheck = collect($diagnosis['checks'])->firstWhere('id', 'callback_endpoint');
+        $this->assertEquals('PASS', $callbackCheck['status']);
+        $this->assertEquals(302, $callbackCheck['http_code']);
+    }
+
+    public function test_diagnostics_service_deconstructs_json_health_payload_degraded(): void
+    {
+        Http::fake([
+            'http://localhost:8001' => Http::response('OK', 200),
+            'http://localhost:8001/health' => Http::response(['status' => 'degraded', 'database' => 'down'], 200),
+            'http://localhost:8001/oauth/callback' => Http::response('OK', 200),
+            'http://localhost:8001/api/sipintu/sync-user' => Http::response(['status' => 'ok'], 200),
+        ]);
+
+        $studentRole = Role::firstOrCreate(['name' => 'student', 'guard_name' => 'web']);
+        $app = Application::create([
+            'name' => 'Degraded Health App',
+            'slug' => 'degraded-health-app',
+            'client_id' => 'app_testdegraded',
+            'client_secret' => Hash::make('sec_secret123456789'),
+            'base_url' => 'http://localhost:8001',
+            'redirect_uri' => 'http://localhost:8001/oauth/callback',
+            'status' => 'active',
+        ]);
+        $app->roles()->attach($studentRole);
+
+        $service = new SsoDiagnosticsService;
+        $diagnosis = $service->diagnose($app);
+
+        // HTTP is 200, but payload status is degraded -> WARN
+        $healthCheck = collect($diagnosis['checks'])->firstWhere('id', 'health_endpoint');
+        $this->assertEquals('WARN', $healthCheck['status']);
+        $issueIds = array_column($diagnosis['issues'], 'id');
+        $this->assertContains('HEALTH_PAYLOAD_DEGRADED', $issueIds);
+    }
+
+    public function test_diagnostics_service_caps_score_when_host_unreachable(): void
+    {
+        Http::fake([
+            '*' => function () {
+                throw new \Illuminate\Http\Client\ConnectionException('Connection refused');
+            },
+        ]);
+
+        $studentRole = Role::firstOrCreate(['name' => 'student', 'guard_name' => 'web']);
+        $app = Application::create([
+            'name' => 'Dead Host App',
+            'slug' => 'dead-host-app',
+            'client_id' => 'app_testdead',
+            'client_secret' => Hash::make('sec_secret123456789'),
+            'base_url' => 'http://localhost:9999',
+            'redirect_uri' => 'http://localhost:9999/oauth/callback',
+            'status' => 'active',
+        ]);
+        $app->roles()->attach($studentRole);
+
+        $service = new SsoDiagnosticsService;
+        $diagnosis = $service->diagnose($app);
+
+        $this->assertEquals('CRITICAL', $diagnosis['overall_status']);
+        // Gating rule caps dead host at max 15%
+        $this->assertLessThanOrEqual(15, $diagnosis['health_score']);
+        $issueIds = array_column($diagnosis['issues'], 'id');
+        $this->assertContains('DOWNSTREAM_HOST_UNREACHABLE', $issueIds);
+    }
+
+    public function test_cli_command_supports_json_flag(): void
+    {
+        Http::fake([
+            '*' => Http::response('OK', 200),
+        ]);
+
+        $studentRole = Role::firstOrCreate(['name' => 'student', 'guard_name' => 'web']);
+        $app = Application::create([
+            'name' => 'CLI JSON App',
+            'slug' => 'cli-json-app',
+            'client_id' => 'app_cli_json',
+            'client_secret' => 'sec_cli_json_123456',
+            'base_url' => 'http://localhost:8001',
+            'redirect_uri' => 'http://localhost:8001/oauth/callback',
+            'status' => 'active',
+        ]);
+        $app->roles()->attach($studentRole);
+
+        $this->artisan('sipintu:sso-diagnose', ['client_id' => 'app_cli_json', '--json' => true])
+            ->assertSuccessful();
+    }
 }

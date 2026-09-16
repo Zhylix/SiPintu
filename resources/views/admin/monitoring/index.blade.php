@@ -12,6 +12,8 @@
     diagnosingSso: false,
     showSsoModal: false,
     ssoDiagnosis: null,
+    diagModalTab: 'summary',
+    copiedReport: false,
     diagnosingAll: false,
     showBatchModal: false,
     batchResults: null,
@@ -74,6 +76,7 @@
         if (!clientId) return;
         this.diagnosingSso = true;
         this.ssoDiagnosis = null;
+        this.diagModalTab = 'summary';
         this.showSsoModal = true;
         this.selectedClientId = clientId;
 
@@ -103,6 +106,39 @@
         } finally {
             this.diagnosingSso = false;
         }
+    },
+    copyDiagnosisReport() {
+        if (!this.ssoDiagnosis) return;
+        const d = this.ssoDiagnosis;
+        let text = `=== LAPORAN DIAGNOSA SSO SIPINTU ===\n`;
+        text += `Aplikasi     : ${d.application.name} (${d.application.client_id})\n`;
+        text += `Waktu Uji    : ${d.diagnosed_at_human || d.timestamp}\n`;
+        text += `Kondisi      : ${d.overall_status} (Skor WHI: ${d.health_score}%)\n`;
+        text += `Base URL     : ${d.application.base_url}\n`;
+        text += `Redirect URI : ${d.application.redirect_uri}\n`;
+        if (d.telemetry && d.telemetry.resolved_ip) {
+            text += `Resolusi IP  : ${d.telemetry.resolved_ip} (${d.telemetry.ip_classification})\n`;
+            text += `Bench Latensi: ${d.telemetry.latency_ms} ms (${d.telemetry.latency_grade})\n`;
+        }
+        text += `\n--- 8 Titik Uji Presisi ---\n`;
+        d.checks.forEach((c, idx) => {
+            text += `${idx + 1}. [${c.status}] ${c.name} (${c.latency_ms > 0 ? c.latency_ms + ' ms' : '0 ms'})\n    Hasil: ${c.message}\n`;
+        });
+        if (d.issues && d.issues.length > 0) {
+            text += `\n--- Temuan Akar Masalah (${d.issues.length}) ---\n`;
+            d.issues.forEach((issue, idx) => {
+                text += `#${idx + 1} [${issue.severity}] ${issue.title} (Lokasi: ${issue.location_label})\n`;
+                text += `Penyebab: ${issue.cause}\n`;
+                text += `Solusi  : ${issue.solution_title}\n`;
+                if (issue.solution_code) {
+                    text += `Kode    : ${issue.solution_code}\n`;
+                }
+                text += `\n`;
+            });
+        }
+        navigator.clipboard.writeText(text);
+        this.copiedReport = true;
+        setTimeout(() => { this.copiedReport = false; }, 2500);
     },
     async runDiagnoseAll() {
         this.diagnosingAll = true;
@@ -614,38 +650,101 @@
          x-transition:leave="transition ease-in duration-150"
          x-transition:leave-start="opacity-100"
          x-transition:leave-end="opacity-0"
-         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs overflow-y-auto"
+         class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/70 backdrop-blur-xs overflow-y-auto"
          style="display: none;">
         
         <div @click.outside="showSsoModal = false" 
-             class="bg-white rounded-3xl border border-slate-200 shadow-2xl w-full max-w-4xl overflow-hidden my-8 flex flex-col max-h-[90vh]">
+             class="bg-white rounded-3xl border border-slate-200 shadow-2xl w-full max-w-5xl overflow-hidden my-4 sm:my-8 flex flex-col max-h-[92vh]">
             
             <!-- Modal Header -->
-            <div class="px-6 py-5 border-b border-slate-100 bg-slate-50 flex items-center justify-between shrink-0">
-                <div class="flex items-center space-x-3">
-                    <div class="p-2.5 rounded-2xl bg-indigo-100 text-indigo-700">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
-                        </svg>
-                    </div>
-                    <div>
-                        <div class="flex items-center space-x-2">
-                            <h3 class="text-lg font-black text-slate-900" x-text="ssoDiagnosis ? ssoDiagnosis.application.name : 'Diagnosa Koneksi SSO'"></h3>
-                            <template x-if="ssoDiagnosis">
-                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-slate-200 text-slate-800" x-text="ssoDiagnosis.application.client_id"></span>
-                            </template>
+            <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/80 flex flex-col gap-3 shrink-0">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3 min-w-0">
+                        <div class="p-2.5 rounded-2xl bg-indigo-600 text-white shadow-md shadow-indigo-600/20 shrink-0">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                            </svg>
                         </div>
-                        <p class="text-xs text-slate-500 font-medium">Pemeriksaan otomatis 6 titik integrasi, deteksi akar masalah, dan panduan solusi</p>
+                        <div class="min-w-0">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <h3 class="text-base sm:text-lg font-black text-slate-900 truncate" x-text="ssoDiagnosis ? ssoDiagnosis.application.name : 'Diagnosa Koneksi SSO Presisi'"></h3>
+                                <template x-if="ssoDiagnosis">
+                                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-slate-200 text-slate-800" x-text="ssoDiagnosis.application.client_id"></span>
+                                </template>
+                            </div>
+                            <p class="text-[11px] sm:text-xs text-slate-500 font-medium truncate">
+                                Mesin Diagnostik 8 Titik Uji Presisi • Benchmark Latensi • Analisis Akar Masalah (RCA)
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center space-x-2 shrink-0">
+                        <template x-if="ssoDiagnosis">
+                            <button type="button" 
+                                    @click="copyDiagnosisReport()" 
+                                    class="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-xs font-extrabold transition-all shadow-2xs flex items-center space-x-1 cursor-pointer">
+                                <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                </svg>
+                                <span x-text="copiedReport ? 'Tersalin!' : 'Salin Laporan'">Salin Laporan</span>
+                            </button>
+                        </template>
+
+                        <button @click="showSsoModal = false" class="p-2 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-100 transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </button>
                     </div>
                 </div>
 
-                <button @click="showSsoModal = false" class="p-2 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-100 transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
+                <!-- Navigation Tabs Bar -->
+                <template x-if="!diagnosingSso && ssoDiagnosis">
+                    <div class="flex items-center space-x-1.5 border-t border-slate-200/60 pt-2.5 overflow-x-auto text-xs font-bold scrollbar-none">
+                        <button type="button" 
+                                @click="diagModalTab = 'summary'"
+                                :class="diagModalTab === 'summary' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-200/70'"
+                                class="px-3 py-1.5 rounded-xl transition-all flex items-center space-x-1.5 shrink-0 cursor-pointer">
+                            <span>📊 Ringkasan & Skor Presisi</span>
+                            <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono"
+                                  :class="diagModalTab === 'summary' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'"
+                                  x-text="ssoDiagnosis.health_score + '%'">
+                            </span>
+                        </button>
+
+                        <button type="button" 
+                                @click="diagModalTab = 'matrix'"
+                                :class="diagModalTab === 'matrix' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-200/70'"
+                                class="px-3 py-1.5 rounded-xl transition-all flex items-center space-x-1.5 shrink-0 cursor-pointer">
+                            <span>🔍 Matriks 8 Titik Uji</span>
+                            <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono"
+                                  :class="diagModalTab === 'matrix' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'"
+                                  x-text="ssoDiagnosis.checks.length">
+                            </span>
+                        </button>
+
+                        <button type="button" 
+                                @click="diagModalTab = 'rca'"
+                                :class="diagModalTab === 'rca' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-200/70'"
+                                class="px-3 py-1.5 rounded-xl transition-all flex items-center space-x-1.5 shrink-0 cursor-pointer">
+                            <span>🛠️ Akar Masalah & Solusi (RCA)</span>
+                            <template x-if="ssoDiagnosis.issues && ssoDiagnosis.issues.length > 0">
+                                <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-rose-500 text-white"
+                                      x-text="ssoDiagnosis.issues.length">
+                                </span>
+                            </template>
+                        </button>
+
+                        <button type="button" 
+                                @click="diagModalTab = 'raw'"
+                                :class="diagModalTab === 'raw' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-200/70'"
+                                class="px-3 py-1.5 rounded-xl transition-all flex items-center space-x-1.5 shrink-0 cursor-pointer">
+                            <span>⚙️ Telemetri JSON</span>
+                        </button>
+                    </div>
+                </template>
             </div>
 
             <!-- Modal Body (Scrollable) -->
-            <div class="p-6 space-y-6 overflow-y-auto flex-1">
+            <div class="p-4 sm:p-6 space-y-6 overflow-y-auto flex-1">
                 <!-- Loading State -->
                 <template x-if="diagnosingSso">
                     <div class="py-16 text-center space-y-4">
@@ -654,9 +753,9 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                             </svg>
                         </div>
-                        <h4 class="text-base font-black text-slate-900">Mendiagnosa Koneksi SSO...</h4>
+                        <h4 class="text-base font-black text-slate-900">Mendiagnosa Koneksi SSO Presisi...</h4>
                         <p class="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
-                            Menguji integritas registry, konektivitas host server, respons endpoint /health, route /oauth/callback, token engine, dan webhook password.
+                            Menguji 8 titik integrasi: integritas konfigurasi gateway, origin matching, DNS & IP resolution, route token OAuth, endpoint /health, route /oauth/callback, signed webhook, dan lifecycle token.
                         </p>
                     </div>
                 </template>
@@ -664,180 +763,289 @@
                 <!-- Result State -->
                 <template x-if="!diagnosingSso && ssoDiagnosis">
                     <div class="space-y-6">
-                        <!-- Overall Status Banner -->
-                        <div class="p-5 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all"
-                             :class="{
-                                 'bg-emerald-50 border-emerald-300 text-emerald-950': ssoDiagnosis.overall_status === 'HEALTHY',
-                                 'bg-amber-50 border-amber-300 text-amber-950': ssoDiagnosis.overall_status === 'WARNING',
-                                 'bg-rose-50 border-rose-300 text-rose-950': ssoDiagnosis.overall_status === 'CRITICAL'
-                             }">
-                            <div class="flex items-start space-x-3.5">
-                                <div class="p-3 rounded-2xl shrink-0 text-white font-black text-lg"
-                                     :class="{
-                                         'bg-emerald-600': ssoDiagnosis.overall_status === 'HEALTHY',
-                                         'bg-amber-600': ssoDiagnosis.overall_status === 'WARNING',
-                                         'bg-rose-600': ssoDiagnosis.overall_status === 'CRITICAL'
-                                     }">
-                                    <span x-text="ssoDiagnosis.health_score + '%'"></span>
-                                </div>
-                                <div class="space-y-1">
-                                    <div class="flex items-center space-x-2">
-                                        <span class="text-xs font-black uppercase tracking-wider px-2 py-0.5 rounded-md"
-                                              :class="{
-                                                  'bg-emerald-200 text-emerald-900': ssoDiagnosis.overall_status === 'HEALTHY',
-                                                  'bg-amber-200 text-amber-900': ssoDiagnosis.overall_status === 'WARNING',
-                                                  'bg-rose-200 text-rose-900': ssoDiagnosis.overall_status === 'CRITICAL'
-                                              }"
-                                              x-text="ssoDiagnosis.overall_status">
-                                        </span>
-                                        <h4 class="text-sm font-black" x-text="ssoDiagnosis.status_text"></h4>
+
+                        <!-- ================= TAB 1: RINGKASAN & SKOR WHI ================= -->
+                        <div x-show="diagModalTab === 'summary'" class="space-y-5">
+                            <!-- Overall Status Banner -->
+                            <div class="p-5 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all"
+                                 :class="{
+                                     'bg-emerald-50 border-emerald-300 text-emerald-950': ssoDiagnosis.overall_status === 'HEALTHY',
+                                     'bg-amber-50 border-amber-300 text-amber-950': ssoDiagnosis.overall_status === 'WARNING',
+                                     'bg-rose-50 border-rose-300 text-rose-950': ssoDiagnosis.overall_status === 'CRITICAL'
+                                 }">
+                                <div class="flex items-start space-x-3.5">
+                                    <div class="p-3.5 rounded-2xl shrink-0 text-white font-black text-xl shadow-xs"
+                                         :class="{
+                                             'bg-emerald-600': ssoDiagnosis.overall_status === 'HEALTHY',
+                                             'bg-amber-600': ssoDiagnosis.overall_status === 'WARNING',
+                                             'bg-rose-600': ssoDiagnosis.overall_status === 'CRITICAL'
+                                         }">
+                                        <span x-text="ssoDiagnosis.health_score + '%'"></span>
                                     </div>
-                                    <p class="text-xs opacity-90 font-medium">
-                                        Diperiksa: <span class="font-mono" x-text="new Date(ssoDiagnosis.timestamp).toLocaleTimeString()"></span> • 
-                                        Base URL: <code class="font-mono" x-text="ssoDiagnosis.application.base_url"></code>
-                                    </p>
+                                    <div class="space-y-1">
+                                        <div class="flex flex-wrap items-center gap-2">
+                                            <span class="text-xs font-black uppercase tracking-wider px-2 py-0.5 rounded-md"
+                                                  :class="{
+                                                      'bg-emerald-200 text-emerald-900': ssoDiagnosis.overall_status === 'HEALTHY',
+                                                      'bg-amber-200 text-amber-900': ssoDiagnosis.overall_status === 'WARNING',
+                                                      'bg-rose-200 text-rose-900': ssoDiagnosis.overall_status === 'CRITICAL'
+                                                  }"
+                                                  x-text="ssoDiagnosis.overall_status">
+                                            </span>
+                                            <h4 class="text-sm sm:text-base font-black" x-text="ssoDiagnosis.status_text"></h4>
+                                        </div>
+                                        <p class="text-xs opacity-90 font-medium">
+                                            Diuji: <span class="font-mono" x-text="ssoDiagnosis.diagnosed_at_human || new Date(ssoDiagnosis.timestamp).toLocaleString()"></span> • 
+                                            Base: <code class="font-mono font-bold" x-text="ssoDiagnosis.application.base_url"></code>
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center gap-2 text-[11px] font-mono font-bold shrink-0 self-end sm:self-auto">
+                                    <span class="px-2.5 py-1 bg-white/90 rounded-lg border shadow-2xs text-emerald-800 border-emerald-200" x-text="ssoDiagnosis.summary.passed + ' Lulus'"></span>
+                                    <span class="px-2.5 py-1 bg-white/90 rounded-lg border shadow-2xs text-amber-800 border-amber-200" x-text="ssoDiagnosis.summary.warnings + ' Peringatan'"></span>
+                                    <span class="px-2.5 py-1 bg-white/90 rounded-lg border shadow-2xs text-rose-800 border-rose-200" x-text="ssoDiagnosis.summary.failed + ' Gagal'"></span>
                                 </div>
                             </div>
 
-                            <div class="flex items-center gap-2 text-[11px] font-mono font-bold shrink-0 self-end sm:self-auto">
-                                <span class="px-2.5 py-1 bg-white/80 rounded-lg border shadow-2xs text-emerald-800 border-emerald-200" x-text="ssoDiagnosis.summary.passed + ' Lulus'"></span>
-                                <span class="px-2.5 py-1 bg-white/80 rounded-lg border shadow-2xs text-amber-800 border-amber-200" x-text="ssoDiagnosis.summary.warnings + ' Peringatan'"></span>
-                                <span class="px-2.5 py-1 bg-white/80 rounded-lg border shadow-2xs text-rose-800 border-rose-200" x-text="ssoDiagnosis.summary.failed + ' Gagal'"></span>
+                            <!-- 3 Quick Telemetry Cards -->
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                                <!-- Card 1: DNS & Jaringan -->
+                                <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-1.5">
+                                    <div class="flex items-center justify-between text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">
+                                        <span>Resolusi Host & DNS</span>
+                                        <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg>
+                                    </div>
+                                    <div class="font-mono text-xs font-bold text-slate-900" x-text="ssoDiagnosis.telemetry.resolved_ip || 'Tidak Terdeteksi'"></div>
+                                    <div class="text-[11px] text-slate-500 font-medium" x-text="ssoDiagnosis.telemetry.ip_classification"></div>
+                                </div>
+
+                                <!-- Card 2: Benchmarking Latensi -->
+                                <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-1.5">
+                                    <div class="flex items-center justify-between text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">
+                                        <span>Benchmarking Latensi</span>
+                                        <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                    </div>
+                                    <div class="flex items-baseline space-x-2">
+                                        <span class="text-base font-black text-slate-900 font-mono" x-text="(ssoDiagnosis.telemetry.latency_ms || 0) + ' ms'"></span>
+                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase font-mono"
+                                              :class="{
+                                                  'bg-emerald-100 text-emerald-800': ssoDiagnosis.telemetry.latency_grade === 'ultra_fast' || ssoDiagnosis.telemetry.latency_grade === 'optimal',
+                                                  'bg-amber-100 text-amber-800': ssoDiagnosis.telemetry.latency_grade === 'warning',
+                                                  'bg-rose-100 text-rose-800': ssoDiagnosis.telemetry.latency_grade === 'critical'
+                                              }"
+                                              x-text="ssoDiagnosis.telemetry.latency_grade === 'ultra_fast' ? 'Sangat Cepat' : (ssoDiagnosis.telemetry.latency_grade === 'optimal' ? 'Optimal' : (ssoDiagnosis.telemetry.latency_grade === 'warning' ? 'Tolerable' : 'Tinggi / Timeout'))">
+                                        </span>
+                                    </div>
+                                    <div class="text-[11px] text-slate-500 font-medium">Batas toleransi SiPintu: 3000 ms</div>
+                                </div>
+
+                                <!-- Card 3: Sesi & Token Gateway -->
+                                <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-1.5">
+                                    <div class="flex items-center justify-between text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">
+                                        <span>Sesi Token & Aktivitas</span>
+                                        <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
+                                    </div>
+                                    <div class="text-xs font-bold text-slate-900">
+                                        <span class="font-mono text-indigo-700" x-text="ssoDiagnosis.telemetry.active_tokens_count"></span> Token Aktif
+                                        <span class="text-slate-400 font-normal">|</span>
+                                        <span class="font-mono text-slate-700" x-text="ssoDiagnosis.telemetry.total_api_requests"></span> Panggilan API
+                                    </div>
+                                    <div class="text-[11px] text-slate-500 font-medium truncate" x-text="'Aktif: ' + ssoDiagnosis.telemetry.last_connected_human"></div>
+                                </div>
                             </div>
+
+                            <!-- Shortcut to RCA if issues exist -->
+                            <template x-if="ssoDiagnosis.issues && ssoDiagnosis.issues.length > 0">
+                                <div class="p-4 rounded-2xl bg-rose-50 border border-rose-200 flex items-center justify-between gap-3">
+                                    <div class="flex items-center space-x-2.5">
+                                        <span class="w-3 h-3 rounded-full bg-rose-600 animate-pulse shrink-0"></span>
+                                        <span class="text-xs font-bold text-rose-900">
+                                            Ditemukan <span class="font-black" x-text="ssoDiagnosis.issues.length"></span> akar masalah yang memerlukan perbaikan.
+                                        </span>
+                                    </div>
+                                    <button type="button" 
+                                            @click="diagModalTab = 'rca'" 
+                                            class="px-3 py-1.5 bg-rose-700 hover:bg-rose-800 text-white rounded-xl text-xs font-extrabold transition-all shrink-0 cursor-pointer shadow-xs">
+                                        Buka Panduan Solusi &rarr;
+                                    </button>
+                                </div>
+                            </template>
                         </div>
 
-                        <!-- 6 Titik Pemeriksaan Grid -->
-                        <div class="space-y-3">
-                            <h4 class="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-2">
-                                <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
-                                Rincian 6 Titik Uji Koneksi SSO
-                            </h4>
+
+                        <!-- ================= TAB 2: MATRIKS 8 TITIK UJI ================= -->
+                        <div x-show="diagModalTab === 'matrix'" class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <h4 class="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                                    <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+                                    Matriks 8 Titik Pemeriksaan Presisi
+                                </h4>
+                                <span class="text-[11px] text-slate-500 font-medium">Evaluasi menyeluruh jaringan, routing, token & webhook</span>
+                            </div>
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                <template x-for="check in ssoDiagnosis.checks" :key="check.id">
-                                    <div class="p-3.5 rounded-2xl border transition-all space-y-2"
+                                <template x-for="(check, idx) in ssoDiagnosis.checks" :key="check.id">
+                                    <div class="p-3.5 rounded-2xl border transition-all space-y-2 flex flex-col justify-between"
                                          :class="{
-                                             'bg-emerald-50/50 border-emerald-200 text-emerald-950': check.status === 'PASS',
-                                             'bg-amber-50/50 border-amber-200 text-amber-950': check.status === 'WARN',
-                                             'bg-rose-50/50 border-rose-200 text-rose-950': check.status === 'FAIL'
+                                             'bg-emerald-50/40 border-emerald-200 text-emerald-950': check.status === 'PASS',
+                                             'bg-amber-50/40 border-amber-200 text-amber-950': check.status === 'WARN',
+                                             'bg-rose-50/40 border-rose-200 text-rose-950': check.status === 'FAIL'
                                          }">
-                                        <div class="flex items-start justify-between gap-2">
-                                            <div class="flex items-center space-x-2">
-                                                <span class="w-2.5 h-2.5 rounded-full shrink-0"
+                                        <div class="space-y-1.5">
+                                            <div class="flex items-start justify-between gap-2">
+                                                <div class="flex items-center space-x-2">
+                                                    <span class="w-2.5 h-2.5 rounded-full shrink-0"
+                                                          :class="{
+                                                              'bg-emerald-600': check.status === 'PASS',
+                                                              'bg-amber-500': check.status === 'WARN',
+                                                              'bg-rose-600 animate-ping': check.status === 'FAIL'
+                                                          }">
+                                                    </span>
+                                                    <span class="font-extrabold text-xs text-slate-900" x-text="(idx + 1) + '. ' + check.name"></span>
+                                                </div>
+                                                <span class="px-2 py-0.5 rounded-md text-[10px] font-black uppercase font-mono tracking-wider shrink-0"
                                                       :class="{
-                                                          'bg-emerald-600': check.status === 'PASS',
-                                                          'bg-amber-500': check.status === 'WARN',
-                                                          'bg-rose-600 animate-ping': check.status === 'FAIL'
-                                                      }">
+                                                          'bg-emerald-200 text-emerald-900': check.status === 'PASS',
+                                                          'bg-amber-200 text-amber-900': check.status === 'WARN',
+                                                          'bg-rose-200 text-rose-900': check.status === 'FAIL'
+                                                      }"
+                                                      x-text="check.status">
                                                 </span>
-                                                <span class="font-extrabold text-xs text-slate-900" x-text="check.name"></span>
                                             </div>
-                                            <span class="px-2 py-0.5 rounded-md text-[10px] font-black uppercase font-mono tracking-wider shrink-0"
-                                                  :class="{
-                                                      'bg-emerald-200 text-emerald-900': check.status === 'PASS',
-                                                      'bg-amber-200 text-amber-900': check.status === 'WARN',
-                                                      'bg-rose-200 text-rose-900': check.status === 'FAIL'
-                                                  }"
-                                                  x-text="check.status">
-                                            </span>
+
+                                            <p class="text-[11px] text-slate-600 leading-relaxed font-medium" x-text="check.message"></p>
                                         </div>
 
-                                        <p class="text-[11px] text-slate-600 leading-relaxed font-medium" x-text="check.message"></p>
-
-                                        <div class="flex items-center justify-between text-[10px] font-mono text-slate-500 pt-1 border-t border-slate-200/60">
+                                        <div class="flex items-center justify-between text-[10px] font-mono text-slate-500 pt-2 border-t border-slate-200/60">
                                             <span class="truncate max-w-[200px]" x-text="check.target"></span>
-                                            <span x-text="check.latency_ms > 0 ? check.latency_ms + ' ms' : ''"></span>
+                                            <div class="flex items-center space-x-1.5 shrink-0">
+                                                <template x-if="check.http_code">
+                                                    <span class="px-1.5 py-0.2 rounded bg-slate-200/70 text-slate-800 font-bold" x-text="'HTTP ' + check.http_code"></span>
+                                                </template>
+                                                <template x-if="check.latency_ms > 0">
+                                                    <span class="font-bold text-slate-700" x-text="check.latency_ms + ' ms'"></span>
+                                                </template>
+                                            </div>
                                         </div>
                                     </div>
                                 </template>
                             </div>
                         </div>
 
-                        <!-- Panel Masalah & Solusi Perbaikan -->
-                        <template x-if="ssoDiagnosis.issues && ssoDiagnosis.issues.length > 0">
-                            <div class="space-y-3 pt-2">
-                                <div class="flex items-center justify-between">
-                                    <h4 class="text-xs font-black text-rose-900 uppercase tracking-wider flex items-center gap-2">
-                                        <svg class="w-4 h-4 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                                        Akar Masalah Terdeteksi & Lokasi Terjadinya (<span x-text="ssoDiagnosis.issues.length"></span>)
-                                    </h4>
-                                    <span class="text-[10px] text-slate-500 font-medium">Ikuti panduan di bawah untuk memperbaiki</span>
-                                </div>
 
+                        <!-- ================= TAB 3: AKAR MASALAH & SOLUSI (RCA) ================= -->
+                        <div x-show="diagModalTab === 'rca'" class="space-y-4">
+                            <!-- Clean state -->
+                            <template x-if="!ssoDiagnosis.issues || ssoDiagnosis.issues.length === 0">
+                                <div class="p-8 rounded-2xl bg-emerald-50 border border-emerald-300 text-center space-y-2.5 my-4">
+                                    <div class="w-12 h-12 rounded-full bg-emerald-600 text-white mx-auto flex items-center justify-center font-bold text-2xl shadow-md shadow-emerald-600/20">✓</div>
+                                    <h4 class="text-base font-black text-emerald-950">Seluruh Titik Pemeriksaan Lulus 100%</h4>
+                                    <p class="text-xs text-emerald-800 max-w-md mx-auto font-medium leading-relaxed">
+                                        Tidak ditemukan kendala integrasi apapun. Aplikasi downstream siap menerima pertukaran authorization code, penerbitan token, dan sinkronisasi real-time.
+                                    </p>
+                                </div>
+                            </template>
+
+                            <!-- Issues list -->
+                            <template x-if="ssoDiagnosis.issues && ssoDiagnosis.issues.length > 0">
                                 <div class="space-y-4">
-                                    <template x-for="(issue, idx) in ssoDiagnosis.issues" :key="issue.id">
-                                        <div class="p-4 rounded-2xl border space-y-3 shadow-xs"
-                                             :class="issue.severity === 'CRITICAL' ? 'bg-rose-50/80 border-rose-300' : 'bg-amber-50/80 border-amber-300'">
-                                            
-                                            <!-- Issue Header -->
-                                            <div class="flex flex-wrap items-center justify-between gap-2 border-b pb-2.5"
-                                                 :class="issue.severity === 'CRITICAL' ? 'border-rose-200' : 'border-amber-200'">
-                                                <div class="flex items-center space-x-2">
-                                                    <span class="px-2 py-0.5 rounded-md text-[10px] font-black uppercase text-white"
-                                                          :class="issue.severity === 'CRITICAL' ? 'bg-rose-600' : 'bg-amber-600'"
-                                                          x-text="issue.severity">
-                                                    </span>
-                                                    <h5 class="text-xs font-black text-slate-900" x-text="issue.title"></h5>
-                                                </div>
+                                    <div class="flex items-center justify-between">
+                                        <h4 class="text-xs font-black text-rose-900 uppercase tracking-wider flex items-center gap-2">
+                                            <svg class="w-4 h-4 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                            Akar Masalah Terdeteksi & Panduan Solusi (<span x-text="ssoDiagnosis.issues.length"></span>)
+                                        </h4>
+                                        <span class="text-[10px] text-slate-500 font-medium">Ikuti langkah preskriptif di bawah ini</span>
+                                    </div>
 
-                                                <!-- Lokasi Error Badge -->
-                                                <div class="flex items-center space-x-1.5">
-                                                    <span class="text-[10px] text-slate-500 font-bold">Terjadi Di:</span>
-                                                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider"
-                                                          :class="{
-                                                              'bg-indigo-100 text-indigo-800 border border-indigo-300': issue.location === 'GATEWAY_SIPINTU',
-                                                              'bg-blue-100 text-blue-800 border border-blue-300': issue.location === 'APLIKASI_DOWNSTREAM',
-                                                              'bg-orange-100 text-orange-800 border border-orange-300': issue.location === 'JARINGAN_NETWORK'
-                                                          }"
-                                                          x-text="issue.location_label">
-                                                    </span>
-                                                </div>
-                                            </div>
-
-                                            <!-- Mengapa Terjadi -->
-                                            <div class="space-y-1">
-                                                <span class="text-[10px] font-extrabold text-slate-500 uppercase">❓ Mengapa Masalah Ini Terjadi:</span>
-                                                <p class="text-xs text-slate-700 font-medium leading-relaxed bg-white/70 p-2.5 rounded-xl border border-slate-200/60" x-text="issue.cause"></p>
-                                            </div>
-
-                                            <!-- Solusi Perbaikan -->
-                                            <div class="space-y-1.5 pt-1">
-                                                <span class="text-[10px] font-extrabold text-slate-900 uppercase flex items-center gap-1">
-                                                    <span>🛠️ Cara Memperbaiki:</span>
-                                                    <span class="text-emerald-700 font-black" x-text="issue.solution_title"></span>
-                                                </span>
-
-                                                <ul class="space-y-1 text-xs text-slate-700 pl-4 list-disc font-medium">
-                                                    <template x-for="step in issue.solution_steps" :key="step">
-                                                        <li x-text="step"></li>
-                                                    </template>
-                                                </ul>
-
-                                                <template x-if="issue.solution_code">
-                                                    <div class="mt-2 bg-slate-900 text-emerald-400 p-3 rounded-xl font-mono text-[11px] flex items-center justify-between gap-2 shadow-inner">
-                                                        <span class="break-all select-all" x-text="issue.solution_code"></span>
-                                                        <button type="button" 
-                                                                @click="navigator.clipboard.writeText(issue.solution_code); alert('Perintah/kode disalin ke clipboard!');"
-                                                                class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-[10px] font-bold shrink-0 transition-colors">
-                                                            Salin
-                                                        </button>
+                                    <div class="space-y-4">
+                                        <template x-for="(issue, idx) in ssoDiagnosis.issues" :key="issue.id">
+                                            <div class="p-4 rounded-2xl border space-y-3 shadow-xs"
+                                                 :class="issue.severity === 'CRITICAL' ? 'bg-rose-50/70 border-rose-300' : 'bg-amber-50/70 border-amber-300'">
+                                                
+                                                <!-- Issue Header -->
+                                                <div class="flex flex-wrap items-center justify-between gap-2 border-b pb-2.5"
+                                                     :class="issue.severity === 'CRITICAL' ? 'border-rose-200' : 'border-amber-200'">
+                                                    <div class="flex items-center space-x-2">
+                                                        <span class="px-2 py-0.5 rounded-md text-[10px] font-black uppercase text-white shadow-2xs"
+                                                              :class="issue.severity === 'CRITICAL' ? 'bg-rose-600' : 'bg-amber-600'"
+                                                              x-text="issue.severity">
+                                                        </span>
+                                                        <h5 class="text-xs sm:text-sm font-black text-slate-900" x-text="issue.title"></h5>
                                                     </div>
-                                                </template>
-                                            </div>
-                                        </div>
-                                    </template>
-                                </div>
-                            </div>
-                        </template>
 
-                        <!-- All Clean Banner -->
-                        <template x-if="!ssoDiagnosis.issues || ssoDiagnosis.issues.length === 0">
-                            <div class="p-6 rounded-2xl bg-emerald-50 border border-emerald-300 text-center space-y-2">
-                                <div class="w-10 h-10 rounded-full bg-emerald-600 text-white mx-auto flex items-center justify-center font-bold text-xl">✓</div>
-                                <h4 class="text-sm font-black text-emerald-950">Tidak Ditemukan Masalah Koneksi SSO</h4>
-                                <p class="text-xs text-emerald-800 font-medium">Seluruh titik pemeriksaan lulus. Pengguna dapat melakukan login SSO secara mulus ke aplikasi ini.</p>
+                                                    <!-- Lokasi Error Badge -->
+                                                    <div class="flex items-center space-x-1.5">
+                                                        <span class="text-[10px] text-slate-500 font-bold">Terjadi Di:</span>
+                                                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider shadow-2xs"
+                                                              :class="{
+                                                                  'bg-indigo-100 text-indigo-800 border border-indigo-300': issue.location === 'GATEWAY_SIPINTU',
+                                                                  'bg-blue-100 text-blue-800 border border-blue-300': issue.location === 'APLIKASI_DOWNSTREAM',
+                                                                  'bg-orange-100 text-orange-800 border border-orange-300': issue.location === 'JARINGAN_NETWORK'
+                                                              }"
+                                                              x-text="issue.location_label">
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Mengapa Terjadi -->
+                                                <div class="space-y-1">
+                                                    <span class="text-[10px] font-extrabold text-slate-500 uppercase flex items-center gap-1">
+                                                        <span>❓ Akar Masalah (Root Cause):</span>
+                                                    </span>
+                                                    <p class="text-xs text-slate-700 font-medium leading-relaxed bg-white/80 p-2.5 rounded-xl border border-slate-200/60" x-text="issue.cause"></p>
+                                                </div>
+
+                                                <!-- Solusi Perbaikan -->
+                                                <div class="space-y-1.5 pt-1">
+                                                    <span class="text-[10px] font-extrabold text-slate-900 uppercase flex items-center gap-1">
+                                                        <span>🛠️ Langkah Perbaikan:</span>
+                                                        <span class="text-emerald-700 font-black" x-text="issue.solution_title"></span>
+                                                    </span>
+
+                                                    <ul class="space-y-1 text-xs text-slate-700 pl-4 list-disc font-medium">
+                                                        <template x-for="step in issue.solution_steps" :key="step">
+                                                            <li x-text="step"></li>
+                                                        </template>
+                                                    </ul>
+
+                                                    <template x-if="issue.solution_code">
+                                                        <div class="mt-2 bg-slate-900 text-emerald-400 p-3 rounded-xl font-mono text-[11px] flex items-center justify-between gap-2 shadow-inner">
+                                                            <span class="break-all select-all" x-text="issue.solution_code"></span>
+                                                            <button type="button" 
+                                                                    @click="navigator.clipboard.writeText(issue.solution_code); alert('Perintah/kode solusi disalin!');"
+                                                                    class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-[10px] font-bold shrink-0 transition-colors cursor-pointer">
+                                                                Salin Kode
+                                                            </button>
+                                                        </div>
+                                                    </template>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+
+
+                        <!-- ================= TAB 4: TELEMETRI RAW JSON ================= -->
+                        <div x-show="diagModalTab === 'raw'" class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <h4 class="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                                    <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                                    Data Telemetri Lengkap (Format JSON)
+                                </h4>
+                                <button type="button" 
+                                        @click="navigator.clipboard.writeText(JSON.stringify(ssoDiagnosis, null, 2)); alert('JSON telemetri disalin ke clipboard!');"
+                                        class="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition-colors cursor-pointer">
+                                    Salin JSON
+                                </button>
                             </div>
-                        </template>
+                            <div class="bg-slate-950 text-emerald-400 p-4 rounded-2xl font-mono text-[11px] max-h-96 overflow-y-auto shadow-inner leading-relaxed select-all">
+                                <pre x-text="JSON.stringify(ssoDiagnosis, null, 2)"></pre>
+                            </div>
+                        </div>
+
                     </div>
                 </template>
             </div>
