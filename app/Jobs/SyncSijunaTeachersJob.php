@@ -22,12 +22,14 @@ class SyncSijunaTeachersJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    public ?array $summary = null;
+
     public function __construct()
     {
         //
     }
 
-    public function handle(SijunaApiService $sijunaApi): void
+    public function handle(SijunaApiService $sijunaApi): array
     {
         $syncLog = SyncLog::create([
             'sync_type' => 'sijuna_teachers',
@@ -39,6 +41,8 @@ class SyncSijunaTeachersJob implements ShouldQueue
         try {
             $teachersData = $sijunaApi->getTeachers();
             $processedCount = 0;
+            $teachersCount = 0;
+            $skipped = [];
 
             $teacherRole = Role::firstOrCreate(
                 ['name' => 'teacher', 'guard_name' => 'web']
@@ -48,16 +52,25 @@ class SyncSijunaTeachersJob implements ShouldQueue
             $now = now()->toDateTimeString();
             $defaultPasswordHash = Hash::make('password');
 
-            foreach ($teachersData as $teacher) {
-                $nip = isset($teacher['nip']) ? (string) $teacher['nip'] : null;
-                $externalId = (string) ($nip ?? $teacher['external_id'] ?? $teacher['id'] ?? '');
+            foreach ($teachersData as $index => $teacher) {
+                $nip = isset($teacher['nip']) ? trim((string) $teacher['nip']) : null;
+                $externalId = trim((string) ($nip ?? $teacher['external_id'] ?? $teacher['id'] ?? ''));
                 $email = $teacher['email'] ?? $teacher['user']['email'] ?? ($externalId ? $externalId.'@guru.sekolah.id' : null);
+                $name = $teacher['nama'] ?? $teacher['name'] ?? null;
 
                 if (! $email && ! $externalId) {
+                    $displayName = $name ?: ('Data Guru #' . ($index + 1));
+                    $skipped[] = [
+                        'identifier' => $displayName,
+                        'reason' => 'NIP, External ID, dan Email kosong / tidak ditemukan',
+                    ];
                     continue;
                 }
 
-                $name = $teacher['nama'] ?? $teacher['name'] ?? 'Guru SIJUNA';
+                if (! $name) {
+                    $name = 'Guru SIJUNA (' . ($nip ?: $externalId) . ')';
+                }
+
                 $phone = $teacher['hp'] ?? $teacher['phone'] ?? null;
                 $username = $nip ?? $teacher['username'] ?? ($teacher['user']['name'] ?? explode('@', $email)[0]);
 
@@ -85,6 +98,7 @@ class SyncSijunaTeachersJob implements ShouldQueue
                     ], 86400);
                 }
 
+                $teachersCount++;
                 $processedCount++;
             }
 
@@ -109,22 +123,70 @@ class SyncSijunaTeachersJob implements ShouldQueue
                 DB::table('model_has_roles')->insertOrIgnore($chunk);
             }
 
+            $apiWarning = $sijunaApi->getLastTeacherError();
+            $usedFallback = $sijunaApi->usedTeacherFallback();
+
+            $noteParts = [];
+            if ($usedFallback) {
+                $noteParts[] = '[Fallback Digunakan] ' . ($apiWarning ?: 'Endpoint SIJUNA offline');
+            } elseif ($apiWarning) {
+                $noteParts[] = $apiWarning;
+            }
+            if (! empty($skipped)) {
+                $reasonsSummary = implode(', ', array_map(fn ($s) => "{$s['identifier']} ({$s['reason']})", array_slice($skipped, 0, 3)));
+                if (count($skipped) > 3) {
+                    $reasonsSummary .= ', dan ' . (count($skipped) - 3) . ' data lainnya';
+                }
+                $noteParts[] = count($skipped) . ' data dilewati: ' . $reasonsSummary;
+            }
+            $noteMessage = ! empty($noteParts) ? implode(' | ', $noteParts) : null;
+
+            $summary = [
+                'sync_type' => 'sijuna_teachers',
+                'status' => 'success',
+                'records_processed' => $processedCount,
+                'teachers_count' => $teachersCount,
+                'skipped_count' => count($skipped),
+                'skipped_items' => $skipped,
+                'used_fallback' => $usedFallback,
+                'warning' => $apiWarning,
+                'note' => $noteMessage,
+            ];
+
             $syncLog->update([
                 'status' => 'success',
                 'records_processed' => $processedCount,
+                'error_message' => $noteMessage,
+                'details' => $summary,
                 'completed_at' => now(),
             ]);
 
             AuditLogger::log('sijuna_teacher_sync_completed', [
                 'records_processed' => $processedCount,
+                'teachers_count' => $teachersCount,
+                'skipped_count' => count($skipped),
                 'sync_log_id' => $syncLog->id,
             ]);
 
-            Log::info("SIJUNA Teacher Sync completed successfully. Processed: {$processedCount}");
+            Log::info("SIJUNA Teacher Sync completed. Guru: {$teachersCount}, Skipped: ".count($skipped));
+
+            $this->summary = $summary;
+            return $summary;
         } catch (Exception $e) {
+            $summary = [
+                'sync_type' => 'sijuna_teachers',
+                'status' => 'failed',
+                'records_processed' => 0,
+                'teachers_count' => 0,
+                'skipped_count' => 0,
+                'skipped_items' => [],
+                'error' => $e->getMessage(),
+            ];
+
             $syncLog->update([
                 'status' => 'failed',
                 'error_message' => $e->getMessage(),
+                'details' => $summary,
                 'completed_at' => now(),
             ]);
 
@@ -134,6 +196,7 @@ class SyncSijunaTeachersJob implements ShouldQueue
             ]);
 
             Log::error('SIJUNA Teacher Sync failed: '.$e->getMessage());
+            $this->summary = $summary;
             throw $e;
         }
     }

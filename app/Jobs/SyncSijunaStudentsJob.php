@@ -22,12 +22,14 @@ class SyncSijunaStudentsJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    public ?array $summary = null;
+
     public function __construct()
     {
         //
     }
 
-    public function handle(SijunaApiService $sijunaApi): void
+    public function handle(SijunaApiService $sijunaApi): array
     {
         $syncLog = SyncLog::create([
             'sync_type' => 'sijuna_students',
@@ -39,6 +41,9 @@ class SyncSijunaStudentsJob implements ShouldQueue
         try {
             $studentsData = $sijunaApi->getStudents();
             $processedCount = 0;
+            $studentsCount = 0;
+            $alumniCount = 0;
+            $skipped = [];
 
             $studentRole = Role::firstOrCreate(
                 ['name' => 'student', 'guard_name' => 'web']
@@ -51,14 +56,24 @@ class SyncSijunaStudentsJob implements ShouldQueue
             $now = now()->toDateTimeString();
             $defaultPasswordHash = Hash::make('password');
 
-            foreach ($studentsData as $student) {
-                $nis = isset($student['nis']) ? (string) $student['nis'] : null;
-                $externalId = (string) ($nis ?? $student['external_id'] ?? $student['id'] ?? '');
+            foreach ($studentsData as $index => $student) {
+                $nis = isset($student['nis']) ? trim((string) $student['nis']) : null;
+                $externalId = trim((string) ($nis ?? $student['external_id'] ?? $student['id'] ?? ''));
+                $name = $student['nama'] ?? $student['name'] ?? null;
+
                 if (! $externalId) {
+                    $displayName = $name ?: ('Data Siswa #' . ($index + 1));
+                    $skipped[] = [
+                        'identifier' => $displayName,
+                        'reason' => 'NIS atau External ID kosong / tidak ditemukan',
+                    ];
                     continue;
                 }
 
-                $name = $student['nama'] ?? $student['name'] ?? 'Siswa SIJUNA';
+                if (! $name) {
+                    $name = 'Siswa SIJUNA (' . $externalId . ')';
+                }
+
                 $email = $student['user']['email'] ?? $student['email'] ?? ($externalId.'@siswa.sekolah.id');
                 $phone = $student['hp'] ?? $student['phone'] ?? null;
                 $username = $nis ?? ($student['user']['name'] ?? $externalId);
@@ -80,6 +95,11 @@ class SyncSijunaStudentsJob implements ShouldQueue
                 }
 
                 $assignedRole = $isAlumni ? 'alumni' : 'student';
+                if ($isAlumni) {
+                    $alumniCount++;
+                } else {
+                    $studentsCount++;
+                }
 
                 $userRows[] = [
                     'external_id' => $externalId,
@@ -159,22 +179,73 @@ class SyncSijunaStudentsJob implements ShouldQueue
                 DB::table('model_has_roles')->insertOrIgnore($chunk);
             }
 
+            $apiWarning = $sijunaApi->getLastStudentError();
+            $usedFallback = $sijunaApi->usedStudentFallback();
+
+            $noteParts = [];
+            if ($usedFallback) {
+                $noteParts[] = '[Fallback Digunakan] ' . ($apiWarning ?: 'Endpoint SIJUNA offline');
+            } elseif ($apiWarning) {
+                $noteParts[] = $apiWarning;
+            }
+            if (! empty($skipped)) {
+                $reasonsSummary = implode(', ', array_map(fn ($s) => "{$s['identifier']} ({$s['reason']})", array_slice($skipped, 0, 3)));
+                if (count($skipped) > 3) {
+                    $reasonsSummary .= ', dan ' . (count($skipped) - 3) . ' data lainnya';
+                }
+                $noteParts[] = count($skipped) . ' data dilewati: ' . $reasonsSummary;
+            }
+            $noteMessage = ! empty($noteParts) ? implode(' | ', $noteParts) : null;
+
+            $summary = [
+                'sync_type' => 'sijuna_students',
+                'status' => 'success',
+                'records_processed' => $processedCount,
+                'students_count' => $studentsCount,
+                'alumni_count' => $alumniCount,
+                'skipped_count' => count($skipped),
+                'skipped_items' => $skipped,
+                'used_fallback' => $usedFallback,
+                'warning' => $apiWarning,
+                'note' => $noteMessage,
+            ];
+
             $syncLog->update([
                 'status' => 'success',
                 'records_processed' => $processedCount,
+                'error_message' => $noteMessage,
+                'details' => $summary,
                 'completed_at' => now(),
             ]);
 
             AuditLogger::log('sijuna_sync_completed', [
                 'records_processed' => $processedCount,
+                'students_count' => $studentsCount,
+                'alumni_count' => $alumniCount,
+                'skipped_count' => count($skipped),
                 'sync_log_id' => $syncLog->id,
             ]);
 
-            Log::info("SIJUNA Student Sync completed successfully. Processed: {$processedCount}");
+            Log::info("SIJUNA Student Sync completed. Siswa: {$studentsCount}, Alumni: {$alumniCount}, Skipped: ".count($skipped));
+
+            $this->summary = $summary;
+            return $summary;
         } catch (Exception $e) {
+            $summary = [
+                'sync_type' => 'sijuna_students',
+                'status' => 'failed',
+                'records_processed' => 0,
+                'students_count' => 0,
+                'alumni_count' => 0,
+                'skipped_count' => 0,
+                'skipped_items' => [],
+                'error' => $e->getMessage(),
+            ];
+
             $syncLog->update([
                 'status' => 'failed',
                 'error_message' => $e->getMessage(),
+                'details' => $summary,
                 'completed_at' => now(),
             ]);
 
@@ -184,6 +255,7 @@ class SyncSijunaStudentsJob implements ShouldQueue
             ]);
 
             Log::error('SIJUNA Student Sync failed: '.$e->getMessage());
+            $this->summary = $summary;
             throw $e;
         }
     }

@@ -19,6 +19,91 @@
         </form>
     </div>
 
+    <!-- Sync Result Report Banner (Notifikasi Hasil Sinkronisasi) -->
+    @if(session('sync_report'))
+        @php
+            $report = session('sync_report');
+            $types = $report['types'] ?? [];
+            $skippedItems = $report['skipped_items'] ?? [];
+            $warnings = $report['warnings'] ?? [];
+        @endphp
+        <div class="p-5 rounded-2xl bg-white border border-emerald-300 shadow-md space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-100 gap-2">
+                <div class="flex items-center space-x-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold shrink-0">
+                        <svg class="w-5 h-5 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </div>
+                    <div>
+                        <h4 class="font-black text-sm text-emerald-950">Laporan Rincian Sinkronisasi SIJUNA</h4>
+                        <p class="text-xs text-slate-500 font-medium">Data yang berhasil diambil per tipe dan evaluasi data yang dilewati.</p>
+                    </div>
+                </div>
+                <span class="px-3 py-1 rounded-full text-xs font-black uppercase bg-emerald-100 text-emerald-900 border border-emerald-300 self-start sm:self-auto">
+                    Total Berhasil: {{ number_format($report['total_fetched'] ?? 0) }} Data
+                </span>
+            </div>
+
+            <!-- Tipe Data yang Diambil -->
+            <div>
+                <span class="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider block mb-2">1. Jumlah Data yang Berhasil Diambil (Berdasarkan Tipe)</span>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                    <div class="p-3.5 rounded-xl bg-emerald-50/70 border border-emerald-200 flex items-center justify-between">
+                        <div>
+                            <span class="font-extrabold text-emerald-950 block text-xs">Siswa Aktif</span>
+                            <span class="text-[10px] text-slate-500">Terdaftar dalam kelas</span>
+                        </div>
+                        <span class="font-black text-emerald-700 text-base font-mono">{{ number_format($types['siswa'] ?? 0) }}</span>
+                    </div>
+                    <div class="p-3.5 rounded-xl bg-teal-50/70 border border-teal-200 flex items-center justify-between">
+                        <div>
+                            <span class="font-extrabold text-teal-950 block text-xs">Alumni</span>
+                            <span class="text-[10px] text-slate-500">Status Lulus (Graduated)</span>
+                        </div>
+                        <span class="font-black text-teal-700 text-base font-mono">{{ number_format($types['alumni'] ?? 0) }}</span>
+                    </div>
+                    <div class="p-3.5 rounded-xl bg-cyan-50/70 border border-cyan-200 flex items-center justify-between">
+                        <div>
+                            <span class="font-extrabold text-cyan-950 block text-xs">Guru & Tenaga Pendidik</span>
+                            <span class="text-[10px] text-slate-500">Akun GTK SIJUNA</span>
+                        </div>
+                        <span class="font-black text-cyan-700 text-base font-mono">{{ number_format($types['guru'] ?? 0) }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data yang belum diambil / dilewati beserta alasannya -->
+            @if(!empty($skippedItems))
+                <div class="p-4 rounded-xl bg-amber-50 border border-amber-200 space-y-2 text-xs">
+                    <div class="font-black text-amber-900 flex items-center gap-1.5">
+                        <svg class="w-4 h-4 text-amber-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                        <span>{{ count($skippedItems) }} Data Belum Diambil / Dilewati:</span>
+                    </div>
+                    <div class="max-h-48 overflow-y-auto space-y-1.5 pr-1">
+                        @foreach($skippedItems as $skip)
+                            <div class="p-2 rounded-lg bg-white/80 border border-amber-200 text-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                                <span class="font-bold text-slate-900">{{ $skip['identifier'] }}</span>
+                                <span class="text-amber-900 font-semibold bg-amber-100/70 px-2 py-0.5 rounded text-[11px]">{{ $skip['reason'] }}</span>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
+            <!-- Warning API atau error sambungan -->
+            @if(!empty($warnings))
+                <div class="p-4 rounded-xl bg-rose-50 border border-rose-200 space-y-1.5 text-xs text-rose-900">
+                    <div class="font-black flex items-center gap-1.5">
+                        <svg class="w-4 h-4 text-rose-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <span>Peringatan / Error Sambungan SIJUNA API:</span>
+                    </div>
+                    @foreach($warnings as $warn)
+                        <p class="font-medium text-[11px] pl-5">&bull; {{ $warn }}</p>
+                    @endforeach
+                </div>
+            @endif
+        </div>
+    @endif
+
     <!-- Configuration Summary Box -->
     <div class="p-4 sm:p-6 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-4 min-w-0 max-w-full">
         <h3 class="text-xs font-black text-emerald-950 uppercase tracking-wider">Parameter Konfigurasi Backend (config/services.php)</h3>
@@ -72,11 +157,15 @@
                         <th class="px-4 py-3">Jumlah Data Diproses</th>
                         <th class="px-4 py-3">Waktu Mulai</th>
                         <th class="px-4 py-3">Waktu Selesai</th>
-                        <th class="px-4 py-3">Pesan Error / Detail</th>
+                        <th class="px-4 py-3">Rincian Tipe & Alasan / Error</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200 font-mono text-slate-700 bg-white">
                     @forelse($syncLogs as $log)
+                        @php
+                            $details = $log->details ?? [];
+                            $hasSkipped = !empty($details['skipped_count']) && $details['skipped_count'] > 0;
+                        @endphp
                         <tr class="hover:bg-emerald-50/50">
                             <td class="px-4 py-3 font-bold text-slate-500">#{{ $log->id }}</td>
                             <td class="px-4 py-3 font-sans">
@@ -92,11 +181,38 @@
                                     {{ $log->status }}
                                 </span>
                             </td>
-                            <td class="px-4 py-3 text-slate-900 font-bold">{{ number_format($log->records_processed) }} Record</td>
+                            <td class="px-4 py-3 text-slate-900 font-bold">
+                                {{ number_format($log->records_processed) }} Record
+                                @if(!empty($details['students_count']) || !empty($details['alumni_count']) || !empty($details['teachers_count']))
+                                    <span class="block text-[10px] font-normal text-slate-500 mt-0.5">
+                                        @if(isset($details['students_count'])) {{ $details['students_count'] }} Siswa @endif
+                                        @if(isset($details['alumni_count'])) • {{ $details['alumni_count'] }} Alumni @endif
+                                        @if(isset($details['teachers_count'])) {{ $details['teachers_count'] }} Guru @endif
+                                    </span>
+                                @endif
+                            </td>
                             <td class="px-4 py-3 text-slate-600 font-semibold">{{ $log->started_at?->format('d/m/Y H:i:s') }}</td>
                             <td class="px-4 py-3 text-slate-600 font-semibold">{{ $log->completed_at?->format('d/m/Y H:i:s') ?? '-' }}</td>
-                            <td class="px-4 py-3 text-rose-600 max-w-xs truncate font-sans text-xs font-medium">
-                                {{ $log->error_message ?: '-' }}
+                            <td class="px-4 py-3 font-sans text-xs max-w-sm">
+                                @if($log->status === 'failed')
+                                    <span class="text-rose-600 font-bold block">{{ $log->error_message ?: 'Gagal tanpa pesan spesifik' }}</span>
+                                @elseif($hasSkipped)
+                                    <div class="space-y-1">
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300 inline-block">
+                                            {{ $details['skipped_count'] }} Data Dilewati
+                                        </span>
+                                        <p class="text-[11px] text-slate-600 line-clamp-2" title="{{ $log->error_message }}">
+                                            {{ $log->error_message }}
+                                        </p>
+                                    </div>
+                                @elseif($log->error_message)
+                                    <span class="text-slate-600 text-[11px]">{{ $log->error_message }}</span>
+                                @else
+                                    <span class="text-emerald-700 font-medium text-[11px] inline-flex items-center gap-1">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                        Tersinkron Penuh
+                                    </span>
+                                @endif
                             </td>
                         </tr>
                     @empty

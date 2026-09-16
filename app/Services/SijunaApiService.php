@@ -20,6 +20,14 @@ class SijunaApiService
 
     protected int $retrySleep;
 
+    protected ?string $lastStudentError = null;
+
+    protected bool $usedStudentFallback = false;
+
+    protected ?string $lastTeacherError = null;
+
+    protected bool $usedTeacherFallback = false;
+
     public function __construct()
     {
         $this->baseUrl = config('services.sijuna.url', 'https://sijuna.com/api/external');
@@ -29,11 +37,34 @@ class SijunaApiService
         $this->retrySleep = (int) config('services.sijuna.retry_sleep', 200);
     }
 
+    public function getLastStudentError(): ?string
+    {
+        return $this->lastStudentError;
+    }
+
+    public function usedStudentFallback(): bool
+    {
+        return $this->usedStudentFallback;
+    }
+
+    public function getLastTeacherError(): ?string
+    {
+        return $this->lastTeacherError;
+    }
+
+    public function usedTeacherFallback(): bool
+    {
+        return $this->usedTeacherFallback;
+    }
+
     /**
      * Fetch all students data from SIJUNA API across all pages with full error handling and retry mechanism
      */
     public function getStudents(): array
     {
+        $this->lastStudentError = null;
+        $this->usedStudentFallback = false;
+
         $endpoint = rtrim($this->baseUrl, '/').'/students';
         $allStudents = [];
         $page = 1;
@@ -73,14 +104,21 @@ class SijunaApiService
                     $allStudents = array_merge($allStudents, $items);
                     $page++;
                 } else {
+                    $this->lastStudentError = 'SIJUNA API Siswa HTTP '.$response->status().': '.($response->json('message') ?? 'Respon tidak sukses');
                     break;
                 }
             } while ($page <= $lastPage);
         } catch (Throwable $e) {
+            $this->lastStudentError = 'Koneksi ke endpoint siswa gagal: '.$e->getMessage();
             Log::info('SIJUNA external URL unreachable, using fallback students: '.$e->getMessage());
         }
 
-        return ! empty($allStudents) ? $allStudents : $this->getFallbackMockStudents();
+        if (empty($allStudents)) {
+            $this->usedStudentFallback = true;
+            return $this->getFallbackMockStudents();
+        }
+
+        return $allStudents;
     }
 
     /**
@@ -130,6 +168,9 @@ class SijunaApiService
      */
     public function getTeachers(): array
     {
+        $this->lastTeacherError = null;
+        $this->usedTeacherFallback = false;
+
         // Check direct URL https://sijuna.com/api/guru or relative /guru
         $endpoint = str_contains($this->baseUrl, 'sijuna.com') ? 'https://sijuna.com/api/guru' : rtrim($this->baseUrl, '/').'/guru';
         $allTeachers = [];
@@ -170,14 +211,21 @@ class SijunaApiService
                     $allTeachers = array_merge($allTeachers, $items);
                     $page++;
                 } else {
+                    $this->lastTeacherError = 'SIJUNA API Guru HTTP '.$response->status().': '.($response->json('message') ?? 'Respon tidak sukses');
                     break;
                 }
             } while ($page <= $lastPage);
         } catch (Throwable $e) {
+            $this->lastTeacherError = 'Koneksi ke endpoint guru gagal: '.$e->getMessage();
             Log::info('SIJUNA external teacher URL unreachable, using fallback teachers: '.$e->getMessage());
         }
 
-        return ! empty($allTeachers) ? $allTeachers : $this->getFallbackMockTeachers();
+        if (empty($allTeachers)) {
+            $this->usedTeacherFallback = true;
+            return $this->getFallbackMockTeachers();
+        }
+
+        return $allTeachers;
     }
 
     /**

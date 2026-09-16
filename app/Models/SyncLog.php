@@ -14,11 +14,13 @@ class SyncLog extends Model
         'status',
         'records_processed',
         'error_message',
+        'details',
         'started_at',
         'completed_at',
     ];
 
     protected $casts = [
+        'details' => 'array',
         'started_at' => 'datetime',
         'completed_at' => 'datetime',
     ];
