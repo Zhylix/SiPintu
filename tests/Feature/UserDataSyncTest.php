@@ -215,4 +215,28 @@ class UserDataSyncTest extends TestCase
         $this->assertEquals('newhashedpassword', $session['synced_password']);
         $this->assertNotEmpty($session['last_webhook_synced_at']);
     }
+
+    public function test_user_observer_broadcasts_avatar_and_phone_updates_to_downstream(): void
+    {
+        Http::fake([
+            'http://localhost:8001/api/sipintu/sync-user' => Http::response(['status' => 'success'], 200),
+        ]);
+
+        $this->student->update([
+            'avatar' => 'avatars/custom_photo.webp',
+            'phone' => '081299887766',
+        ]);
+
+        Http::assertSent(function (Request $request) {
+            $body = $request->data();
+
+            return isset($body['user']['avatar_url'])
+                && str_contains($body['user']['avatar_url'], 'avatars/custom_photo.webp')
+                && isset($body['user']['avatar'])
+                && str_contains($body['user']['avatar'], 'avatars/custom_photo.webp')
+                && ($body['user']['phone'] ?? null) === '081299887766'
+                && in_array('avatar', $body['changed_fields'] ?? [])
+                && in_array('phone', $body['changed_fields'] ?? []);
+        });
+    }
 }

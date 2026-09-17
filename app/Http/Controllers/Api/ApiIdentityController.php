@@ -3,11 +3,14 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Application;
 use App\Models\Jurusan;
+use App\Models\OAuthAccessToken;
 use App\Models\User;
 use App\Services\GatewayHealthValidationService;
 use App\Services\PasswordSyncService;
 use App\Services\SijunaApiService;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -34,6 +37,9 @@ class ApiIdentityController extends Controller
             'external_id' => $user->external_id,
             'name' => $user->name,
             'email' => $user->email,
+            'phone' => $user->phone,
+            'avatar_url' => $user->avatar_url,
+            'avatar' => $user->avatar_url,
             'role' => $primaryRole,
         ], $passwordSyncService->getPasswordPayload($user));
 
@@ -98,6 +104,8 @@ class ApiIdentityController extends Controller
             'username' => $user->username,
             'email' => $user->email,
             'phone' => $user->phone,
+            'avatar_url' => $user->avatar_url,
+            'avatar' => $user->avatar_url,
             'role' => $user->role,
             'user_type' => $user->role,
             'status' => $user->status,
@@ -211,6 +219,9 @@ class ApiIdentityController extends Controller
                         'nama' => $localUser->name,
                         'name' => $localUser->name,
                         'email' => $localUser->email,
+                        'phone' => $localUser->phone,
+                        'avatar_url' => $localUser->avatar_url,
+                        'avatar' => $localUser->avatar_url,
                         'role' => $localUser->role,
                         'status' => $localUser->status,
                     ];
@@ -245,11 +256,20 @@ class ApiIdentityController extends Controller
             return ($b['id'] ?? 0) <=> ($a['id'] ?? 0);
         });
 
+        $enrichedStudents = array_map(function ($s) {
+            $createdYear = ! empty($s['created_at']) ? (int) Carbon::parse($s['created_at'])->format('Y') : null;
+            $updatedYear = ! empty($s['updated_at']) ? (int) Carbon::parse($s['updated_at'])->format('Y') : null;
+            $s['tahun_masuk'] = $createdYear;
+            $s['tahun_lulus'] = $updatedYear;
+
+            return $s;
+        }, $students);
+
         return response()->json([
             'status' => 'success',
             'source' => 'Gateway Proxy (SIJUNA Service + Redis Cache)',
-            'count' => count($students),
-            'data' => $students,
+            'count' => count($enrichedStudents),
+            'data' => $enrichedStudents,
         ]);
     }
 
@@ -273,8 +293,14 @@ class ApiIdentityController extends Controller
                     'nama' => $localUser->name,
                     'name' => $localUser->name,
                     'email' => $localUser->email,
+                    'phone' => $localUser->phone,
+                    'avatar_url' => $localUser->avatar_url,
+                    'avatar' => $localUser->avatar_url,
                     'role' => $localUser->role,
                     'status' => $localUser->status,
+                    'classroom' => $localUser->classroom,
+                    'created_at' => $localUser->created_at?->toIso8601String(),
+                    'updated_at' => $localUser->updated_at?->toIso8601String(),
                 ];
             }
         }
@@ -285,6 +311,9 @@ class ApiIdentityController extends Controller
                 'message' => "Data siswa dengan ID/NIS {$externalId} tidak ditemukan.",
             ], 404);
         }
+
+        $student['tahun_masuk'] = ! empty($student['created_at']) ? (int) Carbon::parse($student['created_at'])->format('Y') : null;
+        $student['tahun_lulus'] = ! empty($student['updated_at']) ? (int) Carbon::parse($student['updated_at'])->format('Y') : null;
 
         return response()->json([
             'status' => 'success',
@@ -368,6 +397,9 @@ class ApiIdentityController extends Controller
                     'nama' => $localUser->name,
                     'name' => $localUser->name,
                     'email' => $localUser->email,
+                    'phone' => $localUser->phone,
+                    'avatar_url' => $localUser->avatar_url,
+                    'avatar' => $localUser->avatar_url,
                     'role' => $localUser->role,
                     'status' => $localUser->status,
                 ];
@@ -540,12 +572,23 @@ class ApiIdentityController extends Controller
     /**
      * Endpoint API untuk aplikasi downstream mengakses data alumni yang telah dikelompokkan sesuai jurusan
      */
-    public function alumni(Request $request): JsonResponse
+    public function alumni(Request $request, ?string $kode = null): JsonResponse
     {
+        // Catat koneksi jika downstream mengirimkan kredensial (Bearer token atau X-Client-ID)
+        $tokenString = $request->bearerToken();
+        $clientId = $request->header('X-Client-ID') ?: $request->input('client_id');
+        if ($tokenString) {
+            $token = OAuthAccessToken::where('token', $tokenString)->first();
+            $token?->application?->recordApiConnection($request->ip());
+        } elseif ($clientId) {
+            $app = Application::where('client_id', $clientId)->first();
+            $app?->recordApiConnection($request->ip());
+        }
+
         $query = User::where('role', 'alumni')->with('jurusan');
 
-        // Filter berdasarkan kode jurusan (PPL, TO, AKL, PM, MPLB)
-        $jurusanKode = $request->query('jurusan');
+        // Filter berdasarkan kode jurusan (PPL, TO, AKL, PM, MPLB) baik dari query atau route param
+        $jurusanKode = $kode ?: $request->query('jurusan');
         if ($jurusanKode && $jurusanKode !== 'all') {
             $normalized = Jurusan::extractKodeJurusan($jurusanKode) ?: strtoupper(trim($jurusanKode));
             $query->whereHas('jurusan', function ($q) use ($normalized) {
@@ -596,6 +639,8 @@ class ApiIdentityController extends Controller
                     'name' => $u->name,
                     'email' => $u->email,
                     'phone' => $u->phone,
+                    'avatar_url' => $u->avatar_url,
+                    'avatar' => $u->avatar_url,
                     'role' => $u->role,
                     'classroom' => $u->classroom,
                     'jurusan' => $u->jurusan ? [
@@ -612,6 +657,67 @@ class ApiIdentityController extends Controller
                     'status' => $u->status,
                 ];
             }),
+        ]);
+    }
+
+    /**
+     * Endpoint API untuk aplikasi downstream mengambil data detail satu alumni berdasarkan NIS, External ID, atau ID
+     */
+    public function alumniDetail(Request $request, string $identifier): JsonResponse
+    {
+        $tokenString = $request->bearerToken();
+        $clientId = $request->header('X-Client-ID') ?: $request->input('client_id');
+        if ($tokenString) {
+            $token = OAuthAccessToken::where('token', $tokenString)->first();
+            $token?->application?->recordApiConnection($request->ip());
+        } elseif ($clientId) {
+            $app = Application::where('client_id', $clientId)->first();
+            $app?->recordApiConnection($request->ip());
+        }
+
+        $alumni = User::where('role', 'alumni')
+            ->where(function ($q) use ($identifier) {
+                $q->where('external_id', $identifier)
+                    ->orWhere('username', $identifier)
+                    ->orWhere('id', $identifier)
+                    ->orWhere('email', $identifier);
+            })
+            ->with('jurusan')
+            ->first();
+
+        if (! $alumni) {
+            return response()->json([
+                'status' => 'error',
+                'message' => "Data alumni dengan NIS/ID '{$identifier}' tidak ditemukan.",
+            ], 404);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'id' => (string) $alumni->id,
+                'external_id' => $alumni->external_id,
+                'nis' => $alumni->nis,
+                'name' => $alumni->name,
+                'email' => $alumni->email,
+                'phone' => $alumni->phone,
+                'avatar_url' => $alumni->avatar_url,
+                'avatar' => $alumni->avatar_url,
+                'role' => $alumni->role,
+                'classroom' => $alumni->classroom,
+                'jurusan' => $alumni->jurusan ? [
+                    'id' => $alumni->jurusan->id,
+                    'kode_jurusan' => $alumni->jurusan->kode_jurusan,
+                    'nama_jurusan' => $alumni->jurusan->nama_jurusan,
+                ] : null,
+                'kode_jurusan' => $alumni->jurusan?->kode_jurusan,
+                'nama_jurusan' => $alumni->jurusan?->nama_jurusan,
+                'tahun_masuk' => $alumni->tahun_masuk,
+                'tahun_lulus' => $alumni->tahun_lulus,
+                'created_at' => $alumni->created_at?->toIso8601String(),
+                'updated_at' => $alumni->updated_at?->toIso8601String(),
+                'status' => $alumni->status,
+            ],
         ]);
     }
 }

@@ -33,6 +33,7 @@ class UserDataSyncService
             'phone' => $user->phone,
             'status' => $user->status,
             'avatar_url' => $user->avatar_url,
+            'avatar' => $user->avatar_url,
             'jurusan_id' => $user->jurusan_id,
             'kode_jurusan' => $user->jurusan?->kode_jurusan,
             'nama_jurusan' => $user->jurusan?->nama_jurusan,

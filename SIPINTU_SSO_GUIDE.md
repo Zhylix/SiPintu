@@ -317,6 +317,41 @@ Endpoint terlindungi OAuth Bearer Token / Client Credentials untuk mengambil dat
 }
 ```
 
+### 4. Detail Satu Alumni berdasarkan NIS / External ID (`GET /api/v1/alumni/{nis}`)
+Endpoint untuk mengambil data profil tunggal alumni secara langsung:
+- **URL**: `GET /api/v1/alumni/3924` (atau NIS/External ID alumni)
+- **Contoh Response JSON**:
+```json
+{
+  "status": "success",
+  "data": {
+    "id": "204",
+    "external_id": "3924",
+    "nis": "3924",
+    "name": "MUHAMMAD ZAKARIA AGUS SUPRIYATIN",
+    "email": "3924@smkn1bangsri.sch.id",
+    "phone": null,
+    "role": "alumni",
+    "classroom": "XII PPLG 1",
+    "jurusan": {
+      "id": 1,
+      "kode_jurusan": "PPLG",
+      "nama_jurusan": "Pengembangan Perangkat Lunak dan Gim"
+    },
+    "kode_jurusan": "PPLG",
+    "nama_jurusan": "Pengembangan Perangkat Lunak dan Gim",
+    "tahun_masuk": 2023,
+    "tahun_lulus": 2025,
+    "created_at": "2023-09-13T00:31:57.000000Z",
+    "updated_at": "2025-05-05T03:44:01.000000Z",
+    "status": "active"
+  }
+}
+```
+
+### 5. Data Alumni per Jurusan Langsung (`GET /api/v1/jurusans/{kode}/alumni`)
+- **URL**: `GET /api/v1/jurusans/PPLG/alumni?tahun_masuk=2023&tahun_lulus=2025`
+
 ---
 
 ## ❓ Troubleshoot & Solusi Masalah

@@ -622,12 +622,23 @@ curl -s -X GET "https://sipintu.smkn1bangsri.sch.id/api/v1/sijuna/students?nis=1
      -H "X-Client-Secret: sec_xxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 ```
 
-### 2. Uji Status Koneksi dari Terminal SiPintu
+### 2. Uji REST API Data Alumni & Tahun Lulus (cURL)
+```bash
+# Mengambil seluruh data alumni yang difilter per jurusan & tahun masuk / lulus:
+curl -s -X GET "https://sipintu.smkn1bangsri.sch.id/api/v1/alumni?jurusan=PPLG&tahun_masuk=2023&tahun_lulus=2025" \
+     -H "Accept: application/json"
+
+# Mengambil detail 1 alumni berdasarkan NIS:
+curl -s -X GET "https://sipintu.smkn1bangsri.sch.id/api/v1/alumni/3924" \
+     -H "Accept: application/json"
+```
+
+### 3. Uji Status Koneksi dari Terminal SiPintu
 ```bash
 php artisan sipintu:client-check --client-id=app_xxxxxxxxxxxx --secret=sec_xxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
-### 3. Uji Webhook Sinkronisasi Data Pengguna dari Terminal SiPintu
+### 4. Uji Webhook Sinkronisasi Data Pengguna dari Terminal SiPintu
 ```bash
 php artisan sipintu:sync-user "budi@smkn1bangsri.sch.id"
 ```

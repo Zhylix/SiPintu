@@ -54,12 +54,10 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        <!-- ========================================== -->
-        <!-- MENU NAVIGASI KIRI (SESUAI WIREFRAME USER) -->
-        <!-- ========================================== -->
+        <!-- MENU NAVIGASI KIRI -->
         <div class="lg:col-span-4 space-y-4">
             
-            <!-- Card Header User Profile Header (Clean Light Theme) -->
+            <!-- Card Header User Profile Header -->
             <div class="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm text-center relative overflow-hidden">
                 
                 <!-- [ FOTO ] Avatar Profile -->
@@ -194,9 +192,7 @@
             </div>
         </div>
 
-        <!-- ========================================== -->
         <!-- DETAIL PANEL KANAN (KONTEN AKTIF)          -->
-        <!-- ========================================== -->
         <div class="lg:col-span-8">
             
             <!-- SECTION 1: Nama Lengkap -->

@@ -602,5 +602,84 @@ class AlumniJurusanGroupingTest extends TestCase
         $response->assertSee('2023');
         $response->assertSee('2026');
     }
+
+    /**
+     * Test aplikasi downstream dapat mengakses daftar alumni secara publik tanpa token
+     */
+    public function test_downstream_apps_can_access_alumni_endpoints_publicly(): void
+    {
+        $ppl = Jurusan::where('kode_jurusan', 'PPLG')->first();
+
+        User::factory()->create([
+            'name' => 'Alumni Terbuka 1',
+            'email' => 'terbuka1@skansaba.sch.id',
+            'role' => 'alumni',
+            'classroom' => 'XII PPLG 1',
+            'jurusan_id' => $ppl->id,
+            'created_at' => '2023-09-13 00:31:57',
+            'updated_at' => '2025-05-05 03:44:01',
+        ]);
+
+        $response = $this->getJson(route('api.v1.alumni'));
+        $response->assertStatus(200);
+        $this->assertGreaterThanOrEqual(1, $response->json('meta.total'));
+    }
+
+    /**
+     * Test aplikasi downstream dapat mengambil detail alumni tunggal berdasarkan NIS
+     */
+    public function test_downstream_apps_can_query_single_alumni_detail_by_nis(): void
+    {
+        $ppl = Jurusan::where('kode_jurusan', 'PPLG')->first();
+
+        User::factory()->create([
+            'name' => 'MUHAMMAD ZAKARIA',
+            'email' => 'zakaria@skansaba.sch.id',
+            'external_id' => '3924',
+            'username' => '3924',
+            'role' => 'alumni',
+            'classroom' => 'XII PPLG 1',
+            'jurusan_id' => $ppl->id,
+            'created_at' => '2023-09-13 00:31:57',
+            'updated_at' => '2025-05-05 03:44:01',
+        ]);
+
+        $response = $this->getJson(route('api.v1.alumni_detail', ['identifier' => '3924']));
+        $response->assertStatus(200);
+        $response->assertJson([
+            'status' => 'success',
+            'data' => [
+                'nis' => '3924',
+                'name' => 'MUHAMMAD ZAKARIA',
+                'tahun_masuk' => 2023,
+                'tahun_lulus' => 2025,
+                'classroom' => 'XII PPLG 1',
+                'kode_jurusan' => 'PPLG',
+            ],
+        ]);
+    }
+
+    /**
+     * Test aplikasi downstream dapat mengambil alumni per jurusan via /jurusans/{kode}/alumni
+     */
+    public function test_downstream_apps_can_access_alumni_by_jurusan_route(): void
+    {
+        $ppl = Jurusan::where('kode_jurusan', 'PPLG')->first();
+
+        User::factory()->create([
+            'name' => 'Alumni PPL Jurusan Route',
+            'email' => 'pplroute@skansaba.sch.id',
+            'role' => 'alumni',
+            'classroom' => 'XII PPLG 1',
+            'jurusan_id' => $ppl->id,
+            'created_at' => '2023-09-13 00:31:57',
+            'updated_at' => '2025-05-05 03:44:01',
+        ]);
+
+        $response = $this->getJson(route('api.v1.jurusan_alumni', ['kode' => 'PPLG']));
+        $response->assertStatus(200);
+        $this->assertNotEmpty($response->json('data'));
+        $this->assertEquals('PPLG', $response->json('data.0.kode_jurusan'));
+    }
 }
 
