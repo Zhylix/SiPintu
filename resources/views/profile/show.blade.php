@@ -3,7 +3,7 @@
 @section('content')
 <div class="w-full space-y-6" x-data="{ 
     activeSection: '{{ old('active_section', session('active_section', 'nama_lengkap')) }}',
-    avatarModalOpen: false,
+    avatarModalOpen: {{ $errors->has('avatar') ? 'true' : 'false' }},
     avatarPreview: null,
     validSections: ['nama_lengkap', 'email', 'whatsapp', 'ganti_password', 'perangkat_login', 'riwayat_login', 'aplikasi_lain'],
     init() {
@@ -61,7 +61,7 @@
             <div class="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm text-center relative overflow-hidden">
                 
                 <!-- [ FOTO ] Avatar Profile -->
-                <div class="relative inline-block mx-auto mb-3 group">
+                <div @click="avatarModalOpen = true" class="relative inline-block mx-auto mb-3 group cursor-pointer" title="Klik untuk mengubah foto profil">
                     @if($user->avatar_url)
                         <img src="{{ $user->avatar_url }}" alt="{{ $user->name }}" loading="lazy" decoding="async" class="w-24 h-24 rounded-2xl object-cover ring-4 ring-emerald-500/10 shadow-sm transition-transform duration-300 group-hover:scale-105">
                     @else
@@ -94,6 +94,16 @@
                 <!-- GROUP 1: Informasi Pribadi -->
                 <div class="p-4 space-y-1">
                     <div class="px-3 py-1 text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">Informasi Pribadi</div>
+                    
+                    <button @click="avatarModalOpen = true" type="button" class="w-full px-3.5 py-2.5 rounded-xl text-xs flex items-center justify-between text-slate-700 hover:bg-slate-50 font-bold transition-all group">
+                        <div class="flex items-center space-x-3">
+                            <div class="p-1.5 rounded-lg bg-emerald-100 text-emerald-800 shrink-0">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                            </div>
+                            <span>Foto Profil</span>
+                        </div>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">Ubah</span>
+                    </button>
                     
                     <button @click="activeSection = 'nama_lengkap'" :class="activeSection === 'nama_lengkap' ? 'bg-emerald-50 text-emerald-900 font-black' : 'text-slate-700 hover:bg-slate-50 font-bold'" class="w-full px-3.5 py-2.5 rounded-xl text-xs flex items-center justify-between transition-all group">
                         <div class="flex items-center space-x-3">
@@ -589,6 +599,11 @@
                         <input type="file" name="avatar" accept="image/jpeg,image/png,image/jpg,image/webp" @change="handleFileChange($event)" required
                             class="w-full text-xs text-slate-600 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-extrabold file:bg-emerald-100 file:text-emerald-800 hover:file:bg-emerald-200 file:cursor-pointer transition-all">
                         <p class="text-[10px] text-emerald-700 mt-1.5 text-center font-semibold">Otomatis diompress & di-crop WebP (Super Ringan & Cepat)</p>
+                        @error('avatar')
+                            <div class="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold mt-2 text-center">
+                                {{ $message }}
+                            </div>
+                        @enderror
                     </div>
 
                     <div class="flex items-center gap-3 pt-2">

@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
@@ -445,11 +446,6 @@ class AuthController extends Controller
         $quality = 80;
 
         $filename = 'avatars/'.Str::random(40).'.webp';
-        $destinationPath = storage_path('app/public/'.$filename);
-
-        if (! file_exists(dirname($destinationPath))) {
-            mkdir(dirname($destinationPath), 0755, true);
-        }
 
         $sourceImagePath = $file->getRealPath();
         $imageInfo = @getimagesize($sourceImagePath);
@@ -496,10 +492,14 @@ class AuthController extends Controller
             $cropSize, $cropSize
         );
 
-        imagewebp($dstImage, $destinationPath, $quality);
+        ob_start();
+        imagewebp($dstImage, null, $quality);
+        $imageContents = ob_get_clean();
 
         imagedestroy($srcImage);
         imagedestroy($dstImage);
+
+        Storage::disk('public')->put($filename, $imageContents);
 
         return $filename;
     }
