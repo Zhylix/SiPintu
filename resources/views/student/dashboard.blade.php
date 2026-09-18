@@ -42,7 +42,7 @@
 
                     <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-600 font-medium w-full">
                         <div class="flex items-center space-x-1 shrink-0">
-                            <span class="text-slate-400">ID:</span>
+                            <span class="text-slate-400">NIS:</span>
                             <span class="font-mono text-emerald-800 font-bold">{{ auth()->user()->external_id ?? auth()->user()->username ?? '-' }}</span>
                         </div>
                         <span class="text-slate-300 shrink-0">•</span>

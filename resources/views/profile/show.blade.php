@@ -221,9 +221,6 @@
                     @csrf
                     @method('PUT')
                     <input type="hidden" name="active_section" value="nama_lengkap">
-                    <input type="hidden" name="email" value="{{ $user->email }}">
-                    <input type="hidden" name="phone" value="{{ $user->phone }}">
-                    <input type="hidden" name="username" value="{{ $user->username }}">
 
                     <div>
                         <label class="block text-xs font-extrabold text-slate-700 mb-2">Nama Lengkap Resmi <span class="text-rose-500">*</span></label>
@@ -282,9 +279,6 @@
                     @csrf
                     @method('PUT')
                     <input type="hidden" name="active_section" value="email">
-                    <input type="hidden" name="name" value="{{ $user->name }}">
-                    <input type="hidden" name="phone" value="{{ $user->phone }}">
-                    <input type="hidden" name="username" value="{{ $user->username }}">
 
                     <div>
                         <label class="block text-xs font-extrabold text-slate-700 mb-2">Alamat Email Terdaftar <span class="text-rose-500">*</span></label>
@@ -318,9 +312,6 @@
                     @csrf
                     @method('PUT')
                     <input type="hidden" name="active_section" value="whatsapp">
-                    <input type="hidden" name="name" value="{{ $user->name }}">
-                    <input type="hidden" name="email" value="{{ $user->email }}">
-                    <input type="hidden" name="username" value="{{ $user->username }}">
 
                     <div>
                         <label class="block text-xs font-extrabold text-slate-700 mb-2">Nomor Telepon / WhatsApp Active</label>

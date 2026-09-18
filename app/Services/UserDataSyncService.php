@@ -94,11 +94,30 @@ class UserDataSyncService
         $payload = $this->getUserPayload($user, $changes, $previous);
         $payloadJson = json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 
+        $currentSchemeAndHost = request()->getSchemeAndHttpHost();
+        $currentHost = parse_url($currentSchemeAndHost, PHP_URL_HOST);
+        $currentPort = parse_url($currentSchemeAndHost, PHP_URL_PORT) ?? (request()->isSecure() ? 443 : 80);
+
         foreach ($activeApps as $app) {
             $targetUrl = rtrim($app->base_url, '/').'/api/sipintu/sync-user';
             $fallbackUrl = rtrim($app->base_url, '/').'/api/sipintu/sync-password';
             $clientSecret = $app->client_secret ?? '';
             $signature = hash_hmac('sha256', $payloadJson, $clientSecret);
+
+            // Prevent self-deadlock when downstream app base_url points to this exact local server instance
+            $appHost = parse_url($app->base_url, PHP_URL_HOST);
+            $appPort = parse_url($app->base_url, PHP_URL_PORT) ?? (parse_url($app->base_url, PHP_URL_SCHEME) === 'https' ? 443 : 80);
+
+            if ($currentHost && $appHost && in_array($appHost, [$currentHost, 'localhost', '127.0.0.1'], true) && in_array($currentHost, ['localhost', '127.0.0.1'], true) && (int) $appPort === (int) $currentPort) {
+                $results[$app->id] = [
+                    'app_name' => $app->name,
+                    'client_id' => $app->client_id,
+                    'target_url' => $targetUrl,
+                    'status' => 'skipped',
+                    'message' => 'Skipped self-synchronization to prevent server deadlock.',
+                ];
+                continue;
+            }
 
             try {
                 $startTime = microtime(true);

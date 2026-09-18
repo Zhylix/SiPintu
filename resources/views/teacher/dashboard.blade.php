@@ -29,7 +29,7 @@
 
                     <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-600 font-medium w-full">
                         <div class="flex items-center space-x-1 shrink-0">
-                            <span class="text-slate-400">NIP / ID:</span>
+                            <span class="text-slate-400">NIP:</span>
                             <span class="font-mono text-emerald-800 font-bold">{{ auth()->user()->username ?? 'guru' }}</span>
                         </div>
                         <span class="text-slate-300 shrink-0">•</span>

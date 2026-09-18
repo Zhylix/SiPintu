@@ -362,17 +362,80 @@ class AuthController extends Controller
                 return $user->canAccessApplication($app);
             });
 
-        // 3. Fetch WhatsApp bot status
-        $waService = app(WhatsAppService::class);
-        $waStatus = $waService->getBotStatus();
-
-        return view('profile.show', compact('user', 'auditLogs', 'accessibleApps', 'waStatus'));
+        return view('profile.show', compact('user', 'auditLogs', 'accessibleApps'));
     }
 
     public function updateProfile(Request $request): RedirectResponse
     {
         $user = Auth::user();
+        $activeSection = $request->input('active_section');
 
+        // 1. WhatsApp Section Update
+        if ($activeSection === 'whatsapp') {
+            $request->validate([
+                'phone' => ['nullable', 'string', 'max:30'],
+                'wa_notify' => ['nullable', 'boolean'],
+            ]);
+
+            $cleanPhone = filled($request->phone) ? trim((string) $request->phone) : null;
+            $updateData = [
+                'phone' => $cleanPhone,
+            ];
+
+            if ($request->has('wa_notify')) {
+                $updateData['wa_notify'] = $request->boolean('wa_notify');
+            }
+
+            $user->update($updateData);
+
+            AuditLogger::log('update_profile_whatsapp', ['fields' => array_keys($updateData)], $user->id);
+
+            return back()
+                ->with('success', 'Pengaturan nomor WhatsApp berhasil diperbarui.')
+                ->with('active_section', 'whatsapp');
+        }
+
+        // 2. Email Section Update
+        if ($activeSection === 'email') {
+            $request->validate([
+                'email' => ['required', 'email', 'max:255', 'unique:users,email,'.$user->id],
+            ], [
+                'email.unique' => 'Email ini sudah digunakan oleh pengguna lain.',
+            ]);
+
+            $updateData = [
+                'email' => trim((string) $request->email),
+            ];
+
+            $user->update($updateData);
+
+            AuditLogger::log('update_profile_email', ['fields' => array_keys($updateData)], $user->id);
+
+            return back()
+                ->with('success', 'Alamat email berhasil diperbarui.')
+                ->with('active_section', 'email');
+        }
+
+        // 3. Nama Lengkap Section Update
+        if ($activeSection === 'nama_lengkap') {
+            $request->validate([
+                'name' => ['required', 'string', 'max:255'],
+            ]);
+
+            $updateData = [
+                'name' => trim((string) $request->name),
+            ];
+
+            $user->update($updateData);
+
+            AuditLogger::log('update_profile_name', ['fields' => array_keys($updateData)], $user->id);
+
+            return back()
+                ->with('success', 'Nama lengkap berhasil diperbarui.')
+                ->with('active_section', 'nama_lengkap');
+        }
+
+        // 4. Fallback for General / Full Profile Update
         if (! $request->filled('name')) {
             $request->merge(['name' => $user->name]);
         }
@@ -389,10 +452,10 @@ class AuthController extends Controller
         ]);
 
         $updateData = [
-            'name' => $request->name,
-            'email' => $request->email,
-            'username' => $request->username,
-            'phone' => $request->phone,
+            'name' => trim((string) $request->name),
+            'email' => trim((string) $request->email),
+            'username' => filled($request->username) ? trim((string) $request->username) : null,
+            'phone' => filled($request->phone) ? trim((string) $request->phone) : null,
         ];
 
         if ($request->has('wa_notify')) {
@@ -403,11 +466,9 @@ class AuthController extends Controller
 
         AuditLogger::log('update_profile', ['fields' => array_keys($updateData)], $user->id);
 
-        $activeSection = $request->input('active_section', 'nama_lengkap');
-
         return back()
             ->with('success', 'Informasi profil Anda berhasil diperbarui.')
-            ->with('active_section', $activeSection);
+            ->with('active_section', $activeSection ?? 'nama_lengkap');
     }
 
     public function updateAvatar(Request $request): RedirectResponse

@@ -1,4 +1,4 @@
-@extends('layouts.app', ['headerTitle' => 'Pengelompokan Alumni per Jurusan'])
+@extends('layouts.app', ['headerTitle' => 'Kelola Alumni Jurusan'])
 
 @section('content')
 <div class="space-y-6">
@@ -11,17 +11,17 @@
                 </span>
                 <span class="text-xs font-bold text-slate-500">SMKN 1 Bangsri</span>
             </div>
-            <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Pengelompokan Alumni per Jurusan</h1>
+            <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Kelola Alumni Jurusan</h1>
             <p class="text-xs sm:text-sm text-slate-500 font-medium mt-1">
-                Pengelompokan data alumni secara otomatis menggunakan regex berdasarkan kelas SIJUNA ke 5 konsentrasi keahlian resmi: <strong>PPLG, TO, AKL, PM, dan MPLB</strong>.
+                Pengelompokan data alumni secara otomatis berdasarkan kelas SIJUNA ke 5 konsentrasi keahlian resmi: <strong>PPLG, TO, AKL, PM, dan MPLB</strong>.
             </p>
         </div>
         <div class="flex items-center gap-3 shrink-0">
-            <form action="{{ route('admin.jurusan.resync') }}" method="POST" onsubmit="return confirm('Jalankan regex untuk mengelompokkan ulang seluruh alumni ke 5 jurusan resmi?')">
+            <form action="{{ route('admin.jurusan.resync') }}" method="POST" onsubmit="return confirm('Jalankan sinkronisasi untuk mengelompokkan ulang seluruh alumni ke 5 jurusan resmi?')">
                 @csrf
                 <button type="submit" class="px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 active:scale-95 text-white text-xs font-black rounded-xl shadow-md shadow-emerald-700/20 transition-all flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                    <span>Kelompokkan Ulang Regex</span>
+                    <span>Sinkronisasi</span>
                 </button>
             </form>
             <a href="{{ route('admin.users.index', ['role' => 'alumni']) }}" class="px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl border border-slate-200 transition-all flex items-center gap-1.5">
@@ -36,7 +36,7 @@
         <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-start gap-3 text-xs text-emerald-900 font-semibold shadow-xs">
             <svg class="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
             <div class="flex-1">
-                <span class="font-black text-emerald-950 block">Sinkronisasi Pengelompokan Berhasil</span>
+                <span class="font-black text-emerald-950 block">Sinkronisasi Pengelompokan Berhasil!</span>
                 <span>{{ session('success') }}</span>
             </div>
         </div>
