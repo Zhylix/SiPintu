@@ -3,7 +3,7 @@
 @section('content')
 <div class="bg-white border border-emerald-100 rounded-3xl p-8 shadow-2xl shadow-emerald-900/10">
     <div class="mb-6 text-center">
-        <h2 class="text-xl font-black text-emerald-950">Portal Login</h2>
+        <h2 class="text-xl font-black text-emerald-950">Login</h2>
         <p class="text-xs text-slate-600 font-semibold mt-1">Layanan Akses SMKN 1 Bangsri</p>
     </div>
 

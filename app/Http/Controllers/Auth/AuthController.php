@@ -510,6 +510,7 @@ class AuthController extends Controller
             'avatar.image' => 'Berkas harus berupa gambar.',
             'avatar.mimes' => 'Format foto harus JPEG, PNG, atau WEBP.',
             'avatar.max' => 'Ukuran berkas foto profil awal maksimal 5 MB.',
+            'avatar.uploaded' => 'Berkas foto profil gagal diunggah. Pastikan ukuran berkas tidak melebihi batas upload server (maksimal 5 MB).',
         ]);
 
         if ($user->avatar && ! filter_var($user->avatar, FILTER_VALIDATE_URL)) {

@@ -437,6 +437,33 @@ Gunakan implementasi cerdas dengan resolusi konflik (conflict resolution) beriku
     }
 ```
 
+#### Panduan Menampilkan Avatar di Downstream (Mencegah Double URL / Error 404)
+
+Avatar yang dikirim oleh SiPintu berupa **URL absolut** (`http(s)://.../storage/avatars/xxx.webp`).
+Jika aplikasi downstream langsung memanggil `Storage::disk('public')->url($user->avatar)` atau `asset('storage/' . $user->avatar)`, URL akan ter-prefix ganda (misal `http://downstream/storage/http://sipintu/...`) dan foto akan rusak/404.
+
+**Solusi Standar di Downstream:**
+Tambahkan accessor di `app/Models/User.php` aplikasi downstream:
+```php
+public function getAvatarUrlAttribute(): ?string
+{
+    if (empty($this->avatar)) {
+        return null;
+    }
+
+    // Jika sudah berupa URL lengkap dari SiPintu, gunakan langsung
+    if (filter_var($this->avatar, FILTER_VALIDATE_URL)) {
+        return $this->avatar;
+    }
+
+    return \Illuminate\Support\Facades\Storage::disk('public')->url($this->avatar);
+}
+```
+Lalu di Blade template downstream, selalu gunakan `$user->avatar_url`:
+```blade
+<img src="{{ $user->avatar_url }}" alt="{{ $user->name }}">
+```
+
 ### 4. Tabel Aturan Resolusi Konflik (Conflict Resolution Matrix)
 
 | Kondisi Data di Downstream | Status Perubahan Lokal | Kolom Utama (`email`, `role`, `status`, `password`) | Kolom Profil (`name`, `phone`, `classroom`, `avatar_url`) | Logika Penyimpanan & Timestamp |

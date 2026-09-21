@@ -5,6 +5,7 @@
     activeSection: '{{ old('active_section', session('active_section', 'nama_lengkap')) }}',
     avatarModalOpen: {{ $errors->has('avatar') ? 'true' : 'false' }},
     avatarPreview: null,
+    avatarError: null,
     validSections: ['nama_lengkap', 'email', 'whatsapp', 'ganti_password', 'perangkat_login', 'riwayat_login', 'aplikasi_lain'],
     init() {
         const serverSection = '{{ old('active_section', session('active_section', '')) }}';
@@ -43,12 +44,29 @@
         }
     },
     handleFileChange(event) {
+        this.avatarError = null;
         const file = event.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (e) => { this.avatarPreview = e.target.result; };
-            reader.readAsDataURL(file);
+        if (!file) return;
+
+        const validTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
+        if (!validTypes.includes(file.type)) {
+            this.avatarError = 'Format file tidak didukung. Pilih foto dengan format JPEG, PNG, atau WEBP.';
+            event.target.value = '';
+            this.avatarPreview = null;
+            return;
         }
+
+        if (file.size > 5 * 1024 * 1024) {
+            const sizeMb = (file.size / (1024 * 1024)).toFixed(2);
+            this.avatarError = `Ukuran foto (${sizeMb} MB) melebihi batas maksimal 5 MB. Silakan pilih foto lain.`;
+            event.target.value = '';
+            this.avatarPreview = null;
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => { this.avatarPreview = e.target.result; };
+        reader.readAsDataURL(file);
     }
 }">
 
@@ -589,7 +607,8 @@
                     <div>
                         <input type="file" name="avatar" accept="image/jpeg,image/png,image/jpg,image/webp" @change="handleFileChange($event)" required
                             class="w-full text-xs text-slate-600 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-extrabold file:bg-emerald-100 file:text-emerald-800 hover:file:bg-emerald-200 file:cursor-pointer transition-all">
-                        <p class="text-[10px] text-emerald-700 mt-1.5 text-center font-semibold">Otomatis diompress & di-crop WebP (Super Ringan & Cepat)</p>
+                        <p class="text-[10px] text-emerald-700 mt-1.5 text-center font-semibold">Maksimal 5 MB. Otomatis dikompres & di-crop WebP (Super Ringan & Cepat)</p>
+                        <div x-show="avatarError" x-text="avatarError" class="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold mt-2 text-center" style="display: none;"></div>
                         @error('avatar')
                             <div class="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold mt-2 text-center">
                                 {{ $message }}
@@ -599,7 +618,7 @@
 
                     <div class="flex items-center gap-3 pt-2">
                         <button type="submit" class="flex-1 px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-extrabold rounded-xl transition-all shadow-md">
-                            Unggah Foto Baru
+                            Unggah Foto
                         </button>
                         <button type="button" @click="avatarModalOpen = false" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all">
                             Batal
