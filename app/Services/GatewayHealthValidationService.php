@@ -16,7 +16,7 @@ class GatewayHealthValidationService
      */
     public function getDownstreamClientsSummary(): array
     {
-        $applications = Application::with('category')->get();
+        $applications = Application::all();
 
         $connected = 0;
         $disconnected = 0;

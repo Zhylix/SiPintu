@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\Admin\AdminAnalyticsController;
 use App\Http\Controllers\Admin\AdminAnnouncementController;
-use App\Http\Controllers\Admin\AdminApplicationCategoryController;
 use App\Http\Controllers\Admin\AdminApplicationController;
 use App\Http\Controllers\Admin\AdminAuditLogController;
 use App\Http\Controllers\Admin\AdminDashboardController;
@@ -158,9 +157,6 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     // Pengelompokan Alumni per Jurusan (PPL, TO, AKL, PM, MPLB)
     Route::get('/jurusan', [AdminJurusanController::class, 'index'])->name('jurusan.index');
     Route::post('/jurusan/resync', [AdminJurusanController::class, 'resync'])->name('jurusan.resync');
-
-    // Application Categories Management
-    Route::resource('categories', AdminApplicationCategoryController::class);
 
     // External Application Registry & OAuth Clients
     Route::resource('applications', AdminApplicationController::class);

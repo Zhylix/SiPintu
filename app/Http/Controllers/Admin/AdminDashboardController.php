@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Application;
-use App\Models\ApplicationCategory;
 use App\Models\AuditLog;
 use App\Models\OAuthAccessToken;
 use App\Models\SyncLog;
@@ -36,16 +35,10 @@ class AdminDashboardController extends Controller
         $latestSync = SyncLog::latest()->first();
 
         // Applications registered in Gateway for admin management view
-        $registeredApps = Application::with(['roles', 'category'])->get();
+        $registeredApps = Application::with(['roles'])->get();
 
         // Active applications for user catalog view
-        $applications = Application::with('category')
-            ->where('status', 'active')
-            ->get();
-
-        $categories = ApplicationCategory::where('is_active', true)
-            ->orderBy('display_order')
-            ->get();
+        $applications = Application::where('status', 'active')->get();
 
         $favoriteAppIds = $user ? $user->favoriteApplications()->pluck('applications.id')->toArray() : [];
         $favoriteApps = $applications->whereIn('id', $favoriteAppIds);
@@ -57,7 +50,6 @@ class AdminDashboardController extends Controller
             'latestSync',
             'registeredApps',
             'applications',
-            'categories',
             'favoriteAppIds',
             'favoriteApps'
         ));
@@ -67,16 +59,9 @@ class AdminDashboardController extends Controller
     {
         $user = Auth::user();
 
-        $applications = Application::with('category')
-            ->where('status', 'active')
-            ->get();
-
-        $categories = ApplicationCategory::where('is_active', true)
-            ->orderBy('display_order')
-            ->get();
-
+        $applications = Application::where('status', 'active')->get();
         $favoriteAppIds = $user ? $user->favoriteApplications()->pluck('applications.id')->toArray() : [];
 
-        return view('admin.apps', compact('user', 'applications', 'categories', 'favoriteAppIds'));
+        return view('admin.apps', compact('user', 'applications', 'favoriteAppIds'));
     }
 }

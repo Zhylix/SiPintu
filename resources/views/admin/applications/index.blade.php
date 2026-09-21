@@ -71,13 +71,6 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
-            <a href="{{ route('admin.categories.index') }}" class="px-3.5 py-2 bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-emerald-800 text-xs font-bold rounded-xl transition-all border border-slate-200 flex items-center space-x-2 flex-1 sm:flex-none justify-center shrink-0">
-                <svg class="w-4 h-4 text-emerald-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-                </svg>
-                <span class="whitespace-nowrap">Kelola Kategori</span>
-            </a>
-
             <a href="{{ route('admin.applications.create') }}" class="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-extrabold rounded-xl transition-all shadow-md shadow-emerald-700/20 flex items-center space-x-2 flex-1 sm:flex-none justify-center shrink-0 group">
                 <svg class="w-4 h-4 shrink-0 group-hover:rotate-90 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
@@ -227,14 +220,6 @@
 
             <!-- Filters Group -->
             <div class="flex flex-wrap sm:flex-nowrap items-center gap-2">
-                <!-- Category Filter -->
-                <select name="category_id" onchange="this.form.submit()" class="bg-slate-50 border border-slate-200 text-xs text-slate-900 font-semibold rounded-xl px-3 py-2.5 focus:outline-none focus:border-emerald-600 cursor-pointer shadow-2xs">
-                    <option value="all">Semua Kategori</option>
-                    @foreach($categories as $cat)
-                        <option value="{{ $cat->id }}" {{ request('category_id') == $cat->id ? 'selected' : '' }}>{{ $cat->name }}</option>
-                    @endforeach
-                </select>
-
                 <!-- Status Filter -->
                 <select name="status" onchange="this.form.submit()" class="bg-slate-50 border border-slate-200 text-xs text-slate-900 font-semibold rounded-xl px-3 py-2.5 focus:outline-none focus:border-emerald-600 cursor-pointer shadow-2xs">
                     <option value="all">Semua Status</option>
@@ -249,7 +234,7 @@
                     <span>Filter</span>
                 </button>
 
-                @if(request()->anyFilled(['search', 'category_id', 'status']))
+                @if(request()->anyFilled(['search', 'status']))
                     <a href="{{ route('admin.applications.index') }}" class="px-3.5 py-2.5 bg-slate-100 hover:bg-rose-50 hover:text-rose-700 text-slate-600 text-xs font-bold rounded-xl border border-slate-200 flex items-center justify-center shrink-0 transition-colors" title="Bersihkan Filter">
                         <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                         <span>Reset</span>

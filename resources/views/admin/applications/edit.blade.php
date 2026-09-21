@@ -14,7 +14,7 @@
         @csrf
         @method('PUT')
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
                 <label class="block text-xs font-bold text-slate-700 mb-1.5">Nama Aplikasi Eksternal</label>
                 <input type="text" name="name" value="{{ old('name', $application->name) }}" required
@@ -25,18 +25,6 @@
                 <label class="block text-xs font-bold text-slate-700 mb-1.5">Slug URL</label>
                 <input type="text" name="slug" value="{{ old('slug', $application->slug) }}" required
                     class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm font-semibold focus:bg-white focus:border-emerald-600 focus:outline-none transition-all">
-            </div>
-
-            <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1.5">Kategori Aplikasi</label>
-                <select name="category_id" class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm font-semibold focus:bg-white focus:border-emerald-600 focus:outline-none transition-all">
-                    <option value="">-- Tanpa Kategori --</option>
-                    @foreach($categories as $cat)
-                        <option value="{{ $cat->id }}" {{ old('category_id', $application->category_id) == $cat->id ? 'selected' : '' }}>
-                            {{ $cat->name }}
-                        </option>
-                    @endforeach
-                </select>
             </div>
         </div>
 

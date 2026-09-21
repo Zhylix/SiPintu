@@ -31,7 +31,7 @@ class UserApplicationFavoriteController extends Controller
                     'id' => $application->id,
                     'name' => $application->name,
                     'description' => $application->description ?? 'Aplikasi terintegrasi dengan Gateway SiPintu.',
-                    'category_name' => $application->category ? $application->category->name : 'Umum',
+                    'category_name' => 'Umum',
                     'favorite_toggle_url' => route('applications.favorite.toggle', $application),
                     'authorize_url' => route('oauth.authorize', [
                         'client_id' => $application->client_id,

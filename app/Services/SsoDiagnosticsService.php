@@ -17,7 +17,7 @@ class SsoDiagnosticsService
      */
     public function diagnose(Application $application, ?string $inputSecret = null, bool $persist = true): array
     {
-        $application->loadMissing('roles', 'category');
+        $application->loadMissing('roles');
 
         $checks = [];
         $issues = [];
@@ -191,7 +191,7 @@ class SsoDiagnosticsService
      */
     public function diagnoseAll(): array
     {
-        $applications = Application::with('roles', 'category')->get();
+        $applications = Application::with('roles')->get();
         $results = [];
 
         foreach ($applications as $app) {

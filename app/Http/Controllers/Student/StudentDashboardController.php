@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
 use App\Models\Application;
-use App\Models\ApplicationCategory;
 use Illuminate\Support\Facades\Auth;
 
 class StudentDashboardController extends Controller
@@ -15,21 +14,16 @@ class StudentDashboardController extends Controller
 
         $allowedRoles = $user->isAlumni() ? ['alumni', 'student', 'siswa'] : ['student', 'siswa'];
 
-        $applications = Application::with('category')
-            ->where('status', 'active')
+        $applications = Application::where('status', 'active')
             ->whereHas('roles', function ($query) use ($allowedRoles) {
                 $query->whereIn('name', $allowedRoles);
             })
             ->get();
 
-        $categories = ApplicationCategory::where('is_active', true)
-            ->orderBy('display_order')
-            ->get();
-
         $favoriteAppIds = $user->favoriteApplications()->pluck('applications.id')->toArray();
         $favoriteApps = $applications->whereIn('id', $favoriteAppIds);
 
-        return view('student.dashboard', compact('user', 'applications', 'categories', 'favoriteAppIds', 'favoriteApps'));
+        return view('student.dashboard', compact('user', 'applications', 'favoriteAppIds', 'favoriteApps'));
     }
 
     public function apps()
@@ -38,19 +32,14 @@ class StudentDashboardController extends Controller
 
         $allowedRoles = $user->isAlumni() ? ['alumni', 'student', 'siswa'] : ['student', 'siswa'];
 
-        $applications = Application::with('category')
-            ->where('status', 'active')
+        $applications = Application::where('status', 'active')
             ->whereHas('roles', function ($query) use ($allowedRoles) {
                 $query->whereIn('name', $allowedRoles);
             })
             ->get();
 
-        $categories = ApplicationCategory::where('is_active', true)
-            ->orderBy('display_order')
-            ->get();
-
         $favoriteAppIds = $user->favoriteApplications()->pluck('applications.id')->toArray();
 
-        return view('student.apps', compact('user', 'applications', 'categories', 'favoriteAppIds'));
+        return view('student.apps', compact('user', 'applications', 'favoriteAppIds'));
     }
 }

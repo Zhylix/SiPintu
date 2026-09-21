@@ -70,7 +70,6 @@ class AdminAnalyticsController extends Controller
         // 3. Top Most Accessed SSO Applications (calculated from OAuth tokens & Audit logs)
         $topApps = Cache::remember("analytics_top_apps_{$range}", 60, function () {
             return Application::withCount(['accessTokens'])
-                ->with('category')
                 ->orderBy('access_tokens_count', 'desc')
                 ->limit(6)
                 ->get()
@@ -78,7 +77,7 @@ class AdminAnalyticsController extends Controller
                     return [
                         'id' => $app->id,
                         'name' => $app->name,
-                        'category_name' => $app->category?->name ?? 'Umum',
+                        'category_name' => 'Aplikasi SSO',
                         'status' => $app->status,
                         'access_tokens_count' => (int) $app->access_tokens_count,
                     ];

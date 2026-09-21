@@ -1,13 +1,13 @@
 <div class="space-y-6" x-data="{ 
-    selectedCategory: 'all', 
+    selectedFilter: 'all', 
     searchQuery: '',
     favoriteIds: @js($favoriteAppIds),
     init() {
-        const storedCat = localStorage.getItem('sipintu_catalog_category');
-        if (storedCat) {
-            this.selectedCategory = storedCat;
+        const storedFilter = localStorage.getItem('sipintu_catalog_filter');
+        if (storedFilter) {
+            this.selectedFilter = storedFilter;
         }
-        this.$watch('selectedCategory', val => localStorage.setItem('sipintu_catalog_category', val));
+        this.$watch('selectedFilter', val => localStorage.setItem('sipintu_catalog_filter', val));
     },
     async toggleFavorite(appId, url) {
         try {
@@ -42,19 +42,19 @@ x-on:favorite-updated.window="
         favoriteIds = favoriteIds.filter(id => id !== $event.detail.appId);
     }
 ">
-    <!-- Search Bar & Category Filter Pills -->
+    <!-- Search Bar & Filter Pills -->
     <div class="flex flex-col lg:flex-row items-center justify-between gap-4 bg-white border border-slate-200 rounded-2xl p-4 shadow-sm text-left min-w-0 max-w-full">
-        <!-- Category Pills Navigation  -->
+        <!-- Pills Navigation  -->
         <div class="flex items-center justify-start space-x-2 overflow-x-auto pb-2 lg:pb-0 no-scrollbar max-w-full w-full min-w-0">
-            <button @click="selectedCategory = 'all'"
-                    :class="selectedCategory === 'all' ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20 font-extrabold' : 'bg-slate-100 text-slate-700 hover:text-emerald-700 hover:bg-emerald-50'"
+            <button @click="selectedFilter = 'all'"
+                    :class="selectedFilter === 'all' ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20 font-extrabold' : 'bg-slate-100 text-slate-700 hover:text-emerald-700 hover:bg-emerald-50'"
                     class="px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center justify-center space-x-1.5 border border-slate-200 shrink-0">
                 <span class="whitespace-nowrap">Semua Aplikasi</span>
                 <span class="px-1.5 py-0.5 rounded-md text-[10px] bg-white/30 font-mono whitespace-nowrap">{{ $applications->count() }}</span>
             </button>
 
-            <button @click="selectedCategory = 'favorites'"
-                    :class="selectedCategory === 'favorites' ? 'bg-amber-500 text-white shadow-md shadow-amber-500/20 font-extrabold' : 'bg-slate-100 hover:bg-amber-50'"
+            <button @click="selectedFilter = 'favorites'"
+                    :class="selectedFilter === 'favorites' ? 'bg-amber-500 text-white shadow-md shadow-amber-500/20 font-extrabold' : 'bg-slate-100 hover:bg-amber-50'"
                     class="px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center justify-center space-x-1.5 border border-slate-200 shrink-0">
                 <svg class="w-3.5 h-3.5 fill-current shrink-0" viewBox="0 0 20 20">
                     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
@@ -62,22 +62,6 @@ x-on:favorite-updated.window="
                 <span class="whitespace-nowrap">Favorit Saya</span>
                 <span class="px-1.5 py-0.5 rounded-md text-[10px] bg-white/40 font-mono whitespace-nowrap" x-text="favoriteIds.length"></span>
             </button>
-
-            @foreach($categories as $category)
-                @php
-                    $catId = is_object($category) ? ($category->id ?? null) : (is_array($category) ? ($category['id'] ?? null) : null);
-                    $catName = is_object($category) ? ($category->name ?? '') : (is_array($category) ? ($category['name'] ?? '') : '');
-                    $catAppCount = $catId ? $applications->where('category_id', $catId)->count() : 0;
-                @endphp
-                @if($catId && $catAppCount > 0)
-                    <button @click="selectedCategory = 'cat-{{ $catId }}'"
-                            :class="selectedCategory === 'cat-{{ $catId }}' ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20 font-extrabold' : 'bg-slate-100 text-slate-700 hover:text-emerald-700 hover:bg-emerald-50'"
-                            class="px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center justify-center space-x-1.5 border border-slate-200 shrink-0">
-                        <span class="whitespace-nowrap">{{ $catName }}</span>
-                        <span class="px-1.5 py-0.5 rounded-md text-[10px] bg-white/40 font-mono whitespace-nowrap">{{ $catAppCount }}</span>
-                    </button>
-                @endif
-            @endforeach
         </div>
 
         <!-- Search Input -->
@@ -93,10 +77,7 @@ x-on:favorite-updated.window="
     <!-- Applications Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 min-w-0 max-w-full">
         @forelse($applications as $app)
-            @php
-                $catId = $app->category_id ? 'cat-' . $app->category_id : 'unassigned';
-            @endphp
-            <div x-show="(selectedCategory === 'all' || (selectedCategory === 'favorites' && favoriteIds.includes({{ $app->id }})) || selectedCategory === '{{ $catId }}') && (searchQuery.trim() === '' || @js(strtolower($app->name)).includes(searchQuery.trim().toLowerCase()))"
+            <div x-show="(selectedFilter === 'all' || (selectedFilter === 'favorites' && favoriteIds.includes({{ $app->id }}))) && (searchQuery.trim() === '' || @js(strtolower($app->name)).includes(searchQuery.trim().toLowerCase()))"
                  x-transition
                  class="group relative bg-white border border-slate-200 hover:border-emerald-500 rounded-2xl p-4 sm:p-5 transition-all duration-300 hover:shadow-xl hover:shadow-emerald-900/5 flex flex-col justify-between space-y-4 text-left items-start overflow-hidden min-w-0 max-w-full">
                 
@@ -113,15 +94,6 @@ x-on:favorite-updated.window="
                             @endif
                             <div class="min-w-0 flex-1">
                                 <h4 class="text-sm font-black text-emerald-950 group-hover:text-emerald-700 transition-colors line-clamp-1 leading-snug break-words" title="{{ $app->name }}">{{ $app->name }}</h4>
-                                @if($app->category)
-                                    <span class="inline-flex items-center text-[10px] font-extrabold text-emerald-700 whitespace-nowrap">
-                                        {{ $app->category->name }}
-                                    </span>
-                                @else
-                                    <span class="inline-flex items-center text-[10px] font-semibold text-slate-500 whitespace-nowrap">
-                                        Umum
-                                    </span>
-                                @endif
                             </div>
                         </div>
 

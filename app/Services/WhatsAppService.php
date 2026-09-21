@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\WhatsAppLog;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
 class WhatsAppService
 {
@@ -136,8 +137,11 @@ class WhatsAppService
     public function dispatchAnnouncementToUsers(Announcement $announcement): array
     {
         $query = User::query()
-            ->where('status', 'active')
-            ->where('wa_notify', true);
+            ->where('status', 'active');
+
+        if (Schema::hasColumn('users', 'wa_notify')) {
+            $query->where('wa_notify', true);
+        }
 
         // Filter target users based on announcement target_role
         if ($announcement->target_role && $announcement->target_role !== 'all') {

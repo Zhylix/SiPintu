@@ -124,6 +124,11 @@ class AdminUserController extends Controller
         return redirect()->route('admin.users.index')->with('success', "Akun {$user->role} ({$user->name}) berhasil dibuat.");
     }
 
+    public function show(User $user): RedirectResponse
+    {
+        return redirect()->route('admin.users.edit', $user);
+    }
+
     public function edit(User $user)
     {
         $roles = Role::all();

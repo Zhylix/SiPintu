@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Teacher;
 
 use App\Http\Controllers\Controller;
 use App\Models\Application;
-use App\Models\ApplicationCategory;
 use Illuminate\Support\Facades\Auth;
 
 class TeacherDashboardController extends Controller
@@ -13,15 +12,10 @@ class TeacherDashboardController extends Controller
     {
         $user = Auth::user();
 
-        $applications = Application::with('category')
-            ->where('status', 'active')
+        $applications = Application::where('status', 'active')
             ->whereHas('roles', function ($query) {
                 $query->whereIn('name', ['teacher', 'guru']);
             })
-            ->get();
-
-        $categories = ApplicationCategory::where('is_active', true)
-            ->orderBy('display_order')
             ->get();
 
         $favoriteAppIds = $user->favoriteApplications()->pluck('applications.id')->toArray();
@@ -32,25 +26,20 @@ class TeacherDashboardController extends Controller
             'favorite_apps' => count($favoriteAppIds),
         ];
 
-        return view('teacher.dashboard', compact('user', 'applications', 'categories', 'favoriteAppIds', 'favoriteApps', 'stats'));
+        return view('teacher.dashboard', compact('user', 'applications', 'favoriteAppIds', 'favoriteApps', 'stats'));
     }
 
     public function apps()
     {
         $user = Auth::user();
-        $applications = Application::with('category')
-            ->where('status', 'active')
+        $applications = Application::where('status', 'active')
             ->whereHas('roles', function ($query) {
                 $query->whereIn('name', ['teacher', 'guru']);
             })
             ->get();
 
-        $categories = ApplicationCategory::where('is_active', true)
-            ->orderBy('display_order')
-            ->get();
-
         $favoriteAppIds = $user->favoriteApplications()->pluck('applications.id')->toArray();
 
-        return view('teacher.apps', compact('user', 'applications', 'categories', 'favoriteAppIds'));
+        return view('teacher.apps', compact('user', 'applications', 'favoriteAppIds'));
     }
 }

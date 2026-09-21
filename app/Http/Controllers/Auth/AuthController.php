@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -400,7 +401,7 @@ class AuthController extends Controller
                     'phone' => $cleanPhone,
                 ];
 
-                if ($request->has('wa_notify')) {
+                if (Schema::hasColumn('users', 'wa_notify') && $request->has('wa_notify')) {
                     $updateData['wa_notify'] = $request->boolean('wa_notify');
                 }
 
@@ -485,7 +486,7 @@ class AuthController extends Controller
             'phone' => filled($request->phone) ? trim((string) $request->phone) : null,
         ];
 
-        if ($request->has('wa_notify')) {
+        if (Schema::hasColumn('users', 'wa_notify') && $request->has('wa_notify')) {
             $updateData['wa_notify'] = $request->boolean('wa_notify');
         }
 
@@ -672,11 +673,13 @@ class AuthController extends Controller
     {
         $user = Auth::user();
 
-        $user->update([
-            'wa_notify' => $request->boolean('wa_notify'),
-        ]);
+        if (Schema::hasColumn('users', 'wa_notify')) {
+            $user->update([
+                'wa_notify' => $request->boolean('wa_notify'),
+            ]);
 
-        AuditLogger::log('update_notification_settings', ['wa_notify' => $user->wa_notify], $user->id);
+            AuditLogger::log('update_notification_settings', ['wa_notify' => $user->wa_notify], $user->id);
+        }
 
         return back()
             ->with('success', 'Pengaturan notifikasi WhatsApp berhasil disimpan.')

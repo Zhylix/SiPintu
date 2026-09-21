@@ -7,6 +7,7 @@ use App\Models\Announcement;
 use App\Models\AuditLog;
 use App\Models\WhatsAppLog;
 use App\Services\WhatsAppService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -93,6 +94,11 @@ class AdminAnnouncementController extends Controller
 
         return redirect()->route('admin.announcements.index')
             ->with('success', 'Pengumuman berhasil dipublikasikan!'.$waMsg);
+    }
+
+    public function show(Announcement $announcement): RedirectResponse
+    {
+        return redirect()->route('admin.announcements.edit', $announcement);
     }
 
     public function edit(Announcement $announcement)
