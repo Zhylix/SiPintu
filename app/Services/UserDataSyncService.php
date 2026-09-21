@@ -25,9 +25,11 @@ class UserDataSyncService
         $userData = [
             'id' => (string) $user->id,
             'external_id' => $user->external_id,
+            'username' => $user->username,
+            'nis' => $user->nis,
+            'nip' => $user->nip,
             'name' => $user->name,
             'email' => $user->email,
-            'username' => $user->username,
             'role' => $user->role,
             'classroom' => $user->classroom,
             'phone' => $user->phone,
@@ -38,7 +40,7 @@ class UserDataSyncService
             'kode_jurusan' => $user->jurusan?->kode_jurusan,
             'nama_jurusan' => $user->jurusan?->nama_jurusan,
             'tahun_masuk' => $user->tahun_masuk,
-            'tahun_lulus' => $user->tahun_lulus,
+            'tahun_lulus' => $user->isAlumni() ? $user->tahun_lulus : null,
             'created_at' => $user->created_at?->toIso8601String(),
             'updated_at' => $user->updated_at?->toIso8601String() ?? now()->toIso8601String(),
         ];
@@ -173,10 +175,14 @@ class UserDataSyncService
                         'updated_at' => now()->toIso8601String(),
                     ];
 
+                    $fallbackSignature = hash_hmac('sha256', (string) json_encode($passwordPayload), $clientSecret);
+
                     $response = Http::connectTimeout(2)->timeout(3)
                         ->withHeaders([
                             'X-SiPintu-Event' => 'user.password_updated',
                             'X-SiPintu-Client-ID' => $app->client_id,
+                            'X-SiPintu-Signature' => $fallbackSignature,
+                            'X-SiPintu-Timestamp' => (string) now()->timestamp,
                             'Accept' => 'application/json',
                         ])
                         ->post($fallbackUrl, $passwordPayload);

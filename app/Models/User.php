@@ -253,10 +253,14 @@ class User extends Authenticatable
     }
 
     /**
-     * Tahun Lulus (dihitung dari tahun pembaruan status kelulusan / updated_at)
+     * Tahun Lulus (dihitung dari tahun pembaruan status kelulusan / updated_at hanya jika berstatus alumni)
      */
     public function getTahunLulusAttribute(): ?int
     {
+        if (! $this->isAlumni()) {
+            return null;
+        }
+
         return $this->updated_at ? (int) $this->updated_at->format('Y') : null;
     }
 
@@ -273,6 +277,10 @@ class User extends Authenticatable
      */
     public function getTahunLulusTanggalAttribute(): ?string
     {
+        if (! $this->isAlumni()) {
+            return null;
+        }
+
         return $this->updated_at ? $this->updated_at->translatedFormat('d M Y') : null;
     }
 }

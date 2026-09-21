@@ -86,7 +86,24 @@ class OAuthController extends Controller
 
         $user = Auth::user();
 
-        // 4. Check Application Access Role Permission
+        // 4. Verify Active Account Status
+        if ($user->status !== 'active') {
+            AuditLogger::log('sso_access_denied_inactive', [
+                'application_id' => $application->id,
+                'app_name' => $application->name,
+                'user_id' => $user->id,
+                'status' => $user->status,
+                'via_sso' => true,
+                'is_sso_failure' => true,
+            ], $user->id);
+
+            return response()->view('oauth.error', [
+                'title' => 'Akun Dinonaktifkan atau Ditangguhkan',
+                'message' => 'Akun Anda sedang dinonaktifkan atau ditangguhkan. Silakan hubungi administrator sekolah untuk mengaktifkan kembali akun Anda.',
+            ], 403);
+        }
+
+        // 5. Check Application Access Role Permission
         if (! $user->canAccessApplication($application)) {
             AuditLogger::log('sso_access_denied', [
                 'application_id' => $application->id,
@@ -188,6 +205,22 @@ class OAuthController extends Controller
             $authCode->update(['revoked' => true]);
 
             $user = $authCode->user;
+
+            if ($user->status !== 'active') {
+                AuditLogger::log('token_exchange_inactive_user', [
+                    'client_id' => $clientId,
+                    'user_id' => $user->id,
+                    'status' => $user->status,
+                    'via_sso' => true,
+                    'is_sso_failure' => true,
+                ], $user->id);
+
+                return response()->json([
+                    'error' => 'invalid_grant',
+                    'error_description' => 'Akun pengguna sedang dinonaktifkan atau ditangguhkan.',
+                ], 403);
+            }
+
             $accessTokenStr = Str::random(80);
             $refreshTokenStr = Str::random(80);
             $accessTokenId = (string) Str::uuid();
@@ -245,6 +278,14 @@ class OAuthController extends Controller
             $refreshToken->accessToken->update(['revoked' => true]);
 
             $user = $refreshToken->accessToken->user;
+
+            if ($user->status !== 'active') {
+                return response()->json([
+                    'error' => 'invalid_grant',
+                    'error_description' => 'Akun pengguna sedang dinonaktifkan atau ditangguhkan.',
+                ], 403);
+            }
+
             $newAccessTokenStr = Str::random(80);
             $newRefreshTokenStr = Str::random(80);
             $newAccessTokenId = (string) Str::uuid();
@@ -391,7 +432,11 @@ class OAuthController extends Controller
             'exp' => time() + 86400,
             'name' => $user->name,
             'email' => $user->email,
+            'username' => $user->username,
+            'nis' => $user->nis,
+            'nip' => $user->nip,
             'role' => $primaryRole,
+            'status' => $user->status,
             'phone' => $user->phone,
             'phone_number' => $user->phone,
             'avatar_url' => $user->avatar_url,
@@ -401,6 +446,8 @@ class OAuthController extends Controller
             'jurusan_id' => $user->jurusan_id,
             'kode_jurusan' => $user->jurusan?->kode_jurusan,
             'nama_jurusan' => $user->jurusan?->nama_jurusan,
+            'tahun_masuk' => $user->tahun_masuk,
+            'tahun_lulus' => $user->isAlumni() ? $user->tahun_lulus : null,
         ], $passwordSync));
 
         $signatureKey = config('app.key', 'secret_gateway_key');

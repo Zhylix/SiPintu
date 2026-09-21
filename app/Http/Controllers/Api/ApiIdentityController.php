@@ -35,40 +35,31 @@ class ApiIdentityController extends Controller
         $response = array_merge([
             'id' => (string) $user->id,
             'external_id' => $user->external_id,
+            'username' => $user->username,
+            'nis' => $user->nis,
+            'nip' => $user->nip,
             'name' => $user->name,
             'email' => $user->email,
             'phone' => $user->phone,
             'avatar_url' => $user->avatar_url,
             'avatar' => $user->avatar_url,
             'role' => $primaryRole,
-        ], $passwordSyncService->getPasswordPayload($user));
-
-        if ($user->classroom) {
-            $response['classroom'] = $user->classroom;
-        }
-
-        if ($user->jurusan) {
-            $response['jurusan_id'] = $user->jurusan->id;
-            $response['kode_jurusan'] = $user->jurusan->kode_jurusan;
-            $response['nama_jurusan'] = $user->jurusan->nama_jurusan;
-            $response['jurusan'] = [
+            'user_type' => $user->role,
+            'status' => $user->status,
+            'classroom' => $user->classroom,
+            'jurusan_id' => $user->jurusan_id,
+            'kode_jurusan' => $user->jurusan?->kode_jurusan,
+            'nama_jurusan' => $user->jurusan?->nama_jurusan,
+            'jurusan' => $user->jurusan ? [
                 'id' => $user->jurusan->id,
                 'kode_jurusan' => $user->jurusan->kode_jurusan,
                 'nama_jurusan' => $user->jurusan->nama_jurusan,
-            ];
-        }
-
-        if ($user->phone) {
-            $response['phone'] = $user->phone;
-        }
-
-        if ($user->isAlumni() || $user->role === 'alumni') {
-            $response['tahun_masuk'] = $user->tahun_masuk;
-            $response['tahun_lulus'] = $user->tahun_lulus;
-        }
-
-        $response['created_at'] = $user->created_at?->toIso8601String();
-        $response['updated_at'] = $user->updated_at?->toIso8601String();
+            ] : null,
+            'tahun_masuk' => $user->tahun_masuk,
+            'tahun_lulus' => $user->isAlumni() ? $user->tahun_lulus : null,
+            'created_at' => $user->created_at?->toIso8601String(),
+            'updated_at' => $user->updated_at?->toIso8601String(),
+        ], $passwordSyncService->getPasswordPayload($user));
 
         return response()->json($response);
     }
@@ -92,7 +83,7 @@ class ApiIdentityController extends Controller
         if ($user->external_id || $user->email) {
             if ($user->isTeacher()) {
                 $sijunaData = $sijunaService->getTeacherByExternalId($user->external_id ?: $user->email);
-            } else {
+            } elseif ($user->isStudent() || $user->isAlumni()) {
                 $sijunaData = $sijunaService->getStudentByExternalId($user->external_id ?: $user->username ?: $user->email);
             }
         }
@@ -100,8 +91,10 @@ class ApiIdentityController extends Controller
         return response()->json(array_merge([
             'id' => (string) $user->id,
             'external_id' => $user->external_id,
-            'name' => $user->name,
             'username' => $user->username,
+            'nis' => $user->nis,
+            'nip' => $user->nip,
+            'name' => $user->name,
             'email' => $user->email,
             'phone' => $user->phone,
             'avatar_url' => $user->avatar_url,
@@ -120,7 +113,7 @@ class ApiIdentityController extends Controller
                 'deskripsi' => $user->jurusan->deskripsi,
             ] : null,
             'tahun_masuk' => $user->tahun_masuk,
-            'tahun_lulus' => $user->tahun_lulus,
+            'tahun_lulus' => $user->isAlumni() ? $user->tahun_lulus : null,
             'roles' => $user->roles->pluck('name'),
             'sijuna_data' => $sijunaData,
             'accessed_via_app' => $app ? [

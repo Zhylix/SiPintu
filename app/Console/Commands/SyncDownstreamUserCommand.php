@@ -68,11 +68,12 @@ class SyncDownstreamUserCommand extends Command
             $status = $detail['status'] ?? 'unknown';
             $statusBadge = match ($status) {
                 'synced' => '<info>SYNCED (200)</info>',
+                'skipped' => '<comment>SKIPPED</comment>',
                 'failed' => '<comment>FAILED ('.($detail['http_code'] ?? 'ERR').')</comment>',
                 default => '<error>ERROR</error>',
             };
 
-            if ($status !== 'synced') {
+            if (! in_array($status, ['synced', 'skipped'], true)) {
                 $hasError = true;
             }
 

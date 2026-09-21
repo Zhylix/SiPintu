@@ -30,6 +30,37 @@ class UserObserver
     ];
 
     /**
+     * Handle the User "created" event to auto-provision new users in downstream apps.
+     */
+    public function created(User $user): void
+    {
+        if (! static::$syncEnabled) {
+            return;
+        }
+
+        $attributes = array_keys(array_filter($user->getAttributes(), fn ($val) => ! is_null($val)));
+        $intersect = array_values(array_intersect($this->syncableAttributes, $attributes));
+
+        if (empty($intersect)) {
+            $intersect = ['name', 'email', 'role'];
+        }
+
+        $syncAction = function () use ($user, $intersect) {
+            try {
+                app(UserDataSyncService::class)->broadcastUserUpdate($user, $intersect, [], force: true);
+            } catch (\Throwable $e) {
+                Log::error("[UserObserver] Downstream sync error for new user ID {$user->id}: ".$e->getMessage());
+            }
+        };
+
+        if (app()->runningInConsole()) {
+            $syncAction();
+        } else {
+            dispatch($syncAction)->afterResponse();
+        }
+    }
+
+    /**
      * Handle the User "updated" event.
      */
     public function updated(User $user): void

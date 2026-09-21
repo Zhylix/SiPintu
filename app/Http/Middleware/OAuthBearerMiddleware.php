@@ -24,6 +24,13 @@ class OAuthBearerMiddleware
                 ->first();
 
             if ($accessToken && $accessToken->user) {
+                if ($accessToken->user->status !== 'active') {
+                    return response()->json([
+                        'error' => 'account_inactive',
+                        'message' => 'Akun pengguna sedang dinonaktifkan atau ditangguhkan.',
+                    ], 403);
+                }
+
                 $request->attributes->set('oauth_user', $accessToken->user);
                 $request->attributes->set('oauth_token', $accessToken);
                 $request->attributes->set('oauth_application', $accessToken->application);
