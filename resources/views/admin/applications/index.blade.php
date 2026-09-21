@@ -7,14 +7,45 @@
     copiedKey: null,
     detailModalOpen: false,
     selectedApp: null,
-    copyToClipboard(text, key) {
+    copyToClipboard(text, key, label = 'Data') {
         if (!text) return;
-        navigator.clipboard.writeText(text).then(() => {
+        const triggerFeedback = () => {
             this.copiedKey = key;
+            if (window.toast) {
+                window.toast.success(`${label} berhasil disalin ke clipboard!`, 'Tersalin');
+            }
             setTimeout(() => {
                 if (this.copiedKey === key) this.copiedKey = null;
             }, 2000);
-        });
+        };
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(triggerFeedback).catch(() => {
+                try {
+                    const ta = document.createElement('textarea');
+                    ta.value = text;
+                    ta.style.position = 'fixed';
+                    ta.style.opacity = '0';
+                    document.body.appendChild(ta);
+                    ta.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(ta);
+                } catch(e) {}
+                triggerFeedback();
+            });
+        } else {
+            try {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                ta.style.position = 'fixed';
+                ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+            } catch(e) {}
+            triggerFeedback();
+        }
     },
     openDetail(appData) {
         this.selectedApp = appData;
@@ -34,12 +65,9 @@
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
             <div class="flex items-center space-x-2">
-                <h2 class="text-xl font-black text-emerald-950 tracking-tight">Registry Aplikasi Eksternal & OAuth Clients</h2>
-                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-emerald-100 text-emerald-800 border border-emerald-300">
-                    SSO Gateway
-                </span>
+                <h2 class="text-xl font-black text-emerald-950 tracking-tight">Registrasi Aplikasi</h2>
             </div>
-            <p class="text-xs text-slate-600 font-medium mt-1">Daftarkan aplikasi downstream, kelola kredensial OAuth 2.0, serta pantau status koneksi dan hak akses role.</p>
+            <p class="text-xs text-slate-600 font-medium mt-1">Daftarkan aplikasi, kelola kredensial dan pantau status koneksi serta hak akses role.</p>
         </div>
 
         <div class="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
@@ -59,7 +87,7 @@
         </div>
     </div>
 
-    <!-- Alert: Client Secret Baru Terbuat (One-time Display) -->
+    <!-- Alert: Client Secret Baru Terbuat -->
     @if(session('new_client_secret'))
         <div class="p-5 rounded-2xl bg-gradient-to-r from-amber-50 to-amber-100/60 border-2 border-amber-300 text-slate-800 space-y-3 max-w-full overflow-hidden shadow-sm">
             <div class="flex items-center space-x-3 text-amber-900 font-black text-sm">
@@ -73,7 +101,7 @@
             </p>
             <div class="p-3 bg-white rounded-xl border border-amber-300 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 font-mono text-xs sm:text-sm text-emerald-900 font-bold max-w-full overflow-hidden shadow-inner">
                 <span class="break-all font-mono select-all">{{ session('new_client_secret') }}</span>
-                <button type="button" @click="copyToClipboard('{{ session('new_client_secret') }}', 'new_secret')" 
+                <button type="button" @click="copyToClipboard('{{ session('new_client_secret') }}', 'new_secret', 'Client Secret')" 
                         class="text-xs font-sans px-3.5 py-1.5 rounded-lg font-extrabold shrink-0 self-end sm:self-auto transition-all inline-flex items-center gap-1.5"
                         :class="copiedKey === 'new_secret' ? 'bg-emerald-600 text-white border border-emerald-700 shadow-xs' : 'bg-emerald-100 hover:bg-emerald-200 text-emerald-900 border border-emerald-300'">
                     <template x-if="copiedKey === 'new_secret'">
@@ -369,7 +397,7 @@
                                 <span class="text-[11px] font-bold text-slate-500 font-sans">Client ID:</span>
                                 <div class="flex items-center space-x-1.5 min-w-0">
                                     <code class="font-bold text-emerald-900 truncate max-w-[150px] select-all bg-white px-1.5 py-0.5 rounded border border-slate-200" title="{{ $app->client_id }}">{{ $app->client_id }}</code>
-                                    <button type="button" @click="copyToClipboard('{{ $app->client_id }}', 'client_{{ $app->id }}')" 
+                                    <button type="button" @click="copyToClipboard('{{ $app->client_id }}', 'client_{{ $app->id }}', 'Client ID')" 
                                             class="p-1 text-slate-400 hover:text-emerald-700 rounded hover:bg-white transition-colors" title="Salin Client ID">
                                         <template x-if="copiedKey === 'client_{{ $app->id }}'">
                                             <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
@@ -389,7 +417,7 @@
                                         <span class="truncate">{{ $app->base_url }}</span>
                                         <svg class="w-3 h-3 text-slate-400 group-hover/link:text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
                                     </a>
-                                    <button type="button" @click="copyToClipboard('{{ $app->base_url }}', 'url_{{ $app->id }}')" 
+                                    <button type="button" @click="copyToClipboard('{{ $app->base_url }}', 'url_{{ $app->id }}', 'Base URL')" 
                                             class="p-1 text-slate-400 hover:text-emerald-700 rounded hover:bg-white transition-colors" title="Salin Base URL">
                                         <template x-if="copiedKey === 'url_{{ $app->id }}'">
                                             <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
@@ -527,11 +555,6 @@
             @endforelse
         </div>
     </div>
-
-    <!-- ========================================================================= -->
-    <!-- 2. TAMPILAN TABEL RAPI & KOMPAK (COMPACT TABLE VIEW) -->
-    <!-- Solusi: Sticky nama aplikasi di kiri, role horizontal, aksi kompak -->
-    <!-- ========================================================================= -->
     <div x-show="viewMode === 'table'" x-transition class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-2xs min-w-0 max-w-full">
         <div class="overflow-x-auto w-full max-w-full">
             <table class="w-full text-left text-xs min-w-[850px] border-collapse">
@@ -579,7 +602,7 @@
                             ];
                         @endphp
                         <tr class="hover:bg-emerald-50/40 transition-colors {{ $isConnected ? '' : 'bg-rose-50/20' }}" x-data="{ tableMenuOpen: false }">
-                            <!-- STICKY APPLICATION NAME COLUMN (Tidak akan hilang saat digeser horizontal!) -->
+                            <!-- APPLICATION NAME COLUMN -->
                             <td class="px-4 py-3.5 whitespace-nowrap sticky left-0 bg-white z-10 shadow-xs border-r border-slate-100">
                                 <div class="flex items-center space-x-3">
                                     @if($app->logo_url)
@@ -619,7 +642,7 @@
                                     <span class="font-mono font-bold text-emerald-900 text-[11px] select-all truncate max-w-[130px] bg-slate-50 px-1.5 py-0.5 rounded border border-slate-200" title="{{ $app->client_id }}">
                                         {{ $app->client_id }}
                                     </span>
-                                    <button type="button" @click="copyToClipboard('{{ $app->client_id }}', 't_client_{{ $app->id }}')" 
+                                    <button type="button" @click="copyToClipboard('{{ $app->client_id }}', 't_client_{{ $app->id }}', 'Client ID')" 
                                             class="p-1 text-slate-400 hover:text-emerald-700 rounded hover:bg-slate-100 transition-colors" title="Salin Client ID">
                                         <template x-if="copiedKey === 't_client_{{ $app->id }}'">
                                             <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
@@ -860,7 +883,7 @@
                             <span class="text-slate-500 font-sans font-bold text-[11px]">Client ID:</span>
                             <div class="flex items-center space-x-2">
                                 <span class="font-bold text-emerald-900 select-all" x-text="selectedApp ? selectedApp.client_id : ''"></span>
-                                <button type="button" @click="copyToClipboard(selectedApp.client_id, 'modal_client')" class="text-slate-400 hover:text-emerald-700">
+                                <button type="button" @click="copyToClipboard(selectedApp.client_id, 'modal_client', 'Client ID')" class="text-slate-400 hover:text-emerald-700">
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
                                 </button>
                             </div>

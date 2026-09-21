@@ -50,10 +50,18 @@ class UserObserver
             $previous[$field] = $user->getOriginal($field);
         }
 
-        try {
-            app(UserDataSyncService::class)->broadcastUserUpdate($user, $intersect, $previous);
-        } catch (\Throwable $e) {
-            Log::error("[UserObserver] Downstream sync error for user ID {$user->id}: ".$e->getMessage());
+        $syncAction = function () use ($user, $intersect, $previous) {
+            try {
+                app(UserDataSyncService::class)->broadcastUserUpdate($user, $intersect, $previous);
+            } catch (\Throwable $e) {
+                Log::error("[UserObserver] Downstream sync error for user ID {$user->id}: ".$e->getMessage());
+            }
+        };
+
+        if (app()->runningInConsole()) {
+            $syncAction();
+        } else {
+            dispatch($syncAction)->afterResponse();
         }
     }
 }

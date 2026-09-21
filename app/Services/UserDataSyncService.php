@@ -97,18 +97,40 @@ class UserDataSyncService
         $currentSchemeAndHost = request()->getSchemeAndHttpHost();
         $currentHost = parse_url($currentSchemeAndHost, PHP_URL_HOST);
         $currentPort = parse_url($currentSchemeAndHost, PHP_URL_PORT) ?? (request()->isSecure() ? 443 : 80);
+        $loopbackHosts = array_filter(array_unique([
+            'localhost',
+            '127.0.0.1',
+            '::1',
+            '0.0.0.0',
+            $currentHost,
+        ]));
 
         foreach ($activeApps as $app) {
-            $targetUrl = rtrim($app->base_url, '/').'/api/sipintu/sync-user';
-            $fallbackUrl = rtrim($app->base_url, '/').'/api/sipintu/sync-password';
+            $baseUrl = trim((string) ($app->base_url ?? ''));
+            if (empty($baseUrl) || ! filter_var($baseUrl, FILTER_VALIDATE_URL)) {
+                $results[$app->id] = [
+                    'app_name' => $app->name,
+                    'client_id' => $app->client_id,
+                    'target_url' => $baseUrl,
+                    'status' => 'skipped',
+                    'message' => 'Skipped downstream synchronization due to empty or invalid base_url.',
+                ];
+                continue;
+            }
+
+            $targetUrl = rtrim($baseUrl, '/').'/api/sipintu/sync-user';
+            $fallbackUrl = rtrim($baseUrl, '/').'/api/sipintu/sync-password';
             $clientSecret = $app->client_secret ?? '';
             $signature = hash_hmac('sha256', $payloadJson, $clientSecret);
 
             // Prevent self-deadlock when downstream app base_url points to this exact local server instance
-            $appHost = parse_url($app->base_url, PHP_URL_HOST);
-            $appPort = parse_url($app->base_url, PHP_URL_PORT) ?? (parse_url($app->base_url, PHP_URL_SCHEME) === 'https' ? 443 : 80);
+            $appHost = parse_url($baseUrl, PHP_URL_HOST);
+            $appPort = parse_url($baseUrl, PHP_URL_PORT) ?? (parse_url($baseUrl, PHP_URL_SCHEME) === 'https' ? 443 : 80);
 
-            if ($currentHost && $appHost && in_array($appHost, [$currentHost, 'localhost', '127.0.0.1'], true) && in_array($currentHost, ['localhost', '127.0.0.1'], true) && (int) $appPort === (int) $currentPort) {
+            $isSelfRequest = ($appHost && in_array($appHost, $loopbackHosts, true) && (int) $appPort === (int) $currentPort)
+                || ($currentHost && $appHost && $appHost === $currentHost && (int) $appPort === (int) $currentPort);
+
+            if ($isSelfRequest) {
                 $results[$app->id] = [
                     'app_name' => $app->name,
                     'client_id' => $app->client_id,
@@ -123,7 +145,7 @@ class UserDataSyncService
                 $startTime = microtime(true);
 
                 // 1. Attempt sending to modern /api/sipintu/sync-user webhook
-                $response = Http::timeout(4)
+                $response = Http::connectTimeout(2)->timeout(3)
                     ->withHeaders([
                         'X-SiPintu-Event' => 'user.updated',
                         'X-SiPintu-Client-ID' => $app->client_id,
@@ -151,7 +173,7 @@ class UserDataSyncService
                         'updated_at' => now()->toIso8601String(),
                     ];
 
-                    $response = Http::timeout(4)
+                    $response = Http::connectTimeout(2)->timeout(3)
                         ->withHeaders([
                             'X-SiPintu-Event' => 'user.password_updated',
                             'X-SiPintu-Client-ID' => $app->client_id,

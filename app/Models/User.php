@@ -276,4 +276,3 @@ class User extends Authenticatable
         return $this->updated_at ? $this->updated_at->translatedFormat('d M Y') : null;
     }
 }
-

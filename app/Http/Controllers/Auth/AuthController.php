@@ -16,6 +16,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -348,14 +349,17 @@ class AuthController extends Controller
     public function showProfile(Request $request)
     {
         $user = Auth::user();
+        if (! $user) {
+            return redirect()->route('login');
+        }
 
-        // 1. Fetch user's recent audit logs (security activity history)
+        // 1. Fetch recent audit logs for security transparency
         $auditLogs = AuditLog::where('user_id', $user->id)
             ->latest()
-            ->take(10)
+            ->take(8)
             ->get();
 
-        // 2. Fetch accessible applications for user
+        // 2. Filter accessible apps for Single Sign-On launcher
         $accessibleApps = Application::where('status', 'active')
             ->get()
             ->filter(function ($app) use ($user) {
@@ -368,31 +372,54 @@ class AuthController extends Controller
     public function updateProfile(Request $request): RedirectResponse
     {
         $user = Auth::user();
+        if (! $user) {
+            return redirect()->route('login');
+        }
+
         $activeSection = $request->input('active_section');
 
         // 1. WhatsApp Section Update
         if ($activeSection === 'whatsapp') {
             $request->validate([
-                'phone' => ['nullable', 'string', 'max:30'],
+                'phone' => ['nullable', 'string', 'max:30', 'regex:/^(\+?[0-9\s\-()]{8,25})?$/'],
                 'wa_notify' => ['nullable', 'boolean'],
+            ], [
+                'phone.regex' => 'Format nomor WhatsApp tidak valid. Masukkan nomor telepon yang valid (contoh: 08123456789 atau +628123456789).',
+                'phone.max' => 'Nomor WhatsApp maksimal 30 karakter.',
             ]);
 
-            $cleanPhone = filled($request->phone) ? trim((string) $request->phone) : null;
-            $updateData = [
-                'phone' => $cleanPhone,
-            ];
+            try {
+                $rawPhone = $request->phone ? trim((string) $request->phone) : null;
+                $cleanPhone = null;
+                if ($rawPhone !== null && $rawPhone !== '') {
+                    // Normalize phone number: allow only numbers and optional leading +
+                    $cleanPhone = preg_replace('/[^\d+]/', '', $rawPhone);
+                }
 
-            if ($request->has('wa_notify')) {
-                $updateData['wa_notify'] = $request->boolean('wa_notify');
+                $updateData = [
+                    'phone' => $cleanPhone,
+                ];
+
+                if ($request->has('wa_notify')) {
+                    $updateData['wa_notify'] = $request->boolean('wa_notify');
+                }
+
+                $user->update($updateData);
+
+                AuditLogger::log('update_profile_whatsapp', ['fields' => array_keys($updateData)], $user->id);
+
+                return back()
+                    ->with('success', 'Pengaturan nomor WhatsApp berhasil diperbarui.')
+                    ->with('active_section', 'whatsapp');
+            } catch (\Throwable $e) {
+                Log::error("[AuthController] Gagal menyimpan nomor WhatsApp untuk user {$user->id}: ".$e->getMessage(), [
+                    'exception' => $e,
+                ]);
+
+                return back()
+                    ->with('error', 'Terjadi kendala saat memperbarui nomor WhatsApp: '.$e->getMessage())
+                    ->with('active_section', 'whatsapp');
             }
-
-            $user->update($updateData);
-
-            AuditLogger::log('update_profile_whatsapp', ['fields' => array_keys($updateData)], $user->id);
-
-            return back()
-                ->with('success', 'Pengaturan nomor WhatsApp berhasil diperbarui.')
-                ->with('active_section', 'whatsapp');
         }
 
         // 2. Email Section Update
