@@ -22,8 +22,14 @@ const PRECACHE_ASSETS = [
 self.addEventListener('install', (event) => {
     self.skipWaiting();
     event.waitUntil(
-        caches.open(CACHE_NAME).then((cache) => {
-            return cache.addAll(PRECACHE_ASSETS);
+        caches.open(CACHE_NAME).then(async (cache) => {
+            for (const asset of PRECACHE_ASSETS) {
+                try {
+                    await cache.add(asset);
+                } catch (e) {
+                    // Ignore non-critical fetch error to ensure service worker activates
+                }
+            }
         })
     );
 });
