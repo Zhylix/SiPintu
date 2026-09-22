@@ -38,24 +38,21 @@
 
 <script>
     (function () {
-        // 1. Standalone Check
         var isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
                            window.navigator.standalone === true ||
                            document.referrer.includes('android-app://');
 
         var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        var isSecure = window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
-        // Global prompt reference
         window.deferredPwaPrompt = null;
         var waitingClickBtn = null;
 
-        // 2. Immediate Service Worker Registration
-        if ('serviceWorker' in navigator) {
+        // 1. Immediate Service Worker Registration
+        if ('serviceWorker' in navigator && isSecure) {
             var registerSW = function () {
                 navigator.serviceWorker.register('/sw.js', { scope: '/' })
-                    .then(function (reg) {
-                        // Registration success
-                    })
+                    .then(function () {})
                     .catch(function (err) {
                         console.warn('SW registration failed:', err);
                     });
@@ -68,21 +65,32 @@
             }
         }
 
-        // 3. Capture beforeinstallprompt
+        // 2. Capture Chrome Native beforeinstallprompt
         window.addEventListener('beforeinstallprompt', function (e) {
             e.preventDefault();
             window.deferredPwaPrompt = e;
 
-            // Jika user sebelumnya sudah menekan tombol pasang saat prompt sedang disiapkan
+            // Jika pengguna sudah sempat mengklik tombol pasang, langsung picu
             if (waitingClickBtn) {
                 triggerPrompt(waitingClickBtn);
                 waitingClickBtn = null;
             }
 
+            // Tampilkan banner instalasi karena Chrome sudah 100% siap memasang
+            if (!isStandalone) {
+                var dismissedAt = localStorage.getItem('sipintu_pwa_dismissed');
+                var threeDays = 3 * 24 * 60 * 60 * 1000;
+                if (!dismissedAt || (Date.now() - parseInt(dismissedAt, 10)) > threeDays) {
+                    showPwaBanner();
+                } else if (isMobile) {
+                    showPwaFab();
+                }
+            }
+
             updateInstallButtons(true);
         });
 
-        // 4. App Installed Event
+        // 3. App Installed Event
         window.addEventListener('appinstalled', function () {
             window.deferredPwaPrompt = null;
             hidePwaBanner();
@@ -93,7 +101,7 @@
             }
         });
 
-        // 5. Trigger Native Install Prompt
+        // 4. Trigger Native System Prompt
         function triggerPrompt(triggerBtn) {
             if (!window.deferredPwaPrompt) return;
 
@@ -109,54 +117,45 @@
             });
         }
 
-        // 6. Universal Direct Install Handler
+        // 5. Universal Direct Install Click
         window.installSiPintuPwa = function (btnElement) {
             if (isStandalone) {
                 if (typeof window.showToastNotification === 'function') {
-                    window.showToastNotification('info', 'Aplikasi SiPintu sudah terpasang di perangkat Anda.');
+                    window.showToastNotification('info', 'Aplikasi SiPintu sudah terpasang dan aktif di perangkat Anda.');
                 }
                 return;
             }
 
-            // Jika native prompt sudah siap -> Langsung munculkan dialog instalasi sistem
+            // Cek apakah website dibuka lewat HTTPS
+            if (!isSecure) {
+                if (typeof window.showToastNotification === 'function') {
+                    window.showToastNotification('warning', 'Instalasi aplikasi otomatis di Android mewajibkan akses melalui HTTPS (SSL).');
+                } else {
+                    alert('Instalasi aplikasi Android mewajibkan akses melalui protokol HTTPS (SSL aktif).');
+                }
+                return;
+            }
+
+            // Jika prompt sistem Android sudah siap, langsung picu seketika (1-klik)
             if (window.deferredPwaPrompt) {
                 triggerPrompt(btnElement);
                 return;
             }
 
-            // Jika browser sedang memuat paket prompt di latar belakang, tunggu hingga 2.5 detik
-            var originalText = '';
+            // Jika Chrome sedang menginisiasi di latar belakang, tunggu respons
             var textSpan = document.getElementById('pwa-install-btn-text');
-            if (textSpan) {
-                originalText = textSpan.innerText;
-                textSpan.innerText = 'Menyiapkan...';
-            }
+            var originalText = textSpan ? textSpan.innerText : '';
+            if (textSpan) textSpan.innerText = 'Menyiapkan...';
 
             waitingClickBtn = btnElement;
 
-            var timer = setTimeout(function () {
+            // Batas waktu tunggu pemicu
+            setTimeout(function () {
                 if (textSpan && originalText) {
                     textSpan.innerText = originalText;
                 }
                 waitingClickBtn = null;
-
-                // Jika prompt tidak muncul (misal dibuka lewat browser non-Chromium atau tanpa HTTPS)
-                if (!window.deferredPwaPrompt) {
-                    if (typeof window.showToastNotification === 'function') {
-                        window.showToastNotification('info', 'Gunakan menu browser Chrome lalu pilih Instal Aplikasi.');
-                    } else {
-                        alert('Silakan buka menu titik tiga di browser Chrome Anda lalu pilih "Instal aplikasi".');
-                    }
-                }
-            }, 2500);
-
-            // Jika prompt tiba sebelum timeout, timer dibatalkan
-            window.addEventListener('beforeinstallprompt', function () {
-                clearTimeout(timer);
-                if (textSpan && originalText) {
-                    textSpan.innerText = originalText;
-                }
-            }, { once: true });
+            }, 3000);
         };
 
         window.dismissPwaBanner = function () {
@@ -214,21 +213,6 @@
 
         document.addEventListener('DOMContentLoaded', function () {
             updateInstallButtons(true);
-
-            if (!isStandalone) {
-                var dismissedAt = localStorage.getItem('sipintu_pwa_dismissed');
-                var threeDays = 3 * 24 * 60 * 60 * 1000;
-
-                if (!dismissedAt || (Date.now() - parseInt(dismissedAt, 10)) > threeDays) {
-                    setTimeout(function () {
-                        if (!isStandalone) {
-                            showPwaBanner();
-                        }
-                    }, 1000);
-                } else if (isMobile) {
-                    showPwaFab();
-                }
-            }
         });
     })();
 </script>

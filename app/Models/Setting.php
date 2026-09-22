@@ -53,11 +53,11 @@ class Setting extends Model
             }
 
             if (Storage::disk('public')->exists($path)) {
-                return Storage::disk('public')->url($path);
+                return '/storage/' . ltrim($path, '/');
             }
         }
 
-        return asset('images/logo-smkn1bangsri.png');
+        return '/images/logo-smkn1bangsri.png';
     }
 
     /**
@@ -74,10 +74,10 @@ class Setting extends Model
             }
 
             if (Storage::disk('public')->exists($path)) {
-                return Storage::disk('public')->url($path);
+                return '/storage/' . ltrim($path, '/');
             }
         }
 
-        return asset('images/logo-smkn1bangsri.png');
+        return '/images/logo-smkn1bangsri.png';
     }
 }
