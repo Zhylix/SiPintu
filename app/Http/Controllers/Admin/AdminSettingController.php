@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use App\Services\AuditLogger;
+use App\Services\PwaIconService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -56,6 +57,9 @@ class AdminSettingController extends Controller
         $path = $request->file('logo')->store('settings', 'public');
         Setting::set('site_logo', $path);
 
+        // Auto-regenerate PWA app icons for mobile & home screen install
+        PwaIconService::generateFromCurrentLogo();
+
         AuditLogger::log('update_site_logo', ['path' => $path], auth()->id());
 
         return back()->with('success', 'Logo website berhasil diperbarui!');
@@ -72,6 +76,9 @@ class AdminSettingController extends Controller
         }
 
         Setting::set('site_logo', null);
+
+        // Auto-regenerate PWA app icons to default logo
+        PwaIconService::generateFromCurrentLogo();
 
         AuditLogger::log('reset_site_logo', [], auth()->id());
 

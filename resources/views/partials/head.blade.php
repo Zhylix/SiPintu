@@ -12,6 +12,7 @@
 <link rel="icon" href="{{ $siteLogoUrl }}" sizes="any">
 <link rel="shortcut icon" href="{{ $siteLogoUrl }}">
 <link rel="apple-touch-icon" href="{{ $siteLogoUrl }}">
+@include('partials.pwa-head')
 
 @fonts
 

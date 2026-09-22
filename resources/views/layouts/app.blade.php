@@ -11,6 +11,7 @@
     <link rel="icon" href="{{ $siteLogoUrl }}" sizes="any">
     <link rel="shortcut icon" href="{{ $siteLogoUrl }}">
     <link rel="apple-touch-icon" href="{{ $siteLogoUrl }}">
+    @include('partials.pwa-head')
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -148,7 +149,7 @@
 
                     <a href="{{ route('admin.audit-logs.index') }}" class="flex items-center px-3 py-2 text-xs font-bold rounded-xl transition-all {{ request()->routeIs('admin.audit-logs.*') ? 'bg-slate-700 text-white shadow-md shadow-slate-700/20' : 'text-slate-700 hover:text-slate-800 hover:bg-slate-50' }}">
                         <svg class="w-4 h-4 mr-2.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
-                        Audit Log Aktivitas
+                        Audit Log
                     </a>
 
                     <a href="{{ route('admin.monitoring.index') }}" class="flex items-center px-3 py-2 text-xs font-bold rounded-xl transition-all {{ request()->routeIs('admin.monitoring.*') ? 'bg-emerald-700 text-white shadow-md shadow-emerald-700/20' : 'text-slate-700 hover:text-emerald-800 hover:bg-emerald-50' }}">
@@ -208,6 +209,13 @@
                         Aplikasi Terpadu
                     </a>
                 @endif
+
+                <!-- PWA Mobile Install Option -->
+                <div class="pt-3 px-3 pb-1.5 text-[10px] font-extrabold text-emerald-900 uppercase tracking-wider">Aplikasi HP</div>
+                <button type="button" onclick="window.installSiPintuPwa()" data-pwa-install-btn class="w-full flex items-center px-3 py-2 text-xs font-bold rounded-xl transition-all bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200/80 shadow-xs cursor-pointer">
+                    <svg class="w-4 h-4 mr-2.5 shrink-0 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    <span>Pasang Aplikasi (PWA)</span>
+                </button>
             </nav>
 
             <div class="p-4 border-t border-slate-200 bg-emerald-50/50 flex items-center justify-between">
@@ -326,7 +334,7 @@
 
                         <a href="{{ route('admin.audit-logs.index') }}" class="flex items-center px-3 py-2.5 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('admin.audit-logs.*') ? 'bg-emerald-700 text-white shadow-md shadow-emerald-700/20' : 'text-slate-700 hover:text-emerald-800 hover:bg-emerald-50' }}">
                             <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
-                            Audit Log Aktivitas
+                            Audit Log
                         </a>
 
                         <a href="{{ route('admin.monitoring.index') }}" class="flex items-center px-3 py-2.5 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('admin.monitoring.*') ? 'bg-emerald-700 text-white shadow-md shadow-emerald-700/20' : 'text-slate-700 hover:text-emerald-800 hover:bg-emerald-50' }}">
@@ -334,7 +342,7 @@
                             Monitoring System
                         </a>
 
-                        <a href="{{ route('admin.analytics.index') }}" class="flex items-center px-3 py-2.5 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('admin.analytics.*') ? 'bg-emerald-700 text-white shadow-md shadow-emerald-700/20' : 'text-slate-700 hover:text-emerald-800 hover:bg-emerald-50' }}">
+;                        <a href="{{ route('admin.analytics.index') }}" class="flex items-center px-3 py-2.5 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('admin.analytics.*') ? 'bg-emerald-700 text-white shadow-md shadow-emerald-700/20' : 'text-slate-700 hover:text-emerald-800 hover:bg-emerald-50' }}">
                             <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                             Analitik & Laporan
                         </a>
@@ -386,6 +394,13 @@
                             Aplikasi Terpadu
                         </a>
                     @endif
+
+                    <!-- PWA Desktop/Mobile Install Shortcut -->
+                    <div class="pt-4 px-3 pb-2 text-[11px] font-extrabold text-emerald-900 uppercase tracking-wider">Aplikasi SiPintu</div>
+                    <button type="button" onclick="window.installSiPintuPwa()" data-pwa-install-btn class="w-full flex items-center px-3 py-2.5 text-xs font-bold rounded-xl transition-all bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200/80 shadow-xs cursor-pointer">
+                        <svg class="w-4 h-4 mr-2.5 shrink-0 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        <span>Pasang Aplikasi (PWA)</span>
+                    </button>
                 </nav>
 
                 <!-- User Footer Profile -->
@@ -528,5 +543,8 @@
 
     <!-- Popup Notifikasi -->
     @include('partials.toast-notification')
+
+    <!-- PWA Installation Component -->
+    @include('partials.pwa-installer')
 </body>
 </html>

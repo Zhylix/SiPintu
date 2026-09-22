@@ -1,4 +1,4 @@
-@extends('layouts.app', ['headerTitle' => 'Audit Log Aktivitas'])
+@extends('layouts.app', ['headerTitle' => 'Audit Log'])
 
 @section('content')
 <div class="space-y-6 min-w-0 max-w-full">

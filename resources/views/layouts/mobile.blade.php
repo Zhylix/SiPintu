@@ -11,6 +11,7 @@
     <link rel="icon" href="{{ $siteLogoUrl }}" sizes="any">
     <link rel="shortcut icon" href="{{ $siteLogoUrl }}">
     <link rel="apple-touch-icon" href="{{ $siteLogoUrl }}">
+    @include('partials.pwa-head')
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -159,5 +160,8 @@
     </div>
     <!-- Popup Notifikasi Toast -->
     @include('partials.toast-notification')
+
+    <!-- PWA Installation Component -->
+    @include('partials.pwa-installer')
 </body>
 </html>

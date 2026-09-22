@@ -14,6 +14,7 @@
     <link rel="icon" href="{{ $siteLogoUrl }}" sizes="any">
     <link rel="shortcut icon" href="{{ $siteLogoUrl }}">
     <link rel="apple-touch-icon" href="{{ $siteLogoUrl }}">
+    @include('partials.pwa-head')
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -114,11 +115,28 @@
         </div>
 
         @yield('content')
+
+        <!-- PWA Install Badge for Login Screen -->
+        <div data-pwa-install-btn class="mt-4 p-3 bg-emerald-50/90 border border-emerald-200/80 rounded-2xl flex items-center justify-between shadow-xs">
+            <div class="flex items-center space-x-2.5">
+                <img src="{{ asset('icons/icon-192x192.png') }}" alt="SiPintu" class="w-8 h-8 rounded-lg object-contain bg-white p-0.5 border border-emerald-300">
+                <div>
+                    <div class="text-xs font-black text-emerald-950">Aplikasi SiPintu Mobile</div>
+                    <div class="text-[10px] text-emerald-700 font-semibold">Pasang di Layar Utama HP Anda</div>
+                </div>
+            </div>
+            <button type="button" onclick="window.installSiPintuPwa()" class="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold shadow-xs transition-colors cursor-pointer">
+                Pasang
+            </button>
+        </div>
     </div>
 
     <!-- Official School Footer -->
     <footer class="bg-white border-t border-slate-200 py-3 text-center text-xs text-slate-500 relative z-10 font-medium">
         <div>&copy; {{ date('Y') }} SMK Negeri 1 Bangsri. Hak Cipta Dilindungi Undang-Undang.</div>
     </footer>
+
+    <!-- PWA Installation Component -->
+    @include('partials.pwa-installer')
 </body>
 </html>
