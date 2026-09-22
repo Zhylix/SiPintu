@@ -117,16 +117,19 @@
         @yield('content')
 
         <!-- PWA Install Badge for Login Screen -->
-        <div data-pwa-install-btn class="mt-4 p-3 bg-emerald-50/90 border border-emerald-200/80 rounded-2xl flex items-center justify-between shadow-xs">
-            <div class="flex items-center space-x-2.5">
-                <img src="{{ asset('icons/icon-192x192.png') }}" alt="SiPintu" class="w-8 h-8 rounded-lg object-contain bg-white p-0.5 border border-emerald-300">
-                <div>
-                    <div class="text-xs font-black text-emerald-950">Aplikasi SiPintu Mobile</div>
-                    <div class="text-[10px] text-emerald-700 font-semibold">Pasang di Layar Utama HP Anda</div>
+        <div data-pwa-install-btn class="mt-4 p-3.5 bg-gradient-to-r from-emerald-50 via-white to-teal-50/50 border-2 border-emerald-500/30 rounded-2xl flex items-center justify-between shadow-sm">
+            <div class="flex items-center space-x-3 min-w-0">
+                <img src="{{ asset('icons/icon-192x192.png') }}" alt="SiPintu" class="w-10 h-10 rounded-xl object-contain bg-white p-1 border border-emerald-300 shadow-xs shrink-0">
+                <div class="truncate">
+                    <div class="text-xs font-black text-emerald-950 flex items-center gap-1.5">
+                        <span>Aplikasi SiPintu Mobile</span>
+                        <span class="px-1.5 py-0.2 text-[8px] font-extrabold bg-emerald-100 text-emerald-800 rounded">1-Klik</span>
+                    </div>
+                    <div class="text-[10px] text-slate-600 font-medium truncate">Pasang di Layar Utama HP &bull; Bebas Kuota</div>
                 </div>
             </div>
-            <button type="button" onclick="window.installSiPintuPwa()" class="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold shadow-xs transition-colors cursor-pointer">
-                Pasang
+            <button type="button" onclick="window.installSiPintuPwa()" class="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 active:scale-95 text-white rounded-xl text-xs font-black shadow-sm transition-all cursor-pointer shrink-0">
+                Pasang App
             </button>
         </div>
     </div>
