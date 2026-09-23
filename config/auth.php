@@ -114,4 +114,21 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Administrator Default Credentials
+    |--------------------------------------------------------------------------
+    |
+    | Configuration for primary administrator account seeded or synchronized
+    | directly from environment variables (.env).
+    |
+    */
+
+    'admin' => [
+        'name' => env('ADMIN_NAME', 'Administrator SiPintu'),
+        'username' => env('ADMIN_USERNAME', 'admin'),
+        'email' => env('ADMIN_EMAIL', 'admin@smkn1bangsri.sch.id'),
+        'password' => env('ADMIN_PASSWORD', 'password'),
+    ],
+
 ];

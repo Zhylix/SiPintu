@@ -96,7 +96,17 @@ class AuthController extends Controller
             }
         }
 
-        if (! $user && in_array(strtolower($identity), ['admin', 'admin@smkn1bangsri.sch.id', 'admin@gateway.sekolah.id'])) {
+        $adminEnvEmail = strtolower((string) config('auth.admin.email', 'admin@smkn1bangsri.sch.id'));
+        $adminEnvUsername = strtolower((string) config('auth.admin.username', 'admin'));
+        $allowedAdminIdentities = array_filter(array_unique([
+            'admin',
+            $adminEnvUsername,
+            $adminEnvEmail,
+            'admin@smkn1bangsri.sch.id',
+            'admin@gateway.sekolah.id',
+        ]));
+
+        if (! $user && in_array(strtolower($identity), $allowedAdminIdentities)) {
             $user = User::where('role', 'admin')->first();
         }
 

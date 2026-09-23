@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Jobs\SyncSijunaStudentsJob;
+use App\Jobs\SyncSijunaTeachersJob;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
@@ -55,63 +56,52 @@ class GatewaySeeder extends Seeder
             }
         }
 
-        // 3. Default Admin User
-        $adminUser = User::updateOrCreate(
-            ['email' => 'admin@gateway.sekolah.id'],
-            [
-                'name' => 'Administrator Gateway',
-                'username' => 'admin',
-                'password' => Hash::make('password'),
+        // 3. Admin User Initialization & Synchronization from .env
+        $adminConfig = config('auth.admin', [
+            'name' => env('ADMIN_NAME', 'Administrator SiPintu'),
+            'username' => env('ADMIN_USERNAME', 'admin'),
+            'email' => env('ADMIN_EMAIL', 'admin@smkn1bangsri.sch.id'),
+            'password' => env('ADMIN_PASSWORD', 'password'),
+        ]);
+
+        $adminUser = User::where('role', 'admin')
+            ->orWhereHas('roles', fn ($q) => $q->where('name', 'admin'))
+            ->orWhere('email', 'admin@gateway.sekolah.id')
+            ->orWhere('email', $adminConfig['email'])
+            ->first();
+
+        if (! $adminUser) {
+            $adminUser = User::create([
+                'name' => $adminConfig['name'],
+                'username' => $adminConfig['username'],
+                'email' => $adminConfig['email'],
+                'password' => Hash::make($adminConfig['password']),
                 'role' => 'admin',
                 'status' => 'active',
-            ]
-        );
-        $adminUser->syncRoles(['admin']);
-
-        // Default Guru User
-        $guruUser = User::updateOrCreate(
-            ['email' => 'guru@gateway.sekolah.id'],
-            [
-                'name' => 'Bpk. Ahmad Fauzi, M.Kom',
-                'username' => 'guru',
-                'password' => Hash::make('password'),
-                'role' => 'teacher',
+            ]);
+            $adminUser->syncRoles(['admin']);
+        } elseif ($adminUser->email === 'admin@gateway.sekolah.id') {
+            // Migrasikan akun dummy lama ke kredensial resmi dari .env
+            $adminUser->update([
+                'name' => $adminConfig['name'],
+                'username' => $adminConfig['username'],
+                'email' => $adminConfig['email'],
+                'password' => Hash::make($adminConfig['password']),
+                'role' => 'admin',
                 'status' => 'active',
-            ]
-        );
-        $guruUser->syncRoles(['teacher']);
+            ]);
+            $adminUser->syncRoles(['admin']);
+        }
 
-        // Default DUDI User
-        $dudiUser = User::updateOrCreate(
-            ['email' => 'dudi@gateway.sekolah.id'],
-            [
-                'name' => 'PT Telkom Indonesia (Mitra DUDI)',
-                'username' => 'dudi',
-                'password' => Hash::make('password'),
-                'role' => 'dudi',
-                'status' => 'active',
-            ]
-        );
-        $dudiUser->syncRoles(['dudi']);
-
-        // Default Siswa User (Static Fallback)
-        $siswaUser = User::updateOrCreate(
-            ['username' => '4439'],
-            [
-                'name' => 'AFRILLIA FIFA ANANTA',
-                'email' => '4439@smkn1bangsri.sch.id',
-                'external_id' => '4439',
-                'password' => Hash::make('password'),
-                'role' => 'student',
-                'classroom' => 'XII PPLG 1',
-                'status' => 'active',
-            ]
-        );
-        $siswaUser->syncRoles(['student']);
-
-        // 4. Auto Sync Real Students from SIJUNA API
+        // 4. Auto Sync Real Data from SIJUNA API (Siswa, Alumni, Guru)
         try {
             SyncSijunaStudentsJob::dispatchSync();
+        } catch (\Throwable $e) {
+            // Ignore if queue or network issue
+        }
+
+        try {
+            SyncSijunaTeachersJob::dispatchSync();
         } catch (\Throwable $e) {
             // Ignore if queue or network issue
         }
