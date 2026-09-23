@@ -56,7 +56,7 @@
 
             <div class="flex items-center space-x-3 shrink-0 self-stretch sm:self-auto w-full sm:w-auto">
                 <a href="{{ route('student.apps') }}" class="w-full sm:w-auto px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl transition-all shadow-md shadow-emerald-600/20 text-center">
-                    Aplikasi Terintegrasi &rarr;
+                    Seluruh Aplikasi &rarr;
                 </a>
             </div>
         </div>

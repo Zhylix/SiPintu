@@ -1,4 +1,4 @@
-@extends('layouts.app', ['headerTitle' => 'Kelola Pengguna Gateway'])
+@extends('layouts.app', ['headerTitle' => 'Kelola Pengguna'])
 
 @section('content')
 <div class="space-y-6 min-w-0 max-w-full">

@@ -32,7 +32,7 @@
 
     <div class="pt-2">
         <a href="{{ route('home') }}" class="inline-block w-full py-3 px-4 bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold rounded-xl transition-all text-xs shadow-md shadow-emerald-700/20">
-            &larr; Kembali ke Dashboard Gateway
+            &larr; Kembali ke Dashboard
         </a>
     </div>
 </div>

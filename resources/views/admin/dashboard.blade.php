@@ -1,4 +1,4 @@
-@extends('layouts.app', ['headerTitle' => 'Dashboard Gateway'])
+@extends('layouts.app', ['headerTitle' => 'Dashboard'])
 
 @section('content')
 <div class="space-y-6 sm:space-y-8 min-w-0 max-w-full">

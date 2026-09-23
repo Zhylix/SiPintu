@@ -52,7 +52,7 @@
     <!-- Teacher Stats Overview Grid -->
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <div class="p-5 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-2">
-            <span class="text-xs font-extrabold text-slate-500 uppercase tracking-wider">Aplikasi Terintegrasi</span>
+            <span class="text-xs font-extrabold text-slate-500 uppercase tracking-wider">Aplikasi Terintegkrasi</span>
             <div class="text-3xl font-black text-emerald-700">{{ $stats['total_apps'] }}</div>
         </div>
     </div>

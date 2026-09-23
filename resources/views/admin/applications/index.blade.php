@@ -1,4 +1,4 @@
-@extends('layouts.app', ['headerTitle' => 'Application Registry'])
+@extends('layouts.app', ['headerTitle' => 'Pendaftaran Aplikasi'])
 
 @section('content')
 <div class="space-y-6 min-w-0 max-w-full" x-data="{
@@ -372,7 +372,7 @@
 
                         <!-- Description -->
                         <p class="text-xs text-slate-600 line-clamp-2 leading-relaxed font-medium">
-                            {{ $app->description ?: 'Aplikasi terintegrasi dengan SSO Gateway SMKN 1 Bangsri.' }}
+                            {{ $app->description ?: 'Aplikasi SiPintu SMKN 1 Bangsri.' }}
                         </p>
 
                         <!-- Credentials & Endpoints Box -->
