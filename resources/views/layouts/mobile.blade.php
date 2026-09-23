@@ -1,16 +1,18 @@
 <!DOCTYPE html>
 @php
     $siteLogoUrl = \App\Models\Setting::getLogoUrl();
+    $siteIconUrl = \App\Models\Setting::getIconUrl();
+    $iconVersion = \App\Models\Setting::getIconVersion();
 @endphp
 <html lang="id" class="h-full bg-slate-50 text-slate-900">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>{{ $title ?? 'SiPintu Mobile Gateway' }}</title>
-    <!-- Website Logo favicon for browser tab -->
-    <link rel="icon" href="{{ $siteLogoUrl }}" sizes="any">
-    <link rel="shortcut icon" href="{{ $siteLogoUrl }}">
-    <link rel="apple-touch-icon" href="{{ $siteLogoUrl }}">
+    <!-- Website Logo & PWA Icon favicon for browser tab -->
+    <link rel="icon" href="{{ $siteIconUrl }}?v={{ $iconVersion }}" sizes="any">
+    <link rel="shortcut icon" href="{{ $siteIconUrl }}?v={{ $iconVersion }}">
+    <link rel="apple-touch-icon" href="{{ $siteIconUrl }}?v={{ $iconVersion }}">
     @include('partials.pwa-head')
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -118,7 +120,7 @@
             <div class="flex items-center space-x-2 shrink-0">
                 <button type="button" onclick="window.installSiPintuPwa(this)" data-pwa-install-btn class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-brand-primary hover:bg-brand-hover active:scale-95 text-white flex items-center gap-1 shadow-xs transition-all cursor-pointer whitespace-nowrap" title="Pasang SiPintu di Layar Utama HP">
                     <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                    <span>Pasang App</span>
+                    <span>Install</span>
                 </button>
                 <a href="{{ route('profile') }}" class="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 text-slate-700 flex items-center justify-center font-bold text-xs hover:bg-brand-soft hover:text-brand-primary transition-colors shrink-0">
                     {{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 1)) }}

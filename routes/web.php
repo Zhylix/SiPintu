@@ -27,25 +27,25 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/manifest.webmanifest', function () {
-    $path = file_exists(public_path('manifest.webmanifest'))
-        ? public_path('manifest.webmanifest')
-        : (file_exists(base_path('public/manifest.webmanifest')) ? base_path('public/manifest.webmanifest') : public_path('manifest.json'));
+    $manifestData = \App\Services\PwaIconService::getManifestData();
 
-    return response()->file($path, [
+    return response()->json($manifestData, 200, [
         'Content-Type' => 'application/manifest+json; charset=utf-8',
-        'Cache-Control' => 'no-cache, private',
-    ]);
+        'Cache-Control' => 'no-cache, no-store, must-revalidate',
+        'Pragma' => 'no-cache',
+        'Expires' => '0',
+    ], JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
 });
 
 Route::get('/manifest.json', function () {
-    $path = file_exists(public_path('manifest.json'))
-        ? public_path('manifest.json')
-        : (file_exists(base_path('public/manifest.json')) ? base_path('public/manifest.json') : public_path('manifest.webmanifest'));
+    $manifestData = \App\Services\PwaIconService::getManifestData();
 
-    return response()->file($path, [
+    return response()->json($manifestData, 200, [
         'Content-Type' => 'application/manifest+json; charset=utf-8',
-        'Cache-Control' => 'no-cache, private',
-    ]);
+        'Cache-Control' => 'no-cache, no-store, must-revalidate',
+        'Pragma' => 'no-cache',
+        'Expires' => '0',
+    ], JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
 });
 
 Route::get('/sw.js', function () {
@@ -53,7 +53,13 @@ Route::get('/sw.js', function () {
         ? public_path('sw.js')
         : base_path('public/sw.js');
 
-    return response()->file($path, [
+    $content = file_exists($path) ? file_get_contents($path) : '';
+    $version = \App\Models\Setting::getIconVersion();
+
+    // Dynamically update cache version so client SW automatically purges old icons
+    $content = preg_replace('/const CACHE_NAME = \'[^\']+\';/', "const CACHE_NAME = 'sipintu-pwa-v{$version}';", $content);
+
+    return response($content, 200, [
         'Content-Type' => 'application/javascript; charset=utf-8',
         'Cache-Control' => 'no-cache, no-store, must-revalidate',
         'Service-Worker-Allowed' => '/',
@@ -69,7 +75,7 @@ Route::get('/icons/{filename}', function ($filename) {
     if (file_exists($path)) {
         return response()->file($path, [
             'Content-Type' => 'image/png',
-            'Cache-Control' => 'public, max-age=604800',
+            'Cache-Control' => 'public, max-age=86400, must-revalidate',
         ]);
     }
     abort(404);
@@ -83,7 +89,7 @@ Route::get('/apple-touch-icon.png', function () {
     if (file_exists($path)) {
         return response()->file($path, [
             'Content-Type' => 'image/png',
-            'Cache-Control' => 'public, max-age=604800',
+            'Cache-Control' => 'public, max-age=86400, must-revalidate',
         ]);
     }
     abort(404);
@@ -277,10 +283,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::post('/announcements/{announcement}/send-whatsapp', [AdminAnnouncementController::class, 'sendWhatsApp'])->name('announcements.send-whatsapp');
     Route::get('/announcements/{announcement}/whatsapp-logs', [AdminAnnouncementController::class, 'whatsAppLogs'])->name('announcements.whatsapp-logs');
 
-    // Website Settings & Logo / Background Login CRUD
+    // Website Settings & Logo / Icon / Background Login CRUD
     Route::get('/settings', [AdminSettingController::class, 'index'])->name('settings.index');
     Route::post('/settings/logo', [AdminSettingController::class, 'updateLogo'])->name('settings.logo.update');
     Route::delete('/settings/logo', [AdminSettingController::class, 'destroyLogo'])->name('settings.logo.destroy');
+    Route::post('/settings/icon', [AdminSettingController::class, 'updateIcon'])->name('settings.icon.update');
+    Route::delete('/settings/icon', [AdminSettingController::class, 'destroyIcon'])->name('settings.icon.destroy');
     Route::post('/settings/login-bg', [AdminSettingController::class, 'updateLoginBg'])->name('settings.login-bg.update');
     Route::delete('/settings/login-bg', [AdminSettingController::class, 'destroyLoginBg'])->name('settings.login-bg.destroy');
 });

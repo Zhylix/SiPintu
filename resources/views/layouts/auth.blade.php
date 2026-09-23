@@ -9,11 +9,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $title ?? 'Login' }}</title>
-    <!-- Website Logo favicon for browser tab -->
-    <link rel="icon" href="{{ $siteLogoUrl }}" sizes="any">
-    <link rel="shortcut icon" href="{{ $siteLogoUrl }}">
-    <link rel="apple-touch-icon" href="{{ $siteLogoUrl }}">
+    @php
+        $siteIconUrl = \App\Models\Setting::getIconUrl();
+        $iconVersion = \App\Models\Setting::getIconVersion();
+    @endphp
+    <!-- Website Logo & PWA Icon favicon for browser tab -->
+    <link rel="icon" href="{{ $siteIconUrl }}?v={{ $iconVersion }}" sizes="any">
+    <link rel="shortcut icon" href="{{ $siteIconUrl }}?v={{ $iconVersion }}">
+    <link rel="apple-touch-icon" href="{{ $siteIconUrl }}?v={{ $iconVersion }}">
     @include('partials.pwa-head')
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -119,7 +122,7 @@
         <!-- PWA Install Badge for Login Screen -->
         <div data-pwa-install-btn class="mt-4 p-3.5 bg-gradient-to-r from-emerald-50 via-white to-teal-50/50 border-2 border-emerald-500/30 rounded-2xl flex items-center justify-between shadow-sm">
             <div class="flex items-center space-x-3 min-w-0">
-                <img src="{{ asset('icons/icon-192x192.png') }}" alt="SiPintu" class="w-10 h-10 rounded-xl object-contain bg-white p-1 border border-emerald-300 shadow-xs shrink-0">
+                <img src="{{ $siteIconUrl }}?v={{ $iconVersion }}" alt="SiPintu" class="w-10 h-10 rounded-xl object-contain bg-white p-1 border border-emerald-300 shadow-xs shrink-0">
                 <div class="truncate">
                     <div class="text-xs font-black text-emerald-950 flex items-center gap-1.5">
                         <span>Aplikasi SiPintu Mobile</span>
@@ -128,7 +131,7 @@
                 </div>
             </div>
             <button type="button" onclick="window.installSiPintuPwa()" class="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 active:scale-95 text-white rounded-xl text-xs font-black shadow-sm transition-all cursor-pointer shrink-0">
-                Pasang App
+                install
             </button>
         </div>
     </div>

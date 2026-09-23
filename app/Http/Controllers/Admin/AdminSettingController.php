@@ -13,13 +13,19 @@ use Illuminate\Support\Facades\Storage;
 class AdminSettingController extends Controller
 {
     /**
-     * Display logo & login background settings management page.
+     * Display logo, icon PWA, & login background settings management page.
      */
     public function index()
     {
         $siteLogo = Setting::get('site_logo');
         $siteLogoUrl = Setting::getLogoUrl();
         $isCustomLogo = ! empty($siteLogo) && Storage::disk('public')->exists($siteLogo);
+
+        $siteIcon = Setting::get('site_icon');
+        $siteIconUrl = Setting::getIconUrl();
+        $isCustomIcon = ! empty($siteIcon) && Storage::disk('public')->exists($siteIcon);
+        $isIconConnectedToLogo = Setting::isIconConnectedToLogo();
+        $iconVersion = Setting::getIconVersion();
 
         $loginBg = Setting::get('login_background');
         $loginBgUrl = Setting::getLoginBgUrl();
@@ -29,6 +35,11 @@ class AdminSettingController extends Controller
             'siteLogo',
             'siteLogoUrl',
             'isCustomLogo',
+            'siteIcon',
+            'siteIconUrl',
+            'isCustomIcon',
+            'isIconConnectedToLogo',
+            'iconVersion',
             'loginBg',
             'loginBgUrl',
             'isCustomLoginBg'
@@ -37,6 +48,7 @@ class AdminSettingController extends Controller
 
     /**
      * Upload / Update Website Logo.
+     * Automatically updates & regenerates connected PWA icons if icon is synced with logo.
      */
     public function updateLogo(Request $request): RedirectResponse
     {
@@ -62,7 +74,11 @@ class AdminSettingController extends Controller
 
         AuditLogger::log('update_site_logo', ['path' => $path], auth()->id());
 
-        return back()->with('success', 'Logo website berhasil diperbarui!');
+        $message = Setting::isIconConnectedToLogo()
+            ? 'Logo website berhasil diperbarui dan tersambung otomatis dengan Icon PWA!'
+            : 'Logo website berhasil diperbarui!';
+
+        return back()->with('success', $message);
     }
 
     /**
@@ -83,6 +99,56 @@ class AdminSettingController extends Controller
         AuditLogger::log('reset_site_logo', [], auth()->id());
 
         return back()->with('info', 'Logo website berhasil dikembalikan ke logo bawaan.');
+    }
+
+    /**
+     * Upload / Update Dedicated PWA & App Icon.
+     */
+    public function updateIcon(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'icon' => ['required', 'image', 'mimes:jpeg,png,jpg,webp,svg', 'max:2048'],
+        ], [
+            'icon.required' => 'Pilih berkas gambar icon terlebih dahulu.',
+            'icon.image' => 'Berkas icon harus berupa gambar.',
+            'icon.mimes' => 'Format icon harus JPEG, PNG, JPG, WEBP, atau SVG.',
+            'icon.max' => 'Ukuran berkas icon maksimal 2 MB.',
+        ]);
+
+        $oldIcon = Setting::get('site_icon');
+        if ($oldIcon && Storage::disk('public')->exists($oldIcon)) {
+            Storage::disk('public')->delete($oldIcon);
+        }
+
+        $path = $request->file('icon')->store('settings', 'public');
+        Setting::set('site_icon', $path);
+
+        // Auto-regenerate all PWA icon variants from this new icon
+        PwaIconService::generateFromCurrentLogo();
+
+        AuditLogger::log('update_site_icon', ['path' => $path], auth()->id());
+
+        return back()->with('success', 'Icon PWA & Favicon berhasil diperbarui!');
+    }
+
+    /**
+     * Connect PWA Icon to Website Logo (Remove custom icon, sync with logo).
+     */
+    public function destroyIcon(): RedirectResponse
+    {
+        $oldIcon = Setting::get('site_icon');
+        if ($oldIcon && Storage::disk('public')->exists($oldIcon)) {
+            Storage::disk('public')->delete($oldIcon);
+        }
+
+        Setting::set('site_icon', null);
+
+        // Auto-regenerate PWA app icons from active website logo (fully connected & identical)
+        PwaIconService::generateFromCurrentLogo();
+
+        AuditLogger::log('connect_icon_to_logo', [], auth()->id());
+
+        return back()->with('success', 'Icon PWA berhasil disambungkan dengan Logo Website! Ikon kini identik dan mengikuti logo website secara otomatis.');
     }
 
     /**

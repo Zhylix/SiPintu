@@ -1,5 +1,7 @@
 @php
     $siteLogoUrl = \App\Models\Setting::getLogoUrl();
+    $siteIconUrl = \App\Models\Setting::getIconUrl();
+    $iconVersion = \App\Models\Setting::getIconVersion();
 @endphp
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,10 +10,10 @@
     {{ filled($title ?? null) ? $title.' - '.config('app.name', 'Laravel') : config('app.name', 'Laravel') }}
 </title>
 
-<!-- Website Logo favicon for browser tab -->
-<link rel="icon" href="{{ $siteLogoUrl }}" sizes="any">
-<link rel="shortcut icon" href="{{ $siteLogoUrl }}">
-<link rel="apple-touch-icon" href="{{ $siteLogoUrl }}">
+<!-- Website Logo & PWA Icon favicon for browser tab -->
+<link rel="icon" href="{{ $siteIconUrl }}?v={{ $iconVersion }}" sizes="any">
+<link rel="shortcut icon" href="{{ $siteIconUrl }}?v={{ $iconVersion }}">
+<link rel="apple-touch-icon" href="{{ $siteIconUrl }}?v={{ $iconVersion }}">
 @include('partials.pwa-head')
 
 @fonts

@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 @php
     $siteLogoUrl = \App\Models\Setting::getLogoUrl();
+    $siteIconUrl = \App\Models\Setting::getIconUrl();
+    $iconVersion = \App\Models\Setting::getIconVersion();
 @endphp
 <html lang="id" class="h-full bg-white text-slate-800">
 <head>
@@ -8,10 +10,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>SiPintu</title>
     <meta name="description" content="Portal Resmi Gateway SMKN 1 Bangsri.">
-    <!-- Website Logo favicon for browser tab -->
-    <link rel="icon" href="{{ $siteLogoUrl }}" sizes="any">
-    <link rel="shortcut icon" href="{{ $siteLogoUrl }}">
-    <link rel="apple-touch-icon" href="{{ $siteLogoUrl }}">
+    <!-- Website Logo & PWA Icon favicon for browser tab -->
+    <link rel="icon" href="{{ $siteIconUrl }}?v={{ $iconVersion }}" sizes="any">
+    <link rel="shortcut icon" href="{{ $siteIconUrl }}?v={{ $iconVersion }}">
+    <link rel="apple-touch-icon" href="{{ $siteIconUrl }}?v={{ $iconVersion }}">
     @include('partials.pwa-head')
 
     <!-- Google Fonts -->
@@ -129,7 +131,7 @@
                     <div class="flex items-center space-x-3">
                         <button type="button" onclick="window.installSiPintuPwa(this)" data-pwa-install-btn class="inline-flex items-center space-x-1.5 px-3.5 py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs font-extrabold rounded-xl shadow-xs transition-all cursor-pointer" title="Pasang Aplikasi di Layar Utama HP / Laptop">
                             <svg class="w-4 h-4 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                            <span>Pasang App</span>
+                            <span>Install</span>
                         </button>
                         @auth
                             <a href="{{ route('dashboard') }}" class="inline-flex items-center space-x-2 px-5 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-extrabold rounded-xl shadow-md transition-all">

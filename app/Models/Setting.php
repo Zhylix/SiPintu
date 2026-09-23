@@ -80,4 +80,43 @@ class Setting extends Model
 
         return '/images/logo-smkn1bangsri.png';
     }
+
+    /**
+     * Get the accessible public URL for the Website / PWA Icon (Favicon & App Icon).
+     * If a separate custom icon is set ('site_icon'), use it.
+     * Otherwise, directly connect & fallback to the Website Logo ('site_logo').
+     */
+    public static function getIconUrl(): string
+    {
+        $path = static::get('site_icon');
+
+        if ($path) {
+            if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://') || str_starts_with($path, 'data:')) {
+                return $path;
+            }
+
+            if (Storage::disk('public')->exists($path)) {
+                return '/storage/' . ltrim($path, '/');
+            }
+        }
+
+        return static::getLogoUrl();
+    }
+
+    /**
+     * Check if the PWA Icon is connected directly with the Website Logo.
+     */
+    public static function isIconConnectedToLogo(): bool
+    {
+        $customIcon = static::get('site_icon');
+        return empty($customIcon) || ! Storage::disk('public')->exists($customIcon);
+    }
+
+    /**
+     * Get the current PWA Icon version timestamp for cache-busting.
+     */
+    public static function getIconVersion(): string
+    {
+        return (string) (static::get('pwa_icon_version') ?? '1');
+    }
 }

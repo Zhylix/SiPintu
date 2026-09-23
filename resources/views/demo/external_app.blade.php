@@ -1,16 +1,18 @@
 <!DOCTYPE html>
 @php
     $siteLogoUrl = \App\Models\Setting::getLogoUrl();
+    $siteIconUrl = \App\Models\Setting::getIconUrl();
+    $iconVersion = \App\Models\Setting::getIconVersion();
 @endphp
 <html lang="id" class="h-full bg-slate-950 text-slate-100 dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simulasi Aplikasi Eksternal (SSO Client Test)</title>
-    <!-- Website Logo favicon for browser tab -->
-    <link rel="icon" href="{{ $siteLogoUrl }}" sizes="any">
-    <link rel="shortcut icon" href="{{ $siteLogoUrl }}">
-    <link rel="apple-touch-icon" href="{{ $siteLogoUrl }}">
+    <!-- Website Logo & PWA Icon favicon for browser tab -->
+    <link rel="icon" href="{{ $siteIconUrl }}?v={{ $iconVersion }}" sizes="any">
+    <link rel="shortcut icon" href="{{ $siteIconUrl }}?v={{ $iconVersion }}">
+    <link rel="apple-touch-icon" href="{{ $siteIconUrl }}?v={{ $iconVersion }}">
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

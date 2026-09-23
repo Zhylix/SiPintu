@@ -37,7 +37,7 @@
             pwaNotify('success', 'Aplikasi SiPintu berhasil dipasang di Layar Utama HP Anda!', 'SiPintu Terpasang');
         });
 
-        // Eksekusi Pemicu Native Langsung (1-Klik)
+        // Eksekusi Pemicu Native 
         function triggerNativePrompt(promptEvent, onComplete) {
             try {
                 promptEvent.prompt();
