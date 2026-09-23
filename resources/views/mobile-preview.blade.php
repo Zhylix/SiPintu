@@ -79,61 +79,45 @@
             <span class="text-[11px] font-bold text-emerald-700 whitespace-nowrap">Flat Design Specs</span>
         </div>
 
-        <div class="grid grid-cols-2 gap-3 text-center">
+        <div class="grid grid-cols-2 min-[420px]:grid-cols-4 gap-3 text-center">
             <!-- App Card 1 -->
-            <div class="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm flex flex-col items-center justify-between hover:border-emerald-700 transition-colors text-center">
-                <div class="flex flex-col items-center text-center w-full">
-                    <div class="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 flex items-center justify-center font-bold mb-2 shrink-0">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
-                    </div>
-                    <h4 class="font-extrabold text-xs text-slate-900 whitespace-nowrap truncate w-full text-center">E-Rapor ESKASABA</h4>
-                    <p class="text-[10px] text-slate-500 font-medium mt-1 line-clamp-2 text-center">Sistem Pengolahan Nilai & Rapor.</p>
+            <div class="p-3.5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs flex flex-col items-center justify-start hover:border-emerald-600 hover:-translate-y-1 transition-all text-center cursor-pointer active:scale-95 group">
+                <div class="w-14 h-14 rounded-[22px] bg-gradient-to-br from-emerald-500 via-teal-600 to-emerald-700 text-white flex items-center justify-center shadow-md shadow-emerald-600/30 ring-2 ring-white/40 group-hover:scale-105 transition-transform">
+                    <svg class="w-7 h-7 drop-shadow-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/></svg>
                 </div>
-                <button class="mt-3 w-full py-2 bg-emerald-700 hover:bg-emerald-800 active:bg-emerald-900 text-white font-extrabold rounded-xl text-[11px] transition-all text-center whitespace-nowrap">
-                    Buka Aplikasi
-                </button>
+                <span class="mt-2.5 font-extrabold text-xs text-slate-800 group-hover:text-emerald-700 transition-colors line-clamp-2 leading-tight break-words text-center">
+                    E-Rapor ESKASABA
+                </span>
             </div>
 
             <!-- App Card 2 -->
-            <div class="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm flex flex-col items-center justify-between hover:border-emerald-700 transition-colors text-center">
-                <div class="flex flex-col items-center text-center w-full">
-                    <div class="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 flex items-center justify-center font-bold mb-2 shrink-0">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                    </div>
-                    <h4 class="font-extrabold text-xs text-slate-900 whitespace-nowrap truncate w-full text-center">Presensi Presisi</h4>
-                    <p class="text-[10px] text-slate-500 font-medium mt-1 line-clamp-2 text-center">Absensi Digital Siswa & Guru.</p>
+            <div class="p-3.5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs flex flex-col items-center justify-start hover:border-emerald-600 hover:-translate-y-1 transition-all text-center cursor-pointer active:scale-95 group">
+                <div class="w-14 h-14 rounded-[22px] bg-gradient-to-br from-teal-500 via-cyan-600 to-blue-700 text-white flex items-center justify-center shadow-md shadow-teal-600/30 ring-2 ring-white/40 group-hover:scale-105 transition-transform">
+                    <svg class="w-7 h-7 drop-shadow-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                 </div>
-                <button class="mt-3 w-full py-2 bg-emerald-700 hover:bg-emerald-800 active:bg-emerald-900 text-white font-extrabold rounded-xl text-[11px] transition-all text-center whitespace-nowrap">
-                    Buka Aplikasi
-                </button>
+                <span class="mt-2.5 font-extrabold text-xs text-slate-800 group-hover:text-emerald-700 transition-colors line-clamp-2 leading-tight break-words text-center">
+                    Presensi Presisi
+                </span>
             </div>
 
             <!-- App Card 3 -->
-            <div class="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm flex flex-col items-center justify-between hover:border-emerald-700 transition-colors text-center">
-                <div class="flex flex-col items-center text-center w-full">
-                    <div class="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 flex items-center justify-center font-bold mb-2 shrink-0">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
-                    </div>
-                    <h4 class="font-extrabold text-xs text-slate-900 whitespace-nowrap truncate w-full text-center">Portal PKL & DUDI</h4>
-                    <p class="text-[10px] text-slate-500 font-medium mt-1 line-clamp-2 text-center">Monitoring Praktik Kerja Lapangan.</p>
+            <div class="p-3.5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs flex flex-col items-center justify-start hover:border-emerald-600 hover:-translate-y-1 transition-all text-center cursor-pointer active:scale-95 group">
+                <div class="w-14 h-14 rounded-[22px] bg-gradient-to-br from-sky-500 via-blue-600 to-indigo-700 text-white flex items-center justify-center shadow-md shadow-blue-600/30 ring-2 ring-white/40 group-hover:scale-105 transition-transform">
+                    <svg class="w-7 h-7 drop-shadow-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
                 </div>
-                <button class="mt-3 w-full py-2 bg-emerald-700 hover:bg-emerald-800 active:bg-emerald-900 text-white font-extrabold rounded-xl text-[11px] transition-all text-center whitespace-nowrap">
-                    Buka Aplikasi
-                </button>
+                <span class="mt-2.5 font-extrabold text-xs text-slate-800 group-hover:text-emerald-700 transition-colors line-clamp-2 leading-tight break-words text-center">
+                    Portal PKL & DUDI
+                </span>
             </div>
 
             <!-- App Card 4 -->
-            <div class="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm flex flex-col items-center justify-between hover:border-emerald-700 transition-colors text-center">
-                <div class="flex flex-col items-center text-center w-full">
-                    <div class="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 flex items-center justify-center font-bold mb-2 shrink-0">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
-                    </div>
-                    <h4 class="font-extrabold text-xs text-slate-900 whitespace-nowrap truncate w-full text-center">SIJUNA Central</h4>
-                    <p class="text-[10px] text-slate-500 font-medium mt-1 line-clamp-2 text-center">Notifikasi Terpusat Sekolah.</p>
+            <div class="p-3.5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs flex flex-col items-center justify-start hover:border-emerald-600 hover:-translate-y-1 transition-all text-center cursor-pointer active:scale-95 group">
+                <div class="w-14 h-14 rounded-[22px] bg-gradient-to-br from-amber-500 via-orange-600 to-rose-600 text-white flex items-center justify-center shadow-md shadow-amber-600/30 ring-2 ring-white/40 group-hover:scale-105 transition-transform">
+                    <svg class="w-7 h-7 drop-shadow-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
                 </div>
-                <button class="mt-3 w-full py-2 bg-emerald-700 hover:bg-emerald-800 active:bg-emerald-900 text-white font-extrabold rounded-xl text-[11px] transition-all text-center whitespace-nowrap">
-                    Buka Aplikasi
-                </button>
+                <span class="mt-2.5 font-extrabold text-xs text-slate-800 group-hover:text-emerald-700 transition-colors line-clamp-2 leading-tight break-words text-center">
+                    SIJUNA Central
+                </span>
             </div>
         </div>
     </div>

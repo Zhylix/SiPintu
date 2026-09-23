@@ -23,7 +23,7 @@
             </div>
         </div>
 
-        <!-- Total Alumni Stat (Dedikasi Khusus Alumni) -->
+        <!-- Total Alumni Stat -->
         <div class="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200 shadow-md relative overflow-hidden group hover:border-teal-500 transition-all flex flex-col justify-between">
             <div class="flex items-center justify-between gap-2">
                 <div class="min-w-0">
