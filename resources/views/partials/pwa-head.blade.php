@@ -1,4 +1,5 @@
 <!-- PWA Web App Manifest -->
+<link rel="manifest" href="/manifest.webmanifest">
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#047857">
 
@@ -18,3 +19,46 @@
 <meta name="application-name" content="SiPintu">
 <meta name="msapplication-TileColor" content="#047857">
 <meta name="msapplication-TileImage" content="/icons/icon-144x144.png">
+
+<!-- Early PWA Listener & Service Worker Registration (Must be executed in HEAD) -->
+<script>
+    // Global PWA Prompt Holders (Compatible with modern Chromium & Reference App)
+    window.deferredPWAInstallPrompt = null;
+    window.deferredPwaPrompt = null;
+    window.pwaPromptSubscribers = window.pwaPromptSubscribers || new Set();
+
+    // 1. Capture beforeinstallprompt immediately
+    window.addEventListener('beforeinstallprompt', function (e) {
+        e.preventDefault();
+        window.deferredPWAInstallPrompt = e;
+        window.deferredPwaPrompt = e;
+
+        if (window.pwaPromptSubscribers) {
+            window.pwaPromptSubscribers.forEach(function (cb) {
+                try { cb(e); } catch (err) {}
+            });
+        }
+        window.dispatchEvent(new CustomEvent('pwa-prompt-ready', { detail: e }));
+    });
+
+    // 2. Track when app is installed
+    window.addEventListener('appinstalled', function () {
+        window.deferredPWAInstallPrompt = null;
+        window.deferredPwaPrompt = null;
+        if (window.pwaPromptSubscribers) {
+            window.pwaPromptSubscribers.forEach(function (cb) {
+                try { cb(null); } catch (err) {}
+            });
+        }
+        window.dispatchEvent(new CustomEvent('pwa-app-installed'));
+    });
+
+    // 3. Register Service Worker on window load
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function () {
+            navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(function (err) {
+                console.warn('[PWA] Service Worker registration note:', err);
+            });
+        });
+    }
+</script>

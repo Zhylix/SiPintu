@@ -189,9 +189,25 @@
                     </button>
                 </div>
 
-                <!-- GROUP 3: Aplikasi Terhubung -->
-                <div class="p-4 space-y-1">
-                    <div class="px-3 py-1 text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">Aplikasi Terhubung</div>
+                <!-- GROUP 3: Aplikasi & Perangkat -->
+                <div class="p-4 space-y-2">
+                    <div class="px-3 py-1 text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">Aplikasi & Perangkat</div>
+
+                    <!-- Tombol Instal Aplikasi PWA -->
+                    <button type="button" onclick="window.installSiPintuPwa(this)" class="w-full px-3.5 py-2.5 rounded-2xl text-xs flex items-center justify-between text-slate-700 hover:bg-emerald-50/80 font-bold transition-all group cursor-pointer border border-emerald-100 bg-emerald-50/30 shadow-2xs">
+                        <div class="flex items-center space-x-3">
+                            <div class="p-1.5 rounded-xl bg-emerald-700 text-white shrink-0 shadow-xs">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                            </div>
+                            <div class="text-left">
+                                <span class="block text-emerald-950 font-black">Unduh & Instal Aplikasi</span>
+                                <span class="block text-[10px] text-slate-500 font-medium">Pasang di Layar Utama HP</span>
+                            </div>
+                        </div>
+                        <span id="profile-pwa-badge" class="px-2 py-0.5 text-[10px] font-black rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                            Tersedia
+                        </span>
+                    </button>
 
                     <button @click="activeSection = 'aplikasi_lain'" :class="activeSection === 'aplikasi_lain' ? 'bg-emerald-50 text-emerald-900 font-black' : 'text-slate-700 hover:bg-slate-50 font-bold'" class="w-full px-3.5 py-2.5 rounded-xl text-xs flex items-center justify-between transition-all group">
                         <div class="flex items-center space-x-3">

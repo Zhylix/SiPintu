@@ -25,7 +25,7 @@
 </IfModule>
 
 <IfModule mod_mime.c>
-    AddType application/manifest+json .webmanifest
+    AddType application/manifest+json .webmanifest .json
 </IfModule>
 
 <IfModule mod_headers.c>
