@@ -209,13 +209,6 @@
                         Aplikasi Terpadu
                     </a>
                 @endif
-
-                <!-- PWA Mobile Install Option -->
-                <div class="pt-3 px-3 pb-1.5 text-[10px] font-extrabold text-emerald-900 uppercase tracking-wider">Aplikasi HP</div>
-                <button type="button" onclick="window.installSiPintuPwa()" data-pwa-install-btn class="w-full flex items-center px-3 py-2 text-xs font-bold rounded-xl transition-all bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200/80 shadow-xs cursor-pointer">
-                    <svg class="w-4 h-4 mr-2.5 shrink-0 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                    <span>Pasang Aplikasi (PWA)</span>
-                </button>
             </nav>
 
             <div class="p-4 border-t border-slate-200 bg-emerald-50/50 flex items-center justify-between">
@@ -394,13 +387,6 @@
                             Aplikasi Terpadu
                         </a>
                     @endif
-
-                    <!-- PWA Desktop/Mobile Install Shortcut -->
-                    <div class="pt-4 px-3 pb-2 text-[11px] font-extrabold text-emerald-900 uppercase tracking-wider">Aplikasi SiPintu</div>
-                    <button type="button" onclick="window.installSiPintuPwa()" data-pwa-install-btn class="w-full flex items-center px-3 py-2.5 text-xs font-bold rounded-xl transition-all bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200/80 shadow-xs cursor-pointer">
-                        <svg class="w-4 h-4 mr-2.5 shrink-0 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                        <span>Pasang Aplikasi (PWA)</span>
-                    </button>
                 </nav>
 
                 <!-- User Footer Profile -->
