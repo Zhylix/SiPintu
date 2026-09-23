@@ -72,6 +72,11 @@ Route::get('/icons/{filename}', function ($filename) {
         ? public_path('icons/' . $clean)
         : base_path('public/icons/' . $clean);
 
+    if (! file_exists($path)) {
+        \App\Services\PwaIconService::generateFromCurrentLogo();
+        $path = public_path('icons/' . $clean);
+    }
+
     if (file_exists($path)) {
         return response()->file($path, [
             'Content-Type' => 'image/png',
@@ -85,6 +90,11 @@ Route::get('/apple-touch-icon.png', function () {
     $path = file_exists(public_path('apple-touch-icon.png'))
         ? public_path('apple-touch-icon.png')
         : base_path('public/apple-touch-icon.png');
+
+    if (! file_exists($path)) {
+        \App\Services\PwaIconService::generateFromCurrentLogo();
+        $path = public_path('apple-touch-icon.png');
+    }
 
     if (file_exists($path)) {
         return response()->file($path, [

@@ -6,6 +6,8 @@ whatsapp-bot/.env
 /public/fonts-manifest.dev.json
 /public/hot
 /public/storage
+/public/icons/
+/public/apple-touch-icon.png
 /storage/*.key
 /storage/pail
 /vendor
