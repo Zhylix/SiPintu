@@ -335,7 +335,7 @@
                             Monitoring System
                         </a>
 
-;                        <a href="{{ route('admin.analytics.index') }}" class="flex items-center px-3 py-2.5 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('admin.analytics.*') ? 'bg-emerald-700 text-white shadow-md shadow-emerald-700/20' : 'text-slate-700 hover:text-emerald-800 hover:bg-emerald-50' }}">
+                        <a href="{{ route('admin.analytics.index') }}" class="flex items-center px-3 py-2.5 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('admin.analytics.*') ? 'bg-emerald-700 text-white shadow-md shadow-emerald-700/20' : 'text-slate-700 hover:text-emerald-800 hover:bg-emerald-50' }}">
                             <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                             Analitik & Laporan
                         </a>
