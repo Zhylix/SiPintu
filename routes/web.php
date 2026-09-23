@@ -22,6 +22,88 @@ use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
+| PWA Service Worker, Manifest, and Static Asset Dedicated Routes
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/manifest.webmanifest', function () {
+    $path = file_exists(public_path('manifest.webmanifest'))
+        ? public_path('manifest.webmanifest')
+        : (file_exists(base_path('public/manifest.webmanifest')) ? base_path('public/manifest.webmanifest') : public_path('manifest.json'));
+
+    return response()->file($path, [
+        'Content-Type' => 'application/manifest+json; charset=utf-8',
+        'Cache-Control' => 'no-cache, private',
+    ]);
+});
+
+Route::get('/manifest.json', function () {
+    $path = file_exists(public_path('manifest.json'))
+        ? public_path('manifest.json')
+        : (file_exists(base_path('public/manifest.json')) ? base_path('public/manifest.json') : public_path('manifest.webmanifest'));
+
+    return response()->file($path, [
+        'Content-Type' => 'application/manifest+json; charset=utf-8',
+        'Cache-Control' => 'no-cache, private',
+    ]);
+});
+
+Route::get('/sw.js', function () {
+    $path = file_exists(public_path('sw.js'))
+        ? public_path('sw.js')
+        : base_path('public/sw.js');
+
+    return response()->file($path, [
+        'Content-Type' => 'application/javascript; charset=utf-8',
+        'Cache-Control' => 'no-cache, no-store, must-revalidate',
+        'Service-Worker-Allowed' => '/',
+    ]);
+});
+
+Route::get('/icons/{filename}', function ($filename) {
+    $clean = basename($filename);
+    $path = file_exists(public_path('icons/' . $clean))
+        ? public_path('icons/' . $clean)
+        : base_path('public/icons/' . $clean);
+
+    if (file_exists($path)) {
+        return response()->file($path, [
+            'Content-Type' => 'image/png',
+            'Cache-Control' => 'public, max-age=604800',
+        ]);
+    }
+    abort(404);
+})->where('filename', '[a-zA-Z0-9_\-\.]+');
+
+Route::get('/apple-touch-icon.png', function () {
+    $path = file_exists(public_path('apple-touch-icon.png'))
+        ? public_path('apple-touch-icon.png')
+        : base_path('public/apple-touch-icon.png');
+
+    if (file_exists($path)) {
+        return response()->file($path, [
+            'Content-Type' => 'image/png',
+            'Cache-Control' => 'public, max-age=604800',
+        ]);
+    }
+    abort(404);
+});
+
+Route::get('/offline.html', function () {
+    $path = file_exists(public_path('offline.html'))
+        ? public_path('offline.html')
+        : base_path('public/offline.html');
+
+    if (file_exists($path)) {
+        return response()->file($path, [
+            'Content-Type' => 'text/html; charset=utf-8',
+        ]);
+    }
+    return response('Anda sedang offline.', 200, ['Content-Type' => 'text/plain']);
+});
+
+/*
+|--------------------------------------------------------------------------
 | Root & Authentication Routes
 |--------------------------------------------------------------------------
 */
