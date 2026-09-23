@@ -428,12 +428,6 @@
                     </div>
 
                     <div class="flex items-center space-x-2 sm:space-x-3 shrink-0">
-                        <!-- Quick PWA Install Button in Header -->
-                        <button type="button" onclick="window.installSiPintuPwa()" data-pwa-install-btn class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 text-xs font-bold transition-all shadow-2xs cursor-pointer" title="Pasang Aplikasi di Layar Utama HP / Komputer">
-                            <svg class="w-3.5 h-3.5 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                            <span class="hidden sm:inline">Pasang App</span>
-                        </button>
-
                         <span class="hidden sm:inline-flex items-center px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300">
                             <span class="w-2 h-2 rounded-full bg-emerald-600 mr-2 animate-pulse"></span>
                             Aktif

@@ -123,9 +123,8 @@
                 <div class="truncate">
                     <div class="text-xs font-black text-emerald-950 flex items-center gap-1.5">
                         <span>Aplikasi SiPintu Mobile</span>
-                        <span class="px-1.5 py-0.2 text-[8px] font-extrabold bg-emerald-100 text-emerald-800 rounded">1-Klik</span>
                     </div>
-                    <div class="text-[10px] text-slate-600 font-medium truncate">Pasang di Layar Utama HP &bull; Bebas Kuota</div>
+                    <div class="text-[10px] text-slate-600 font-medium truncate">Pasang di Layar Utama HP</div>
                 </div>
             </div>
             <button type="button" onclick="window.installSiPintuPwa()" class="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 active:scale-95 text-white rounded-xl text-xs font-black shadow-sm transition-all cursor-pointer shrink-0">

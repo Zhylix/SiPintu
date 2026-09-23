@@ -1,110 +1,4 @@
-<div x-data="{ 
-        toasts: [],
-        addToast(message, type = 'success', title = null, duration = 4000) {
-            if (!message) return;
-
-            // Normalisasi tipe notifikasi
-            let toastType = 'success';
-            if (typeof type === 'boolean') {
-                toastType = type ? 'success' : 'error';
-            } else if (typeof type === 'string') {
-                const lower = type.toLowerCase();
-                if (['danger', 'failed'].includes(lower)) toastType = 'error';
-                else if (['warn'].includes(lower)) toastType = 'warning';
-                else if (['success', 'error', 'warning', 'info', 'favorite'].includes(lower)) toastType = lower;
-                else toastType = 'info';
-            }
-
-            // Standar judul yang elegan & ringkas
-            let toastTitle = title;
-            if (!toastTitle) {
-                switch(toastType) {
-                    case 'success': toastTitle = 'Berhasil'; break;
-                    case 'error': toastTitle = 'Perhatian'; break;
-                    case 'warning': toastTitle = 'Peringatan'; break;
-                    case 'info': toastTitle = 'Informasi'; break;
-                    case 'favorite': toastTitle = 'Favorit'; break;
-                    default: toastTitle = 'SiPintu'; break;
-                }
-            }
-
-            const id = 'toast_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
-            const newToast = {
-                id,
-                title: toastTitle,
-                message: message,
-                type: toastType,
-                duration: duration,
-                remaining: duration,
-                startTime: Date.now(),
-                timer: null
-            };
-
-            this.toasts.unshift(newToast);
-            this.startTimer(newToast);
-        },
-
-        startTimer(toast) {
-            toast.startTime = Date.now();
-            toast.timer = setTimeout(() => {
-                this.removeToast(toast.id);
-            }, toast.remaining);
-        },
-
-        pauseToast(toast) {
-            clearTimeout(toast.timer);
-            const elapsed = Date.now() - toast.startTime;
-            toast.remaining = Math.max(500, toast.remaining - elapsed);
-        },
-
-        resumeToast(toast) {
-            this.startTimer(toast);
-        },
-
-        removeToast(id) {
-            const index = this.toasts.findIndex(t => t.id === id);
-            if (index !== -1) {
-                clearTimeout(this.toasts[index].timer);
-                this.toasts.splice(index, 1);
-            }
-        },
-
-        init() {
-            window.toast = {
-                success: (msg, title, duration) => this.addToast(msg, 'success', title, duration),
-                error: (msg, title, duration) => this.addToast(msg, 'error', title, duration),
-                warning: (msg, title, duration) => this.addToast(msg, 'warning', title, duration),
-                info: (msg, title, duration) => this.addToast(msg, 'info', title, duration),
-                favorite: (msg, title, duration) => this.addToast(msg, 'favorite', title, duration),
-                show: (msg, type, title, duration) => this.addToast(msg, type, title, duration)
-            };
-
-            window.showToast = (msg, type = 'success', title = null, duration = 4000) => {
-                this.addToast(msg, type, title, duration);
-            };
-
-            // Otomatis tangkap Flash Session Laravel
-            @if(session('success'))
-                this.addToast(@json(session('success')), 'success', 'Berhasil');
-            @endif
-
-            @if(session('error'))
-                this.addToast(@json(session('error')), 'error', 'Pemberitahuan');
-            @endif
-
-            @if(session('warning'))
-                this.addToast(@json(session('warning')), 'warning', 'Peringatan');
-            @endif
-
-            @if(session('info'))
-                this.addToast(@json(session('info')), 'info', 'Informasi');
-            @endif
-
-            @if(session('status'))
-                this.addToast(@json(session('status')), 'info', 'Status');
-            @endif
-        }
-    }"
+<div x-data="toastNotificationComponent()"
     x-on:show-toast.window="addToast($event.detail.message, $event.detail.type ?? ($event.detail.isSuccess !== undefined ? ($event.detail.isSuccess ? 'success' : 'error') : 'success'), $event.detail.title, $event.detail.duration)"
     x-on:favorite-updated.window="if ($event.detail.message) addToast($event.detail.message, 'favorite', $event.detail.is_favorited ? 'Ditambahkan ke Favorit' : 'Dihapus dari Favorit')"
     class="fixed top-4 right-4 sm:top-6 sm:right-6 z-[9999] flex flex-col space-y-2.5 max-w-[380px] w-[calc(100%-2rem)] sm:w-[380px] pointer-events-none"
@@ -188,3 +82,153 @@
         </div>
     </template>
 </div>
+
+<script>
+    (function () {
+        // Safe global queue in case methods are called prior to Alpine initialization
+        window._toastQueue = window._toastQueue || [];
+        if (!window.toast) {
+            window.toast = {
+                success: function(msg, title, duration) { window._toastQueue.push([msg, 'success', title, duration]); },
+                error: function(msg, title, duration) { window._toastQueue.push([msg, 'error', title, duration]); },
+                warning: function(msg, title, duration) { window._toastQueue.push([msg, 'warning', title, duration]); },
+                info: function(msg, title, duration) { window._toastQueue.push([msg, 'info', title, duration]); },
+                favorite: function(msg, title, duration) { window._toastQueue.push([msg, 'favorite', title, duration]); },
+                show: function(msg, type, title, duration) { window._toastQueue.push([msg, type, title, duration]); }
+            };
+        }
+        if (!window.showToast) {
+            window.showToast = function(msg, type, title, duration) {
+                window._toastQueue.push([msg, type || 'success', title, duration]);
+            };
+        }
+
+        function toastNotificationComponent() {
+            return {
+                toasts: [],
+                addToast(message, type = 'success', title = null, duration = 4000) {
+                    if (!message) return;
+
+                    // Normalisasi tipe notifikasi
+                    let toastType = 'success';
+                    if (typeof type === 'boolean') {
+                        toastType = type ? 'success' : 'error';
+                    } else if (typeof type === 'string') {
+                        const lower = type.toLowerCase();
+                        if (['danger', 'failed'].includes(lower)) toastType = 'error';
+                        else if (['warn'].includes(lower)) toastType = 'warning';
+                        else if (['success', 'error', 'warning', 'info', 'favorite'].includes(lower)) toastType = lower;
+                        else toastType = 'info';
+                    }
+
+                    // Standar judul yang elegan & ringkas
+                    let toastTitle = title;
+                    if (!toastTitle) {
+                        switch(toastType) {
+                            case 'success': toastTitle = 'Berhasil'; break;
+                            case 'error': toastTitle = 'Perhatian'; break;
+                            case 'warning': toastTitle = 'Peringatan'; break;
+                            case 'info': toastTitle = 'Informasi'; break;
+                            case 'favorite': toastTitle = 'Favorit'; break;
+                            default: toastTitle = 'SiPintu'; break;
+                        }
+                    }
+
+                    const id = 'toast_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+                    const newToast = {
+                        id,
+                        title: toastTitle,
+                        message: message,
+                        type: toastType,
+                        duration: duration,
+                        remaining: duration,
+                        startTime: Date.now(),
+                        timer: null
+                    };
+
+                    this.toasts.unshift(newToast);
+                    this.startTimer(newToast);
+                },
+
+                startTimer(toast) {
+                    toast.startTime = Date.now();
+                    toast.timer = setTimeout(() => {
+                        this.removeToast(toast.id);
+                    }, toast.remaining);
+                },
+
+                pauseToast(toast) {
+                    clearTimeout(toast.timer);
+                    const elapsed = Date.now() - toast.startTime;
+                    toast.remaining = Math.max(500, toast.remaining - elapsed);
+                },
+
+                resumeToast(toast) {
+                    this.startTimer(toast);
+                },
+
+                removeToast(id) {
+                    const index = this.toasts.findIndex(t => t.id === id);
+                    if (index !== -1) {
+                        clearTimeout(this.toasts[index].timer);
+                        this.toasts.splice(index, 1);
+                    }
+                },
+
+                init() {
+                    window.toast = {
+                        success: (msg, title, duration) => this.addToast(msg, 'success', title, duration),
+                        error: (msg, title, duration) => this.addToast(msg, 'error', title, duration),
+                        warning: (msg, title, duration) => this.addToast(msg, 'warning', title, duration),
+                        info: (msg, title, duration) => this.addToast(msg, 'info', title, duration),
+                        favorite: (msg, title, duration) => this.addToast(msg, 'favorite', title, duration),
+                        show: (msg, type, title, duration) => this.addToast(msg, type, title, duration)
+                    };
+
+                    window.showToast = (msg, type = 'success', title = null, duration = 4000) => {
+                        this.addToast(msg, type, title, duration);
+                    };
+
+                    // Jalankan antrian jika ada pemanggilan sebelum init
+                    if (window._toastQueue && window._toastQueue.length > 0) {
+                        while (window._toastQueue.length > 0) {
+                            const queued = window._toastQueue.shift();
+                            this.addToast(queued[0], queued[1], queued[2], queued[3]);
+                        }
+                    }
+
+                    // Otomatis tangkap Flash Session Laravel secara aman tanpa bentrok tanda kutip HTML
+                    @if(session('success'))
+                        this.addToast({!! json_encode(session('success')) !!}, 'success', 'Berhasil');
+                    @endif
+
+                    @if(session('error'))
+                        this.addToast({!! json_encode(session('error')) !!}, 'error', 'Pemberitahuan');
+                    @endif
+
+                    @if(session('warning'))
+                        this.addToast({!! json_encode(session('warning')) !!}, 'warning', 'Peringatan');
+                    @endif
+
+                    @if(session('info'))
+                        this.addToast({!! json_encode(session('info')) !!}, 'info', 'Informasi');
+                    @endif
+
+                    @if(session('status'))
+                        this.addToast({!! json_encode(session('status')) !!}, 'info', 'Status');
+                    @endif
+                }
+            };
+        }
+
+        window.toastNotificationComponent = toastNotificationComponent;
+
+        if (window.Alpine) {
+            window.Alpine.data('toastNotificationComponent', toastNotificationComponent);
+        } else {
+            document.addEventListener('alpine:init', function () {
+                window.Alpine.data('toastNotificationComponent', toastNotificationComponent);
+            });
+        }
+    })();
+</script>
