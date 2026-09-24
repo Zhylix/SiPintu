@@ -714,4 +714,3 @@ class ApiIdentityController extends Controller
         ]);
     }
 }
-

@@ -450,6 +450,8 @@
 
                 <!-- Alerts Banner -->
                 <div class="px-3 sm:px-6 pt-3 sm:pt-6 w-full max-w-full min-w-0">
+                    @include('partials.security-onboarding-banner')
+
                     @if(session('success'))
                         <div class="p-4 mb-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 flex items-center justify-between">
                             <div class="flex items-center space-x-3">

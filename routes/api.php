@@ -52,5 +52,3 @@ Route::prefix('v1')->middleware('oauth.bearer')->group(function () {
     Route::get('/sijuna/teachers', [ApiIdentityController::class, 'teachers'])->name('api.v1.sijuna.teachers');
     Route::get('/sijuna/teachers/{externalId}', [ApiIdentityController::class, 'teacherDetail'])->name('api.v1.sijuna.teacher_detail');
 });
-
-

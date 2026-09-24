@@ -47,7 +47,6 @@ class AdminSettingController extends Controller
     }
 
     /**
-     * Upload / Update Website Logo.
      * Automatically updates & regenerates connected PWA icons if icon is synced with logo.
      */
     public function updateLogo(Request $request): RedirectResponse

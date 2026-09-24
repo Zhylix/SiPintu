@@ -66,16 +66,17 @@ class SyncSijunaStudentsJob implements ShouldQueue
                 $name = $student['nama'] ?? $student['name'] ?? null;
 
                 if (! $externalId) {
-                    $displayName = $name ?: ('Data Siswa #' . ($index + 1));
+                    $displayName = $name ?: ('Data Siswa #'.($index + 1));
                     $skipped[] = [
                         'identifier' => $displayName,
                         'reason' => 'NIS atau External ID kosong / tidak ditemukan',
                     ];
+
                     continue;
                 }
 
                 if (! $name) {
-                    $name = 'Siswa SIJUNA (' . $externalId . ')';
+                    $name = 'Siswa SIJUNA ('.$externalId.')';
                 }
 
                 $email = $student['user']['email'] ?? $student['email'] ?? ($externalId.'@siswa.sekolah.id');
@@ -178,9 +179,12 @@ class SyncSijunaStudentsJob implements ShouldQueue
                 );
             }
 
-            // Attach student & alumni roles in bulk using Spatie model_has_roles
-            $studentUserIds = User::where('role', 'student')->pluck('id')->toArray();
-            $alumniUserIds = User::where('role', 'alumni')->pluck('id')->toArray();
+            // Attach student & alumni roles in bulk for the current synced batch only (prevents memory bloat)
+            $processedExternalIds = array_filter(array_column($userRows, 'external_id'));
+            $syncedUsers = User::whereIn('external_id', $processedExternalIds)->select('id', 'role')->get();
+
+            $studentUserIds = $syncedUsers->where('role', 'student')->pluck('id')->toArray();
+            $alumniUserIds = $syncedUsers->where('role', 'alumni')->pluck('id')->toArray();
 
             // Ensure alumni do not retain old student role
             if (! empty($alumniUserIds)) {
@@ -225,16 +229,16 @@ class SyncSijunaStudentsJob implements ShouldQueue
 
             $noteParts = [];
             if ($usedFallback) {
-                $noteParts[] = '[Fallback Digunakan] ' . ($apiWarning ?: 'Endpoint SIJUNA offline');
+                $noteParts[] = '[Fallback Digunakan] '.($apiWarning ?: 'Endpoint SIJUNA offline');
             } elseif ($apiWarning) {
                 $noteParts[] = $apiWarning;
             }
             if (! empty($skipped)) {
                 $reasonsSummary = implode(', ', array_map(fn ($s) => "{$s['identifier']} ({$s['reason']})", array_slice($skipped, 0, 3)));
                 if (count($skipped) > 3) {
-                    $reasonsSummary .= ', dan ' . (count($skipped) - 3) . ' data lainnya';
+                    $reasonsSummary .= ', dan '.(count($skipped) - 3).' data lainnya';
                 }
-                $noteParts[] = count($skipped) . ' data dilewati: ' . $reasonsSummary;
+                $noteParts[] = count($skipped).' data dilewati: '.$reasonsSummary;
             }
             $noteMessage = ! empty($noteParts) ? implode(' | ', $noteParts) : null;
 
@@ -270,6 +274,7 @@ class SyncSijunaStudentsJob implements ShouldQueue
             Log::info("SIJUNA Student Sync completed. Siswa: {$studentsCount}, Alumni: {$alumniCount}, Skipped: ".count($skipped));
 
             $this->summary = $summary;
+
             return $summary;
         } catch (Exception $e) {
             $summary = [

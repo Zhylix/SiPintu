@@ -27,7 +27,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/manifest.webmanifest', function () {
-    $manifestData = \App\Services\PwaIconService::getManifestData();
+    $manifestData = PwaIconService::getManifestData();
 
     return response()->json($manifestData, 200, [
         'Content-Type' => 'application/manifest+json; charset=utf-8',
@@ -38,7 +38,7 @@ Route::get('/manifest.webmanifest', function () {
 });
 
 Route::get('/manifest.json', function () {
-    $manifestData = \App\Services\PwaIconService::getManifestData();
+    $manifestData = PwaIconService::getManifestData();
 
     return response()->json($manifestData, 200, [
         'Content-Type' => 'application/manifest+json; charset=utf-8',
@@ -54,7 +54,7 @@ Route::get('/sw.js', function () {
         : base_path('public/sw.js');
 
     $content = file_exists($path) ? file_get_contents($path) : '';
-    $version = \App\Models\Setting::getIconVersion();
+    $version = Setting::getIconVersion();
 
     // Dynamically update cache version so client SW automatically purges old icons
     $content = preg_replace('/const CACHE_NAME = \'[^\']+\';/', "const CACHE_NAME = 'sipintu-pwa-v{$version}';", $content);
@@ -68,13 +68,13 @@ Route::get('/sw.js', function () {
 
 Route::get('/icons/{filename}', function ($filename) {
     $clean = basename($filename);
-    $path = file_exists(public_path('icons/' . $clean))
-        ? public_path('icons/' . $clean)
-        : base_path('public/icons/' . $clean);
+    $path = file_exists(public_path('icons/'.$clean))
+        ? public_path('icons/'.$clean)
+        : base_path('public/icons/'.$clean);
 
     if (! file_exists($path)) {
-        \App\Services\PwaIconService::generateFromCurrentLogo();
-        $path = public_path('icons/' . $clean);
+        PwaIconService::generateFromCurrentLogo();
+        $path = public_path('icons/'.$clean);
     }
 
     if (file_exists($path)) {
@@ -92,7 +92,7 @@ Route::get('/apple-touch-icon.png', function () {
         : base_path('public/apple-touch-icon.png');
 
     if (! file_exists($path)) {
-        \App\Services\PwaIconService::generateFromCurrentLogo();
+        PwaIconService::generateFromCurrentLogo();
         $path = public_path('apple-touch-icon.png');
     }
 
@@ -115,6 +115,7 @@ Route::get('/offline.html', function () {
             'Content-Type' => 'text/html; charset=utf-8',
         ]);
     }
+
     return response('Anda sedang offline.', 200, ['Content-Type' => 'text/plain']);
 });
 
@@ -151,6 +152,9 @@ Route::middleware('guest')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])->name('login.store');
     Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.request');
     Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->name('password.email');
+    Route::post('/forgot-password/whatsapp-otp', [AuthController::class, 'sendResetOtpWhatsapp'])->name('password.whatsapp.otp');
+    Route::get('/forgot-password/verify-otp', [AuthController::class, 'showVerifyOtp'])->name('password.whatsapp.verify_form');
+    Route::post('/forgot-password/verify-otp', [AuthController::class, 'verifyResetOtp'])->name('password.whatsapp.verify');
 });
 
 // Explicit 404 response for any registration attempt
@@ -188,6 +192,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/profile/sync-sijuna', [AuthController::class, 'syncSijunaProfile'])->name('profile.sijuna-sync');
     Route::put('/profile/notifications', [AuthController::class, 'updateNotificationSettings'])->name('profile.notifications.update');
     Route::post('/profile/test-whatsapp', [AuthController::class, 'sendTestWhatsapp'])->name('profile.test-whatsapp');
+    Route::post('/profile/logout-other-devices', [AuthController::class, 'logoutOtherDevices'])->name('profile.logout-other-devices');
 
     // Toggle favorite application for user
     Route::post('/applications/{application}/favorite', [UserApplicationFavoriteController::class, 'toggleFavorite'])->name('applications.favorite.toggle');
@@ -309,6 +314,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
 |--------------------------------------------------------------------------
 */
 use App\Http\Controllers\Demo\ExternalAppDemoController;
+use App\Models\Setting;
+use App\Services\PwaIconService;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 
 Route::prefix('demo')->name('demo.')->group(function () {

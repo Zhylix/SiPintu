@@ -9,12 +9,14 @@ use App\Models\Role;
 use App\Models\User;
 use App\Services\AuditLogger;
 use App\Services\PasswordSyncService;
+use App\Services\SecurityService;
 use App\Services\SijunaApiService;
 use App\Services\WhatsAppService;
 use Exception;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
@@ -68,6 +70,16 @@ class AuthController extends Controller
             ])->onlyInput('account_type', 'nis', 'nip', 'kode_dudi', 'identity');
         }
 
+        $securityService = app(SecurityService::class);
+        if ($securityService->isIpBlocked($request->ip())) {
+            $block = $securityService->getActiveBlock($request->ip());
+            $expiryText = $block?->expires_at ? $block->expires_at->diffForHumans() : 'beberapa saat';
+
+            return back()->withErrors([
+                $identityFieldName => "Akses IP Anda ({$request->ip()}) diblokir sementara karena terlalu banyak percobaan login yang gagal. Silakan coba lagi {$expiryText}.",
+            ])->onlyInput('account_type', 'nis', 'nip', 'kode_dudi', 'identity');
+        }
+
         $password = $request->input('password');
 
         $isSso = session()->has('oauth_return_to') || $request->boolean('via_sso');
@@ -114,6 +126,8 @@ class AuthController extends Controller
             // 1. Direct login for Administrator with valid password regardless of active tab (Guru / DUDI / Siswa)
             if ($user->isAdmin()) {
                 if (! Hash::check($password, $user->password)) {
+                    $securityService->recordFailedLogin($request->ip(), $identity, $user->id);
+
                     AuditLogger::log($isSso ? 'sso_login_failed_password' : 'login_failed_password', [
                         'identity' => $identity,
                         'via_sso' => $isSso,
@@ -126,6 +140,8 @@ class AuthController extends Controller
                 }
 
                 if ($user->status !== 'active') {
+                    $securityService->recordFailedLogin($request->ip(), $identity, $user->id);
+
                     AuditLogger::log($isSso ? 'sso_login_failed_suspended' : 'login_failed_suspended', [
                         'identity' => $identity,
                         'via_sso' => $isSso,
@@ -137,6 +153,12 @@ class AuthController extends Controller
 
                 Auth::login($user, $request->boolean('remember'));
                 $request->session()->regenerate();
+
+                $securityService->recordSuccessfulLogin($request->ip(), $user);
+
+                if ($user->needsSecurityOnboarding()) {
+                    session()->flash('security_onboarding_notice', true);
+                }
 
                 AuditLogger::log('login_success_admin', [
                     'user_id' => $user->id,
@@ -173,6 +195,8 @@ class AuthController extends Controller
                 ];
                 $targetTab = $tabMap[$user->role] ?? $userRoleName;
 
+                $securityService->recordFailedLogin($request->ip(), $identity, $user->id);
+
                 AuditLogger::log($isSso ? 'sso_login_failed_role_mismatch' : 'login_failed_role_mismatch', [
                     'identity' => $identity,
                     'selected_tab' => $accountType,
@@ -188,6 +212,8 @@ class AuthController extends Controller
 
             // 3. Handle password verification for all users (Siswa, Guru, DUDI)
             if (! Hash::check($password, $user->password)) {
+                $securityService->recordFailedLogin($request->ip(), $identity, $user->id);
+
                 AuditLogger::log($isSso ? 'sso_login_failed_password' : 'login_failed_password', [
                     'identity' => $identity,
                     'via_sso' => $isSso,
@@ -200,6 +226,8 @@ class AuthController extends Controller
             }
 
             if ($user->status !== 'active') {
+                $securityService->recordFailedLogin($request->ip(), $identity, $user->id);
+
                 AuditLogger::log($isSso ? 'sso_login_failed_suspended' : 'login_failed_suspended', [
                     'identity' => $identity,
                     'via_sso' => $isSso,
@@ -213,6 +241,12 @@ class AuthController extends Controller
 
             Auth::login($user, $request->boolean('remember'));
             $request->session()->regenerate();
+
+            $securityService->recordSuccessfulLogin($request->ip(), $user);
+
+            if ($user->needsSecurityOnboarding()) {
+                session()->flash('security_onboarding_notice', true);
+            }
 
             AuditLogger::log($user->isStudent() ? 'login_success_student' : ($user->isTeacher() ? 'login_success_teacher' : 'login_success'), [
                 'user_id' => $user->id,
@@ -235,6 +269,14 @@ class AuthController extends Controller
                 $sijunaService = app(SijunaApiService::class);
                 $teacherData = $sijunaService->getTeacherByExternalId($identity);
                 if ($teacherData) {
+                    if ($password !== 'password') {
+                        $securityService->recordFailedLogin($request->ip(), $identity);
+
+                        return back()->withErrors([
+                            'password' => 'Akun Guru Anda terdaftar di SIJUNA tetapi baru pertama kali masuk ke SiPintu Gateway. Silakan gunakan kata sandi awal ("password") untuk masuk.',
+                        ])->onlyInput('account_type', 'nis', 'nip', 'kode_dudi', 'identity');
+                    }
+
                     $nip = (string) ($teacherData['nip'] ?? $teacherData['external_id'] ?? $teacherData['id'] ?? '');
                     $email = $teacherData['email'] ?? $teacherData['user']['email'] ?? ($nip ? $nip.'@guru.sekolah.id' : $identity);
                     $name = $teacherData['nama'] ?? $teacherData['name'] ?? 'Guru SIJUNA';
@@ -250,7 +292,7 @@ class AuthController extends Controller
                         'role' => 'teacher',
                         'phone' => $phone,
                         'status' => 'active',
-                        'password' => Hash::make($password),
+                        'password' => Hash::make('password'),
                     ]);
 
                     $teacherRole = Role::firstOrCreate(['name' => 'teacher', 'guard_name' => 'web']);
@@ -258,6 +300,9 @@ class AuthController extends Controller
 
                     Auth::login($teacherUser, $request->boolean('remember'));
                     $request->session()->regenerate();
+
+                    $securityService->recordSuccessfulLogin($request->ip(), $teacherUser);
+                    session()->flash('security_onboarding_notice', true);
 
                     AuditLogger::log('login_success_teacher_provisioned', [
                         'external_id' => $teacherUser->external_id,
@@ -271,7 +316,7 @@ class AuthController extends Controller
                         return redirect()->to($returnTo);
                     }
 
-                    return redirect()->intended(route('dashboard'))->with('success', 'Selamat datang, '.$teacherUser->name);
+                    return redirect()->intended(route('dashboard'))->with('success', 'Selamat datang, '.$teacherUser->name.'. Silakan ganti kata sandi awal Anda.');
                 }
             } catch (Exception $e) {
                 // Silently continue to login failed error below
@@ -286,12 +331,20 @@ class AuthController extends Controller
                 $studentData = $sijunaService->getStudentByExternalId($identity)
                     ?: ($nisSearch !== $identity ? $sijunaService->getStudentByExternalId($nisSearch) : null);
                 if ($studentData) {
+                    if ($password !== 'password') {
+                        $securityService->recordFailedLogin($request->ip(), $identity);
+
+                        return back()->withErrors([
+                            'password' => 'Akun Siswa Anda terdaftar di SIJUNA tetapi baru pertama kali masuk ke SiPintu Gateway. Silakan gunakan kata sandi awal ("password") untuk masuk.',
+                        ])->onlyInput('account_type', 'nis', 'nip', 'kode_dudi', 'identity');
+                    }
+
                     $nis = (string) ($studentData['nis'] ?? $studentData['external_id'] ?? $studentData['id'] ?? $nisSearch);
                     $email = $studentData['user']['email'] ?? $studentData['email'] ?? ($nis.'@smkn1bangsri.sch.id');
                     $name = $studentData['nama'] ?? $studentData['name'] ?? 'Siswa SIJUNA';
                     $phone = $studentData['hp'] ?? $studentData['phone'] ?? null;
 
-                    // Provision student locally
+                    // Provision student locally with default password
                     $studentUser = User::create([
                         'external_id' => $nis,
                         'username' => $nis,
@@ -300,7 +353,7 @@ class AuthController extends Controller
                         'role' => 'student',
                         'phone' => $phone,
                         'status' => 'active',
-                        'password' => Hash::make($password),
+                        'password' => Hash::make('password'),
                     ]);
 
                     $studentRole = Role::firstOrCreate(['name' => 'student', 'guard_name' => 'web']);
@@ -308,6 +361,9 @@ class AuthController extends Controller
 
                     Auth::login($studentUser, $request->boolean('remember'));
                     $request->session()->regenerate();
+
+                    $securityService->recordSuccessfulLogin($request->ip(), $studentUser);
+                    session()->flash('security_onboarding_notice', true);
 
                     AuditLogger::log('login_success_student_provisioned', [
                         'external_id' => $studentUser->external_id,
@@ -321,12 +377,14 @@ class AuthController extends Controller
                         return redirect()->to($returnTo);
                     }
 
-                    return redirect()->intended(route('dashboard'))->with('success', 'Selamat datang, '.$studentUser->name);
+                    return redirect()->intended(route('dashboard'))->with('success', 'Selamat datang, '.$studentUser->name.'. Silakan ganti kata sandi awal Anda.');
                 }
             } catch (Exception $e) {
                 // Silently continue to login failed error below
             }
         }
+
+        $securityService->recordFailedLogin($request->ip(), $identity);
 
         AuditLogger::log($isSso ? 'sso_login_failed' : 'login_failed', [
             'identity' => $identity,
@@ -779,5 +837,166 @@ class AuthController extends Controller
         }
 
         return back()->withErrors(['email' => __($status)]);
+    }
+
+    /**
+     * Send OTP to user's registered WhatsApp number for fast password reset.
+     */
+    public function sendResetOtpWhatsapp(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'identity' => ['required', 'string'],
+        ], [
+            'identity.required' => 'Masukkan NIS, NIP, Email, atau Username Anda.',
+        ]);
+
+        $identity = trim((string) $request->identity);
+        $user = User::where('email', $identity)
+            ->orWhere('username', $identity)
+            ->orWhere('external_id', $identity)
+            ->first();
+
+        // Support NIS lookup by prefix
+        if (! $user && ! str_contains($identity, '@')) {
+            $user = User::where('email', 'like', $identity.'@%')->first();
+        }
+
+        if (! $user) {
+            return back()->withErrors(['identity' => 'Akun dengan NIS/NIP/Email tersebut tidak ditemukan di sistem.'])->withInput();
+        }
+
+        if (empty($user->phone)) {
+            return back()->withErrors([
+                'identity' => 'Akun Anda belum memiliki nomor WhatsApp terdaftar. Silakan hubungi admin sekolah atau gunakan pemulihan via email.',
+            ])->withInput();
+        }
+
+        $whatsAppService = app(WhatsAppService::class);
+        $cleanPhone = $whatsAppService->formatPhoneNumber($user->phone);
+
+        if (! $cleanPhone) {
+            return back()->withErrors([
+                'identity' => 'Format nomor WhatsApp Anda tidak valid. Silakan hubungi admin sekolah.',
+            ])->withInput();
+        }
+
+        // Generate 6 digit numeric OTP
+        $otp = (string) random_int(100000, 999999);
+        $otpKey = "wa_reset_otp:{$user->id}";
+
+        Cache::put($otpKey, [
+            'otp' => $otp,
+            'phone' => $cleanPhone,
+            'user_id' => $user->id,
+        ], 300);
+
+        $maskedPhone = substr($cleanPhone, 0, 4).'****'.substr($cleanPhone, -3);
+        $message = "🔐 *KODE VERIFIKASI SIPINTU*\n\n".
+            "Halo, *{$user->name}*.\n\n".
+            "Kode OTP untuk reset kata sandi akun SiPintu Anda adalah:\n\n".
+            "👉 *{$otp}*\n\n".
+            "Kode ini berlaku selama 5 menit. Jangan berikan kode ini kepada siapapun demi keamanan akun Anda.\n\n".
+            '_SiPintu Identity Gateway - SMKN 1 Bangsri_';
+
+        $res = $whatsAppService->sendMessage($cleanPhone, $message);
+
+        if (! ($res['success'] ?? false)) {
+            Log::warning("[WhatsApp OTP] Gagal mengirim pesan WA ke {$cleanPhone}: ".($res['error'] ?? ''));
+
+            return back()->withErrors([
+                'identity' => 'Gagal mengirim OTP WhatsApp: '.($res['error'] ?? 'Layanan WhatsApp Bot sedang offline. Coba lagi nanti atau gunakan pemulihan email.'),
+            ])->withInput();
+        }
+
+        AuditLogger::log('wa_otp_reset_requested', ['phone' => $maskedPhone], $user->id);
+
+        return redirect()->route('password.whatsapp.verify_form', ['uid' => $user->id])
+            ->with('status', "Kode OTP 6 digit telah dikirimkan ke nomor WhatsApp Anda ({$maskedPhone}).");
+    }
+
+    /**
+     * Show form to verify OTP and enter new password.
+     */
+    public function showVerifyOtp(Request $request)
+    {
+        $userId = $request->query('uid');
+        $user = User::find($userId);
+
+        if (! $user) {
+            return redirect()->route('password.request')->withErrors(['identity' => 'Sesi pemulihan tidak valid.']);
+        }
+
+        $otpData = Cache::get("wa_reset_otp:{$user->id}");
+        if (! $otpData) {
+            return redirect()->route('password.request')->withErrors(['identity' => 'Kode OTP Anda telah kedaluwarsa (lebih dari 5 menit). Silakan ajukan ulang.']);
+        }
+
+        $cleanPhone = (string) $user->phone;
+        $maskedPhone = strlen($cleanPhone) >= 7 ? (substr($cleanPhone, 0, 4).'****'.substr($cleanPhone, -3)) : $cleanPhone;
+
+        return view('auth.verify-otp', [
+            'user' => $user,
+            'maskedPhone' => $maskedPhone,
+        ]);
+    }
+
+    /**
+     * Verify OTP and reset user password.
+     */
+    public function verifyResetOtp(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'user_id' => ['required', 'integer'],
+            'otp' => ['required', 'string', 'digits:6'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+        ], [
+            'otp.required' => 'Kode OTP wajib diisi.',
+            'otp.digits' => 'Kode OTP harus 6 digit angka.',
+            'password.required' => 'Kata sandi baru wajib diisi.',
+            'password.min' => 'Kata sandi baru minimal 8 karakter.',
+            'password.confirmed' => 'Konfirmasi kata sandi baru tidak cocok.',
+        ]);
+
+        $user = User::findOrFail($request->user_id);
+        $otpKey = "wa_reset_otp:{$user->id}";
+        $cached = Cache::get($otpKey);
+
+        if (! $cached || ! hash_equals((string) $cached['otp'], trim((string) $request->otp))) {
+            return back()->withErrors(['otp' => 'Kode OTP salah atau telah kedaluwarsa. Silakan periksa kembali pesan WhatsApp Anda.'])->withInput();
+        }
+
+        $user->update([
+            'password' => Hash::make($request->password),
+        ]);
+
+        Cache::forget($otpKey);
+
+        // Broadcast to downstream apps
+        app(PasswordSyncService::class)->broadcastPasswordChange($user);
+
+        AuditLogger::log('wa_otp_reset_success', [], $user->id);
+
+        return redirect()->route('login')->with('success', 'Kata sandi akun Anda berhasil diperbarui melalui verifikasi WhatsApp! Silakan login dengan kata sandi baru Anda.');
+    }
+
+    /**
+     * Invalidate other sessions for the authenticated user.
+     */
+    public function logoutOtherDevices(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'password' => ['required', 'current_password'],
+        ], [
+            'password.required' => 'Masukkan kata sandi akun Anda untuk konfirmasi.',
+            'password.current_password' => 'Kata sandi tidak sesuai.',
+        ]);
+
+        Auth::logoutOtherDevices($request->password);
+
+        AuditLogger::log('logout_other_devices', [], Auth::id());
+
+        return back()
+            ->with('success', 'Berhasil mengeluarkan akun Anda dari semua sesi perangkat lain!')
+            ->with('active_section', 'perangkat_login');
     }
 }

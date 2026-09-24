@@ -29,6 +29,8 @@ class OAuthController extends Controller
         $responseType = $request->query('response_type', 'code');
         $scope = $request->query('scope', 'openid profile email');
         $state = $request->query('state');
+        $codeChallenge = $request->query('code_challenge');
+        $codeChallengeMethod = $request->query('code_challenge_method');
 
         // 1. Validate Client Application
         $application = Application::where('client_id', $clientId)->first();
@@ -128,6 +130,8 @@ class OAuthController extends Controller
             'application_id' => $application->id,
             'redirect_uri' => $targetRedirectUri,
             'scopes' => $scope,
+            'code_challenge' => $codeChallenge,
+            'code_challenge_method' => $codeChallenge ? ($codeChallengeMethod ?: 'S256') : null,
             'expires_at' => now()->addMinutes(5),
             'revoked' => false,
         ]);
@@ -199,6 +203,47 @@ class OAuthController extends Controller
                 ]);
 
                 return response()->json(['error' => 'invalid_grant', 'error_description' => 'Authorization code is invalid, expired, or revoked.'], 400);
+            }
+
+            // Verify PKCE (RFC 7636) if code_challenge was provided
+            if (! empty($authCode->code_challenge)) {
+                $codeVerifier = $request->input('code_verifier');
+                if (empty($codeVerifier)) {
+                    AuditLogger::log('token_exchange_missing_pkce_verifier', [
+                        'client_id' => $clientId,
+                        'via_sso' => true,
+                        'is_sso_failure' => true,
+                    ]);
+
+                    return response()->json([
+                        'error' => 'invalid_request',
+                        'error_description' => 'PKCE verification failed: code_verifier is required.',
+                    ], 400);
+                }
+
+                $method = strtoupper((string) ($authCode->code_challenge_method ?: 'S256'));
+                $isValidPkce = false;
+
+                if ($method === 'S256') {
+                    $rawHash = hash('sha256', (string) $codeVerifier, true);
+                    $calculatedChallenge = rtrim(strtr(base64_encode($rawHash), '+/', '-_'), '=');
+                    $isValidPkce = hash_equals($authCode->code_challenge, $calculatedChallenge);
+                } elseif ($method === 'PLAIN') {
+                    $isValidPkce = hash_equals($authCode->code_challenge, (string) $codeVerifier);
+                }
+
+                if (! $isValidPkce) {
+                    AuditLogger::log('token_exchange_invalid_pkce_verifier', [
+                        'client_id' => $clientId,
+                        'via_sso' => true,
+                        'is_sso_failure' => true,
+                    ]);
+
+                    return response()->json([
+                        'error' => 'invalid_grant',
+                        'error_description' => 'PKCE verification failed: code_verifier does not match code_challenge.',
+                    ], 400);
+                }
             }
 
             // Revoke authorization code immediately (single-use)

@@ -115,6 +115,7 @@ class SijunaApiService
 
         if (empty($allStudents)) {
             $this->usedStudentFallback = true;
+
             return $this->getFallbackMockStudents();
         }
 
@@ -222,6 +223,7 @@ class SijunaApiService
 
         if (empty($allTeachers)) {
             $this->usedTeacherFallback = true;
+
             return $this->getFallbackMockTeachers();
         }
 

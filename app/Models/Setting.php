@@ -53,7 +53,7 @@ class Setting extends Model
             }
 
             if (Storage::disk('public')->exists($path)) {
-                return '/storage/' . ltrim($path, '/');
+                return '/storage/'.ltrim($path, '/');
             }
         }
 
@@ -74,7 +74,7 @@ class Setting extends Model
             }
 
             if (Storage::disk('public')->exists($path)) {
-                return '/storage/' . ltrim($path, '/');
+                return '/storage/'.ltrim($path, '/');
             }
         }
 
@@ -96,7 +96,7 @@ class Setting extends Model
             }
 
             if (Storage::disk('public')->exists($path)) {
-                return '/storage/' . ltrim($path, '/');
+                return '/storage/'.ltrim($path, '/');
             }
         }
 
@@ -109,6 +109,7 @@ class Setting extends Model
     public static function isIconConnectedToLogo(): bool
     {
         $customIcon = static::get('site_icon');
+
         return empty($customIcon) || ! Storage::disk('public')->exists($customIcon);
     }
 

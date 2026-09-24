@@ -60,7 +60,7 @@ class Application extends Model
         }
 
         if (Storage::disk('public')->exists($this->logo)) {
-            return '/storage/' . ltrim($this->logo, '/');
+            return '/storage/'.ltrim($this->logo, '/');
         }
 
         return null;

@@ -69,7 +69,7 @@ class SyncAdminEnvCommand extends Command
             ]);
             $admin->syncRoles(['admin']);
 
-            $this->components->info("Akun admin baru berhasil dibuat berdasarkan file .env!");
+            $this->components->info('Akun admin baru berhasil dibuat berdasarkan file .env!');
         } else {
             if ($this->option('password-only')) {
                 $admin->update([
@@ -86,7 +86,7 @@ class SyncAdminEnvCommand extends Command
                     'status' => 'active',
                 ]);
                 $admin->syncRoles(['admin']);
-                $this->components->info("Data akun admin berhasil diperbarui & disinkronkan dari file .env!");
+                $this->components->info('Data akun admin berhasil diperbarui & disinkronkan dari file .env!');
             }
         }
 
@@ -106,7 +106,7 @@ class SyncAdminEnvCommand extends Command
 
         $this->newLine();
         $this->line('<fg=green;options=bold>✓ Kredensial admin sekarang dapat digunakan langsung untuk login.</>');
-        $this->line("<fg=gray>Catatan: Jika Anda mengubah ADMIN_* di .env nanti, jalankan kembali perintah `php artisan admin:sync`.</>");
+        $this->line('<fg=gray>Catatan: Jika Anda mengubah ADMIN_* di .env nanti, jalankan kembali perintah `php artisan admin:sync`.</>');
         $this->newLine();
 
         return self::SUCCESS;

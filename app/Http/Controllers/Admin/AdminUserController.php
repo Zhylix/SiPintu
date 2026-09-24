@@ -7,7 +7,6 @@ use App\Models\Jurusan;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\AuditLogger;
-use App\Services\PasswordSyncService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;

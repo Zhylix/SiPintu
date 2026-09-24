@@ -12,6 +12,7 @@ use App\Services\SijunaApiService;
 use Exception;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class AdminSijunaController extends Controller
 {
@@ -40,10 +41,10 @@ class AdminSijunaController extends Controller
     {
         try {
             // Run sync synchronously for instant admin feedback (Students + Teachers)
-            $studentJob = new SyncSijunaStudentsJob();
+            $studentJob = new SyncSijunaStudentsJob;
             $studentsSummary = $studentJob->handle($sijunaApi);
 
-            $teacherJob = new SyncSijunaTeachersJob();
+            $teacherJob = new SyncSijunaTeachersJob;
             $teachersSummary = $teacherJob->handle($sijunaApi);
 
             AuditLogger::log('admin_manual_sijuna_sync_triggered', [
@@ -52,7 +53,7 @@ class AdminSijunaController extends Controller
             ]);
 
             // Clear dashboard cache so stats reflect immediately
-            \Illuminate\Support\Facades\Cache::forget('admin_dashboard_stats');
+            Cache::forget('admin_dashboard_stats');
 
             // Hitung ringkasan per tipe data
             $studentsCount = (int) ($studentsSummary['students_count'] ?? 0);

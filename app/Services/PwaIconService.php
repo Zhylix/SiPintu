@@ -39,12 +39,14 @@ class PwaIconService
 
             if (! $fullSourcePath || ! file_exists($fullSourcePath)) {
                 Log::warning('PwaIconService: Source logo/icon not found for PWA icon generation.');
+
                 return false;
             }
 
             return self::generateIconsFromPath($fullSourcePath);
         } catch (\Throwable $e) {
-            Log::error('PwaIconService failed: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            Log::error('PwaIconService failed: '.$e->getMessage(), ['trace' => $e->getTraceAsString()]);
+
             return false;
         }
     }
@@ -57,6 +59,7 @@ class PwaIconService
     {
         if (! extension_loaded('gd')) {
             Log::warning('PwaIconService: PHP GD extension is not loaded.');
+
             return false;
         }
 
@@ -68,7 +71,7 @@ class PwaIconService
         if ($isSvg) {
             $convertBin = trim((string) @shell_exec('which convert 2>/dev/null'));
             if ($convertBin && file_exists($convertBin)) {
-                $tempPngPath = tempnam(sys_get_temp_dir(), 'pwa_svg_') . '.png';
+                $tempPngPath = tempnam(sys_get_temp_dir(), 'pwa_svg_').'.png';
                 $cmd = sprintf(
                     '%s -background none -density 300 %s -resize 1024x1024 %s',
                     escapeshellcmd($convertBin),
@@ -87,6 +90,7 @@ class PwaIconService
             if ($tempPngPath && file_exists($tempPngPath)) {
                 @unlink($tempPngPath);
             }
+
             return false;
         }
 
@@ -102,6 +106,7 @@ class PwaIconService
             if ($tempPngPath && file_exists($tempPngPath)) {
                 @unlink($tempPngPath);
             }
+
             return false;
         }
 
@@ -131,7 +136,7 @@ class PwaIconService
             imagecopyresampled($destImg, $srcImg, $dstX, $dstY, 0, 0, $targetW, $targetH, $origW, $origH);
             imagealphablending($destImg, false);
             imagesavealpha($destImg, true);
-            imagepng($destImg, $outDir . "/icon-{$size}x{$size}.png", 8);
+            imagepng($destImg, $outDir."/icon-{$size}x{$size}.png", 8);
             imagedestroy($destImg);
         }
 
@@ -150,7 +155,7 @@ class PwaIconService
 
             imagealphablending($maskImg, true);
             imagecopyresampled($maskImg, $srcImg, $dstX, $dstY, 0, 0, $targetW, $targetH, $origW, $origH);
-            imagepng($maskImg, $outDir . "/icon-maskable-{$size}x{$size}.png", 8);
+            imagepng($maskImg, $outDir."/icon-maskable-{$size}x{$size}.png", 8);
             imagedestroy($maskImg);
         }
 
@@ -241,7 +246,7 @@ class PwaIconService
             file_put_contents(public_path('manifest.webmanifest'), $json);
             file_put_contents(public_path('manifest.json'), $json);
         } catch (\Throwable $e) {
-            Log::warning('PwaIconService: Failed to write manifest files: ' . $e->getMessage());
+            Log::warning('PwaIconService: Failed to write manifest files: '.$e->getMessage());
         }
     }
 }

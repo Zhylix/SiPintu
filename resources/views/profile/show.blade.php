@@ -457,50 +457,43 @@
                     </div>
                 </div>
 
-                @if($user->isStudent())
-                    <div class="p-5 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-950 font-medium space-y-2">
-                        <div class="font-black text-emerald-950 flex items-center space-x-2 text-sm">
-                            <svg class="w-5 h-5 text-emerald-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                            <span>Akun Siswa Tersinkron Sijuna</span>
-                        </div>
-                        <p class="leading-relaxed text-slate-700">Kata sandi untuk akun Siswa bersumber langsung dari SIJUNA API untuk menjaga konsistensi Single Sign-On seluruh aplikasi SMKN 1 Bangsri.</p>
+                <form method="POST" action="{{ route('profile.password') }}" class="space-y-4">
+                    @csrf
+                    @method('PUT')
+                    <input type="hidden" name="active_section" value="ganti_password">
+
+                    <div>
+                        <label class="block text-xs font-extrabold text-slate-700 mb-1.5">Kata Sandi Saat Ini <span class="text-rose-500">*</span></label>
+                        <input type="password" name="current_password" required
+                            class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm font-semibold focus:bg-white focus:border-emerald-600 focus:outline-none transition-all">
+                        @error('current_password')
+                            <p class="text-xs text-rose-500 font-bold mt-1.5">{{ $message }}</p>
+                        @enderror
                     </div>
-                @else
-                    <form method="POST" action="{{ route('profile.password') }}" class="space-y-4">
-                        @csrf
-                        @method('PUT')
-                        <input type="hidden" name="active_section" value="ganti_password">
 
-                        <div>
-                            <label class="block text-xs font-extrabold text-slate-700 mb-1.5">Kata Sandi Saat Ini <span class="text-rose-500">*</span></label>
-                            <input type="password" name="current_password" required
-                                class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm font-semibold focus:bg-white focus:border-emerald-600 focus:outline-none transition-all">
-                            @error('current_password')
-                                <p class="text-xs text-rose-500 font-bold mt-1.5">{{ $message }}</p>
-                            @enderror
-                        </div>
+                    <div>
+                        <label class="block text-xs font-extrabold text-slate-700 mb-1.5">Kata Sandi Baru <span class="text-rose-500">*</span></label>
+                        <input type="password" name="password" required minlength="8"
+                            class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm font-semibold focus:bg-white focus:border-emerald-600 focus:outline-none transition-all">
+                        <p class="text-[10px] text-slate-400 mt-1 font-medium">Minimal 8 karakter kombinasi huruf dan angka.</p>
+                        @error('password')
+                            <p class="text-xs text-rose-500 font-bold mt-1.5">{{ $message }}</p>
+                        @enderror
+                    </div>
 
-                        <div>
-                            <label class="block text-xs font-extrabold text-slate-700 mb-1.5">Kata Sandi Baru <span class="text-rose-500">*</span></label>
-                            <input type="password" name="password" required minlength="8"
-                                class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm font-semibold focus:bg-white focus:border-emerald-600 focus:outline-none transition-all">
-                            <p class="text-[10px] text-slate-400 mt-1 font-medium">Minimal 8 karakter kombinasi huruf dan angka.</p>
-                            @error('password')
-                                <p class="text-xs text-rose-500 font-bold mt-1.5">{{ $message }}</p>
-                            @enderror
-                        </div>
+                    <div>
+                        <label class="block text-xs font-extrabold text-slate-700 mb-1.5">Konfirmasi Kata Sandi Baru <span class="text-rose-500">*</span></label>
+                        <input type="password" name="password_confirmation" required
+                            class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm font-semibold focus:bg-white focus:border-emerald-600 focus:outline-none transition-all">
+                    </div>
 
-                        <div>
-                            <label class="block text-xs font-extrabold text-slate-700 mb-1.5">Konfirmasi Kata Sandi Baru <span class="text-rose-500">*</span></label>
-                            <input type="password" name="password_confirmation" required
-                                class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm font-semibold focus:bg-white focus:border-emerald-600 focus:outline-none transition-all">
-                        </div>
-
-                        <button type="submit" class="px-6 py-3 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-extrabold rounded-xl transition-all shadow-md shadow-emerald-700/20">
+                    <div class="pt-2 flex items-center justify-between">
+                        <button type="submit" class="px-6 py-3 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-extrabold rounded-xl transition-all shadow-md shadow-emerald-700/20 cursor-pointer">
                             Perbarui Kata Sandi
                         </button>
-                    </form>
-                @endif
+                        <span class="text-[11px] text-slate-400 font-medium">Kata sandi baru langsung tersinkron ke semua aplikasi sekolah.</span>
+                    </div>
+                </form>
             </div>
 
             <!-- SECTION 5: Perangkat Login -->
@@ -548,6 +541,30 @@
                         <div>
                             <span class="text-slate-400 font-medium block">Status Keamanan:</span>
                             <span class="font-extrabold text-emerald-700">TERAUTENTIKASI</span>
+                        </div>
+                    </div>
+
+                    <!-- Form Logout dari Semua Perangkat Lain -->
+                    <div class="pt-4 border-t border-slate-200" x-data="{ openLogoutOther: false }">
+                        <button type="button" @click="openLogoutOther = !openLogoutOther"
+                                class="px-4 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold transition-all flex items-center space-x-2 cursor-pointer">
+                            <svg class="w-4 h-4 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                            <span>Keluarkan Akun dari Semua Perangkat Lain</span>
+                        </button>
+
+                        <div x-show="openLogoutOther" x-transition class="mt-3 p-4 rounded-xl bg-white border border-rose-200 space-y-2.5 shadow-xs">
+                            <p class="text-xs text-slate-600 font-medium">
+                                Masukkan kata sandi akun Anda untuk memvalidasi dan memutus semua sesi login aktif di komputer, ponsel, atau browser lain.
+                            </p>
+                            <form method="POST" action="{{ route('profile.logout-other-devices') }}" class="flex flex-col sm:flex-row gap-2">
+                                @csrf
+                                <input type="password" name="password" required placeholder="Kata sandi akun Anda"
+                                    class="flex-1 px-4 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-xs font-semibold focus:outline-none focus:border-rose-600">
+                                <button type="submit"
+                                    class="px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-extrabold transition-all shadow-xs cursor-pointer whitespace-nowrap">
+                                    Logout Perangkat Lain
+                                </button>
+                            </form>
                         </div>
                     </div>
                 </div>

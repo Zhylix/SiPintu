@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
@@ -115,6 +116,40 @@ class User extends Authenticatable
         }
 
         return ucfirst($this->role ?? 'User');
+    }
+
+    /**
+     * Determine whether the user is still using the initial default password ('password').
+     */
+    public function isUsingDefaultPassword(): bool
+    {
+        return ! empty($this->password) && Hash::check('password', $this->password);
+    }
+
+    /**
+     * Check if user needs to update their initial password.
+     */
+    public function needsPasswordChange(): bool
+    {
+        return $this->isUsingDefaultPassword();
+    }
+
+    /**
+     * Check if user has not yet configured a valid WhatsApp phone number.
+     */
+    public function needsWhatsAppPhone(): bool
+    {
+        $clean = preg_replace('/[^\d]/', '', (string) $this->phone);
+
+        return empty($clean) || strlen($clean) < 8;
+    }
+
+    /**
+     * Check if user requires the security onboarding prompt (either default password or missing phone).
+     */
+    public function needsSecurityOnboarding(): bool
+    {
+        return $this->needsPasswordChange() || $this->needsWhatsAppPhone();
     }
 
     public function canAccessApplication(Application $app): bool

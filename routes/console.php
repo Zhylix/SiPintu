@@ -11,3 +11,6 @@ Schedule::job(new SyncSijunaTeachersJob)->cron('0 0 */3 * *');
 
 // Schedule application health checks (every 15 minutes)
 Schedule::job(new CheckApplicationHealthJob)->everyFifteenMinutes();
+
+// Schedule automated maintenance & cleanup of expired tokens and old logs (daily at 03:00 AM)
+Schedule::command('sipintu:prune')->dailyAt('03:00');

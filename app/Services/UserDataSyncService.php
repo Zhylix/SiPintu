@@ -117,6 +117,7 @@ class UserDataSyncService
                     'status' => 'skipped',
                     'message' => 'Skipped downstream synchronization due to empty or invalid base_url.',
                 ];
+
                 continue;
             }
 
@@ -140,6 +141,7 @@ class UserDataSyncService
                     'status' => 'skipped',
                     'message' => 'Skipped self-synchronization to prevent server deadlock.',
                 ];
+
                 continue;
             }
 

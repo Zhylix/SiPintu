@@ -59,16 +59,17 @@ class SyncSijunaTeachersJob implements ShouldQueue
                 $name = $teacher['nama'] ?? $teacher['name'] ?? null;
 
                 if (! $email && ! $externalId) {
-                    $displayName = $name ?: ('Data Guru #' . ($index + 1));
+                    $displayName = $name ?: ('Data Guru #'.($index + 1));
                     $skipped[] = [
                         'identifier' => $displayName,
                         'reason' => 'NIP, External ID, dan Email kosong / tidak ditemukan',
                     ];
+
                     continue;
                 }
 
                 if (! $name) {
-                    $name = 'Guru SIJUNA (' . ($nip ?: $externalId) . ')';
+                    $name = 'Guru SIJUNA ('.($nip ?: $externalId).')';
                 }
 
                 $phone = $teacher['hp'] ?? $teacher['phone'] ?? null;
@@ -128,16 +129,16 @@ class SyncSijunaTeachersJob implements ShouldQueue
 
             $noteParts = [];
             if ($usedFallback) {
-                $noteParts[] = '[Fallback Digunakan] ' . ($apiWarning ?: 'Endpoint SIJUNA offline');
+                $noteParts[] = '[Fallback Digunakan] '.($apiWarning ?: 'Endpoint SIJUNA offline');
             } elseif ($apiWarning) {
                 $noteParts[] = $apiWarning;
             }
             if (! empty($skipped)) {
                 $reasonsSummary = implode(', ', array_map(fn ($s) => "{$s['identifier']} ({$s['reason']})", array_slice($skipped, 0, 3)));
                 if (count($skipped) > 3) {
-                    $reasonsSummary .= ', dan ' . (count($skipped) - 3) . ' data lainnya';
+                    $reasonsSummary .= ', dan '.(count($skipped) - 3).' data lainnya';
                 }
-                $noteParts[] = count($skipped) . ' data dilewati: ' . $reasonsSummary;
+                $noteParts[] = count($skipped).' data dilewati: '.$reasonsSummary;
             }
             $noteMessage = ! empty($noteParts) ? implode(' | ', $noteParts) : null;
 
@@ -171,6 +172,7 @@ class SyncSijunaTeachersJob implements ShouldQueue
             Log::info("SIJUNA Teacher Sync completed. Guru: {$teachersCount}, Skipped: ".count($skipped));
 
             $this->summary = $summary;
+
             return $summary;
         } catch (Exception $e) {
             $summary = [

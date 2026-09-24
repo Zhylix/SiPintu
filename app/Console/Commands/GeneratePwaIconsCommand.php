@@ -54,10 +54,12 @@ class GeneratePwaIconsCommand extends Command
             $this->line('   - /icons/icon-maskable-512x512.png');
             $this->line('   - /apple-touch-icon.png');
             $this->line('   - /manifest.webmanifest & /manifest.json updated.');
+
             return self::SUCCESS;
         }
 
         $this->error('Gagal men-generate PWA icons. Pastikan ekstensi PHP GD terpasang di server.');
+
         return self::FAILURE;
     }
 }

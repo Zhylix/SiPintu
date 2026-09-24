@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\AdminMiddleware;
+use App\Http\Middleware\CheckBlockedIp;
 use App\Http\Middleware\OAuthBearerMiddleware;
 use App\Http\Middleware\RoleMiddleware;
 use Illuminate\Foundation\Application;
@@ -23,10 +24,13 @@ return Application::configure(basePath: dirname(__DIR__))
             'api/*',
         ]);
 
+        $middleware->append(CheckBlockedIp::class);
+
         $middleware->alias([
             'admin' => AdminMiddleware::class,
             'role' => RoleMiddleware::class,
             'oauth.bearer' => OAuthBearerMiddleware::class,
+            'check.blocked.ip' => CheckBlockedIp::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
