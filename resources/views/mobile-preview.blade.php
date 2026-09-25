@@ -14,8 +14,8 @@
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-600 mr-1.5 shrink-0"></span>
                 {{ auth()->user()->getUserTypeName() ?? 'Pengguna' }} Portal
             </span>
-            <h2 class="text-xl font-black text-slate-900 tracking-tight whitespace-nowrap">Hai, {{ auth()->user()->name ?? 'Pengguna Gateway' }}</h2>
-            <p class="text-xs text-slate-500 font-medium text-center whitespace-nowrap">Selamat datang di SiPintu Mobile Gateway SMKN 1 Bangsri</p>
+            <h2 class="text-xl font-black text-slate-900 tracking-tight whitespace-nowrap">Hai, {{ auth()->user()->name ?? 'Pengguna' }}</h2>
+            <p class="text-xs text-slate-500 font-medium text-center whitespace-nowrap">Selamat datang di SiPintu Mobile SMKN 1 Bangsri</p>
         </div>
 
         <!-- Quick Stats Pill Row (Centered) -->

@@ -17,6 +17,9 @@
     diagnosingAll: false,
     showBatchModal: false,
     batchResults: null,
+    openRestoreModal: false,
+    selectedRestoreFile: '',
+    openBlockIpModal: false,
     clients: @js($gatewayDiagnostics['downstream_clients']['clients'] ?? []),
     summary: @js($gatewayDiagnostics['summary'] ?? []),
     init() {
@@ -549,6 +552,10 @@
                             </td>
                             <td class="px-4 py-3 text-right">
                                 <div class="flex items-center justify-end gap-2">
+                                    <button type="button" @click="selectedRestoreFile = '{{ $b['filename'] }}'; openRestoreModal = true;" class="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 text-xs font-bold rounded-xl transition-all inline-flex items-center gap-1.5 shadow-2xs cursor-pointer" title="Pulihkan (Restore) database dari arsip ini">
+                                        <svg class="w-3.5 h-3.5 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                                        <span>Pulihkan</span>
+                                    </button>
                                     <a href="{{ route('admin.monitoring.backup.download', $b['filename']) }}" class="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-900 text-xs font-bold rounded-xl transition-all inline-flex items-center gap-1.5 shadow-2xs" title="Unduh Arsip Cadangan">
                                         <svg class="w-3.5 h-3.5 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                                         <span>Unduh</span>
@@ -578,6 +585,184 @@
                     @endforelse
                 </tbody>
             </table>
+        </div>
+    </div>
+
+    <!-- Security Center & Brute Force Prevention Section -->
+    <div class="bg-white rounded-3xl border border-slate-200 p-6 sm:p-7 space-y-6 shadow-sm">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-5">
+            <div>
+                <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-rose-100 border border-rose-200 text-rose-800 text-[11px] font-extrabold tracking-wide uppercase mb-1.5">
+                    <svg class="w-3.5 h-3.5 text-rose-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                    <span>Brute Force Protection & Security Center</span>
+                </div>
+                <h3 class="text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+                    Proteksi Serangan & Manajemen IP Terblokir
+                </h3>
+                <p class="text-xs text-slate-500 font-medium mt-1">
+                    Sistem otomatis mengunci IP yang gagal login 5x berturut-turut selama 15 menit. Anda dapat membuka blokir atau memblokir IP secara manual.
+                </p>
+            </div>
+
+            <div class="flex items-center gap-2.5 flex-wrap shrink-0">
+                <button type="button" @click="openBlockIpModal = true" class="px-4 py-2.5 bg-rose-50 hover:bg-rose-100 border border-rose-300 text-rose-900 text-xs font-black rounded-xl transition-all shadow-2xs inline-flex items-center gap-1.5 cursor-pointer">
+                    <svg class="w-4 h-4 text-rose-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                    <span>Tambah Blokir IP Manual</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 3 Quick Security Badges -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+                <span class="text-[10px] font-extrabold uppercase text-slate-500 block">IP Terblokir Aktif Saat Ini</span>
+                <div class="text-xl font-black {{ $activeBlockedCount > 0 ? 'text-rose-700' : 'text-emerald-700' }} mt-1">
+                    {{ $activeBlockedCount }} Alamat IP
+                </div>
+                <p class="text-[11px] text-slate-500 mt-0.5 font-medium">
+                    {{ $activeBlockedCount > 0 ? 'Sedang dibatasi aksesnya oleh sistem gateway' : 'Semua IP normal & tidak ada blokir aktif' }}
+                </p>
+            </div>
+
+            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+                <span class="text-[10px] font-extrabold uppercase text-slate-500 block">Deteksi Brute Force (24 Jam)</span>
+                <div class="text-xl font-black text-amber-700 mt-1">
+                    {{ $bruteForceCount24h }} Kali Terdeteksi
+                </div>
+                <p class="text-[11px] text-slate-500 mt-0.5 font-medium">Serangan login beruntun yang berhasil ditangkal</p>
+            </div>
+
+            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+                <span class="text-[10px] font-extrabold uppercase text-slate-500 block">Batas Percobaan Gagal</span>
+                <div class="text-xl font-black text-slate-800 mt-1 font-mono">
+                    5 Percobaan / 15 Menit
+                </div>
+                <p class="text-[11px] text-slate-500 mt-0.5 font-medium">Otomatis reset setelah login berhasil</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <!-- Table IP Terblokir (Cols 7) -->
+            <div class="lg:col-span-7 space-y-3">
+                <div class="flex items-center justify-between">
+                    <h4 class="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                        <span>Daftar IP Address Terblokir</span>
+                    </h4>
+                    <span class="text-[11px] text-slate-500 font-semibold">{{ count($blockedIps) }} entri</span>
+                </div>
+
+                <div class="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-2xs">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-black uppercase text-[10px]">
+                                <tr>
+                                    <th class="px-3.5 py-2.5">IP Address</th>
+                                    <th class="px-3.5 py-2.5">Alasan & Durasi</th>
+                                    <th class="px-3.5 py-2.5 text-center">Status</th>
+                                    <th class="px-3.5 py-2.5 text-right">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                @forelse($blockedIps as $bIp)
+                                    @php
+                                        $isCurrentlyBlocked = $bIp->is_active && (empty($bIp->expires_at) || \Carbon\Carbon::parse($bIp->expires_at)->isFuture());
+                                    @endphp
+                                    <tr class="hover:bg-slate-50/70 transition-colors {{ $isCurrentlyBlocked ? 'bg-rose-50/20' : '' }}">
+                                        <td class="px-3.5 py-2.5 font-mono font-bold text-slate-900">
+                                            {{ $bIp->ip_address }}
+                                        </td>
+                                        <td class="px-3.5 py-2.5 text-slate-600">
+                                            <div class="text-[11px] font-medium leading-tight max-w-xs truncate" title="{{ $bIp->reason }}">
+                                                {{ $bIp->reason }}
+                                            </div>
+                                            <div class="text-[10px] text-slate-400 mt-0.5">
+                                                Kedaluwarsa: {{ $bIp->expires_at ? \Carbon\Carbon::parse($bIp->expires_at)->diffForHumans() : 'Permanen' }}
+                                            </div>
+                                        </td>
+                                        <td class="px-3.5 py-2.5 text-center">
+                                            @if($isCurrentlyBlocked)
+                                                <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-rose-100 text-rose-800 border border-rose-300">
+                                                    Diblokir
+                                                </span>
+                                            @else
+                                                <span class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase bg-slate-100 text-slate-600 border border-slate-200">
+                                                    Selesai
+                                                </span>
+                                            @endif
+                                        </td>
+                                        <td class="px-3.5 py-2.5 text-right">
+                                            @if($isCurrentlyBlocked)
+                                                <form action="{{ route('admin.monitoring.blocked-ips.destroy', $bIp->id) }}" method="POST" onsubmit="return confirm('Buka blokir IP {{ $bIp->ip_address }}?');" class="inline">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-lg text-[10px] font-extrabold transition-all cursor-pointer" title="Buka blokir IP ini">
+                                                        Buka Blokir
+                                                    </button>
+                                                </form>
+                                            @else
+                                                <span class="text-[10px] text-slate-400">-</span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="4" class="px-4 py-8 text-center text-slate-400 text-xs">
+                                            <svg class="w-8 h-8 mx-auto text-emerald-500 mb-2 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                                            <p class="font-bold text-slate-700">Tidak ada IP yang sedang diblokir</p>
+                                            <p class="text-[11px] text-slate-500">Semua aktivitas autentikasi berada dalam kondisi normal.</p>
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Table Riwayat Security Logs (Cols 5) -->
+            <div class="lg:col-span-5 space-y-3">
+                <div class="flex items-center justify-between">
+                    <h4 class="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                        <span>Riwayat Log Keamanan Terbaru</span>
+                    </h4>
+                    <a href="{{ route('admin.audit-logs.index') }}" class="text-[11px] text-emerald-700 hover:text-emerald-800 font-bold">
+                        Audit Log Lengkap &rarr;
+                    </a>
+                </div>
+
+                <div class="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-2xs divide-y divide-slate-100 max-h-[380px] overflow-y-auto">
+                    @forelse($securityLogs as $sLog)
+                        <div class="p-3 text-xs flex items-start justify-between gap-3 hover:bg-slate-50/80 transition-colors">
+                            <div class="space-y-0.5 min-w-0">
+                                <div class="flex items-center gap-1.5 flex-wrap">
+                                    <span class="font-bold text-slate-900 truncate max-w-[150px]" title="{{ $sLog->target_identifier }}">
+                                        {{ $sLog->target_identifier ?? 'Anonim' }}
+                                    </span>
+                                    @if($sLog->event_type === 'brute_force_detected')
+                                        <span class="px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-rose-100 text-rose-800 border border-rose-300">Brute Force</span>
+                                    @elseif($sLog->event_type === 'login_failed')
+                                        <span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-amber-100 text-amber-800 border border-amber-300">Gagal</span>
+                                    @else
+                                        <span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-emerald-100 text-emerald-800 border border-emerald-300">Sukses</span>
+                                    @endif
+                                </div>
+                                <div class="text-[10px] text-slate-500 font-mono">
+                                    IP: {{ $sLog->ip_address }}
+                                </div>
+                            </div>
+                            <div class="text-[10px] text-slate-400 font-medium shrink-0 text-right">
+                                {{ $sLog->created_at->diffForHumans() }}
+                            </div>
+                        </div>
+                    @empty
+                        <div class="p-6 text-center text-slate-400 text-xs">
+                            Belum ada catatan log ancaman keamanan.
+                        </div>
+                    @endforelse
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1345,6 +1530,160 @@
                     Tutup
                 </button>
             </div>
+        </div>
+    </div>
+
+    <!-- Modal Pulihkan / Restore Database -->
+    <div x-show="openRestoreModal" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6"
+         x-cloak>
+        <div @click.away="openRestoreModal = false" 
+             x-show="openRestoreModal"
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 translate-y-4 sm:scale-95"
+             x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+             x-transition:leave-end="opacity-0 translate-y-4 sm:scale-95"
+             class="bg-white rounded-3xl shadow-2xl max-w-lg w-full border border-slate-200 overflow-hidden relative">
+            
+            <div class="px-6 py-5 bg-gradient-to-r from-amber-700 to-rose-800 text-white flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="p-2 bg-white/10 rounded-xl">
+                        <svg class="w-5 h-5 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    </div>
+                    <div>
+                        <h3 class="font-black text-base">Konfirmasi Restore Database</h3>
+                        <p class="text-[11px] text-amber-200 font-medium">Pemulihan snapshot database SiPintu</p>
+                    </div>
+                </div>
+                <button type="button" @click="openRestoreModal = false" class="p-1 rounded-xl text-white/70 hover:text-white hover:bg-white/10 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            <form :action="'{{ url('/admin/monitoring/backup/restore') }}/' + encodeURIComponent(selectedRestoreFile)" method="POST" class="p-6 space-y-4" onsubmit="this.querySelector('button[type=submit]').disabled = true; this.querySelector('button[type=submit] span').innerText = 'Memulihkan Database...';">
+                @csrf
+
+                <div class="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-900 text-xs space-y-2">
+                    <div class="font-black flex items-center gap-1.5 text-rose-800">
+                        <svg class="w-4 h-4 text-rose-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                        <span>PERINGATAN KRITIKAL:</span>
+                    </div>
+                    <p class="leading-relaxed">
+                        Tindakan ini akan menimpa seluruh tabel dan data pada database aktif saat ini dengan data dari file cadangan:
+                    </p>
+                    <div class="p-2.5 bg-white border border-rose-300 rounded-xl font-mono font-black text-rose-950 text-xs truncate" x-text="selectedRestoreFile"></div>
+                    <p class="text-[11px] text-rose-700">
+                        Semua perubahan data yang terjadi setelah tanggal backup tersebut akan digantikan. Pastikan tidak ada transaksi penting yang sedang berjalan.
+                    </p>
+                </div>
+
+                <div class="space-y-1.5">
+                    <label class="block text-xs font-black text-slate-800">
+                        Kata Sandi Administrator untuk Verifikasi <span class="text-rose-600">*</span>
+                    </label>
+                    <input type="password" name="admin_password" required placeholder="Masukkan kata sandi akun Admin Anda saat ini..."
+                           class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 font-semibold focus:outline-none focus:border-rose-600 focus:bg-white transition-all">
+                </div>
+
+                <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2.5">
+                    <button type="button" @click="openRestoreModal = false" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all">
+                        Batal
+                    </button>
+                    <button type="submit" class="px-5 py-2.5 bg-rose-700 hover:bg-rose-800 text-white text-xs font-extrabold rounded-xl transition-all shadow-md shadow-rose-700/20 flex items-center gap-1.5">
+                        <svg class="w-4 h-4 text-rose-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        <span>Pulihkan Database Sekarang</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Tambah Blokir IP Manual -->
+    <div x-show="openBlockIpModal" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6"
+         x-cloak>
+        <div @click.away="openBlockIpModal = false" 
+             x-show="openBlockIpModal"
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 translate-y-4 sm:scale-95"
+             x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+             x-transition:leave-end="opacity-0 translate-y-4 sm:scale-95"
+             class="bg-white rounded-3xl shadow-2xl max-w-lg w-full border border-slate-200 overflow-hidden relative">
+            
+            <div class="px-6 py-5 bg-gradient-to-r from-rose-800 to-slate-900 text-white flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="p-2 bg-white/10 rounded-xl">
+                        <svg class="w-5 h-5 text-rose-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                    </div>
+                    <div>
+                        <h3 class="font-black text-base">Tambah Blokir IP Address Manual</h3>
+                        <p class="text-[11px] text-rose-200 font-medium">Batasi akses IP yang terindikasi melakukan penyalahgunaan</p>
+                    </div>
+                </div>
+                <button type="button" @click="openBlockIpModal = false" class="p-1 rounded-xl text-white/70 hover:text-white hover:bg-white/10 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            <form action="{{ route('admin.monitoring.blocked-ips.store') }}" method="POST" class="p-6 space-y-4">
+                @csrf
+
+                <div class="space-y-1.5">
+                    <label class="block text-xs font-black text-slate-800">
+                        Alamat IP (IPv4 / IPv6) <span class="text-rose-600">*</span>
+                    </label>
+                    <input type="text" name="ip_address" required placeholder="Contoh: 192.168.1.50 atau 103.45.67.89"
+                           class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-900 font-bold focus:outline-none focus:border-rose-600 focus:bg-white transition-all">
+                </div>
+
+                <div class="space-y-1.5">
+                    <label class="block text-xs font-black text-slate-800">
+                        Alasan Pemblokiran <span class="text-rose-600">*</span>
+                    </label>
+                    <textarea name="reason" rows="2" required placeholder="Contoh: Percobaan flooding request, bot scanning, atau request mencurigakan"
+                              class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 font-medium focus:outline-none focus:border-rose-600 focus:bg-white transition-all"></textarea>
+                </div>
+
+                <div class="space-y-1.5">
+                    <label class="block text-xs font-black text-slate-800">
+                        Durasi Pemblokiran
+                    </label>
+                    <select name="duration_hours" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 font-semibold focus:outline-none focus:border-rose-600">
+                        <option value="1">1 Jam</option>
+                        <option value="6">6 Jam</option>
+                        <option value="24" selected>24 Jam (1 Hari)</option>
+                        <option value="168">7 Hari (1 Minggu)</option>
+                        <option value="720">30 Hari (1 Bulan)</option>
+                        <option value="0">Permanen (Tanpa batas waktu)</option>
+                    </select>
+                </div>
+
+                <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2.5">
+                    <button type="button" @click="openBlockIpModal = false" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all">
+                        Batal
+                    </button>
+                    <button type="submit" class="px-5 py-2.5 bg-rose-700 hover:bg-rose-800 text-white text-xs font-extrabold rounded-xl transition-all shadow-md shadow-rose-700/20 flex items-center gap-1.5">
+                        <svg class="w-4 h-4 text-rose-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                        <span>Simpan & Blokir IP</span>
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

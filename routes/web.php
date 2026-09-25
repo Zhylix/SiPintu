@@ -149,12 +149,12 @@ Route::get('/', function () {
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-    Route::post('/login', [AuthController::class, 'login'])->name('login.store');
+    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:15,1')->name('login.store');
     Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.request');
-    Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->name('password.email');
-    Route::post('/forgot-password/whatsapp-otp', [AuthController::class, 'sendResetOtpWhatsapp'])->name('password.whatsapp.otp');
+    Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->middleware('throttle:5,1')->name('password.email');
+    Route::post('/forgot-password/whatsapp-otp', [AuthController::class, 'sendResetOtpWhatsapp'])->middleware('throttle:5,1')->name('password.whatsapp.otp');
     Route::get('/forgot-password/verify-otp', [AuthController::class, 'showVerifyOtp'])->name('password.whatsapp.verify_form');
-    Route::post('/forgot-password/verify-otp', [AuthController::class, 'verifyResetOtp'])->name('password.whatsapp.verify');
+    Route::post('/forgot-password/verify-otp', [AuthController::class, 'verifyResetOtp'])->middleware('throttle:10,1')->name('password.whatsapp.verify');
 });
 
 // Explicit 404 response for any registration attempt
@@ -208,7 +208,10 @@ Route::middleware('auth')->group(function () {
 */
 
 Route::get('/oauth/authorize', [OAuthController::class, 'authorize'])->name('oauth.authorize');
-Route::post('/oauth/token', [OAuthController::class, 'token'])->withoutMiddleware([PreventRequestForgery::class])->name('oauth.token');
+Route::post('/oauth/token', [OAuthController::class, 'token'])
+    ->withoutMiddleware([PreventRequestForgery::class])
+    ->middleware('throttle:60,1')
+    ->name('oauth.token');
 Route::post('/oauth/logout', [OAuthController::class, 'logout'])->withoutMiddleware([PreventRequestForgery::class])->name('oauth.logout');
 Route::get('/.well-known/openid-configuration', [OAuthController::class, 'openidConfiguration'])->name('oauth.well-known');
 Route::get('/oauth/openid-configuration', [OAuthController::class, 'openidConfiguration']);
@@ -254,8 +257,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::get('/apps', [AdminDashboardController::class, 'apps'])->name('apps');
 
     // User Management (Teachers, DUDI, Students, Admins)
-    Route::resource('users', AdminUserController::class);
+    Route::get('/users/template', [AdminUserController::class, 'downloadTemplate'])->name('users.template');
+    Route::post('/users/import', [AdminUserController::class, 'import'])->name('users.import');
     Route::patch('/users/{user}/update-phone', [AdminUserController::class, 'updatePhone'])->name('users.update-phone');
+    Route::resource('users', AdminUserController::class);
 
     // Pengelompokan Alumni per Jurusan (PPL, TO, AKL, PM, MPLB)
     Route::get('/jurusan', [AdminJurusanController::class, 'index'])->name('jurusan.index');
@@ -287,7 +292,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::post('/monitoring/diagnose-all-sso', [AdminMonitoringController::class, 'diagnoseAllSso'])->name('monitoring.diagnose-all-sso');
     Route::post('/monitoring/backup/create', [AdminMonitoringController::class, 'createBackup'])->name('monitoring.backup.create');
     Route::get('/monitoring/backup/download/{filename}', [AdminMonitoringController::class, 'downloadBackup'])->name('monitoring.backup.download');
+    Route::post('/monitoring/backup/restore/{filename}', [AdminMonitoringController::class, 'restoreBackup'])->name('monitoring.backup.restore');
     Route::delete('/monitoring/backup/{filename}', [AdminMonitoringController::class, 'deleteBackup'])->name('monitoring.backup.delete');
+    Route::post('/monitoring/blocked-ips', [AdminMonitoringController::class, 'storeBlockedIp'])->name('monitoring.blocked-ips.store');
+    Route::delete('/monitoring/blocked-ips/{blockedIp}', [AdminMonitoringController::class, 'unblockIp'])->name('monitoring.blocked-ips.destroy');
 
     // Analytics & Usage Reports
     Route::get('/analytics', [AdminAnalyticsController::class, 'index'])->name('analytics.index');

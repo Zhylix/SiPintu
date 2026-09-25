@@ -31,6 +31,7 @@ class User extends Authenticatable
         'avatar',
         'wa_notify',
         'status',
+        'must_change_password',
         'sipintu_last_synced_at',
     ];
 
@@ -50,6 +51,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'wa_notify' => 'boolean',
+            'must_change_password' => 'boolean',
             'sipintu_last_synced_at' => 'datetime',
         ];
     }
@@ -131,7 +133,7 @@ class User extends Authenticatable
      */
     public function needsPasswordChange(): bool
     {
-        return $this->isUsingDefaultPassword();
+        return (bool) ($this->must_change_password || $this->isUsingDefaultPassword());
     }
 
     /**

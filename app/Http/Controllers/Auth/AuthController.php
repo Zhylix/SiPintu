@@ -5,6 +5,9 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\Application;
 use App\Models\AuditLog;
+use App\Models\OAuthAccessToken;
+use App\Models\OAuthAuthCode;
+use App\Models\OAuthRefreshToken;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\AuditLogger;
@@ -18,6 +21,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Schema;
@@ -172,6 +176,12 @@ class AuthController extends Controller
                     return redirect()->to($returnTo);
                 }
 
+                if ($user->must_change_password) {
+                    return redirect()->route('profile')
+                        ->with('warning', 'Demi keamanan akun Anda, Anda diwajibkan mengubah kata sandi awal terlebih dahulu.')
+                        ->with('active_section', 'ganti_password');
+                }
+
                 return redirect()->route('admin.dashboard')->with('success', 'Berhasil login sebagai '.$user->name);
             }
 
@@ -258,6 +268,12 @@ class AuthController extends Controller
                 $returnTo = session()->pull('oauth_return_to');
 
                 return redirect()->to($returnTo);
+            }
+
+            if ($user->must_change_password) {
+                return redirect()->route('profile')
+                    ->with('warning', 'Demi keamanan akun Anda, Anda diwajibkan mengubah kata sandi awal terlebih dahulu.')
+                    ->with('active_section', 'ganti_password');
             }
 
             return redirect()->intended(route('dashboard'))->with('success', 'Berhasil login sebagai '.$user->name);
@@ -406,13 +422,43 @@ class AuthController extends Controller
     public function logout(Request $request): RedirectResponse
     {
         $userId = Auth::id();
-        AuditLogger::log('logout', [], $userId);
+
+        if ($userId) {
+            AuditLogger::log('logout', [], $userId);
+
+            // Single Sign-Out (Global Logout): Invalidate and revoke all active OAuth tokens and auth codes
+            OAuthAccessToken::where('user_id', $userId)->update(['revoked' => true]);
+            OAuthRefreshToken::whereHas('accessToken', function ($q) use ($userId) {
+                $q->where('user_id', $userId);
+            })->update(['revoked' => true]);
+            OAuthAuthCode::where('user_id', $userId)->update(['revoked' => true]);
+
+            // Dispatch backchannel logout notification to downstream applications if configured
+            $appsWithLogout = Application::whereNotNull('logout_uri')
+                ->where('logout_uri', '!=', '')
+                ->where('status', 'active')
+                ->get();
+
+            foreach ($appsWithLogout as $app) {
+                try {
+                    Http::timeout(3)->post($app->logout_uri, [
+                        'event' => 'user_logout',
+                        'user_id' => $userId,
+                        'client_id' => $app->client_id,
+                        'timestamp' => now()->toIso8601String(),
+                    ]);
+                } catch (\Throwable $e) {
+                    // Fail silently so downstream offline app doesn't block local logout
+                    Log::debug("Backchannel logout notice to {$app->name} skipped: ".$e->getMessage());
+                }
+            }
+        }
 
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('login')->with('info', 'Anda telah berhasil logout dari Gateway.');
+        return redirect()->route('login')->with('info', 'Anda telah berhasil logout dari seluruh sesi Gateway.');
     }
 
     public function showProfile(Request $request)
@@ -800,6 +846,7 @@ class AuthController extends Controller
 
         $user->update([
             'password' => Hash::make($request->password),
+            'must_change_password' => false,
         ]);
 
         // Broadcast password change to connected downstream SSO applications (KEC ADMIN)

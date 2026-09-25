@@ -378,6 +378,162 @@ class DatabaseBackupService
     }
 
     /**
+     * Restore database dari file backup .sql.gz.
+     *
+     * @param  string  $filename  Nama file backup (misal: sipintu_backup_2026-09-25_080617.sql.gz)
+     * @param  int|string|null  $triggeredByUserId  ID user admin yang mengeksekusi restore
+     */
+    public function restoreBackup(string $filename, int|string|null $triggeredByUserId = null): array
+    {
+        $filepath = $this->getBackupPath($filename);
+        if (! $filepath) {
+            return [
+                'success' => false,
+                'message' => 'File backup database tidak ditemukan atau nama file tidak valid.',
+            ];
+        }
+
+        $method = 'mysql_cli';
+        $success = false;
+        $errorMessage = null;
+
+        try {
+            $success = $this->restoreUsingMysqlCli($filepath);
+            if (! $success) {
+                $method = 'pdo_fallback';
+                $success = $this->restoreUsingPdo($filepath);
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Restore mysql CLI gagal, mencoba metode fallback PDO: '.$e->getMessage());
+            try {
+                $method = 'pdo_fallback';
+                $success = $this->restoreUsingPdo($filepath);
+            } catch (\Throwable $pdoException) {
+                $success = false;
+                $errorMessage = $pdoException->getMessage();
+            }
+        }
+
+        if (! $success) {
+            Log::error("Restore database SiPintu dari {$filename} gagal: ".($errorMessage ?? 'Gagal memproses eksekusi SQL.'));
+
+            return [
+                'success' => false,
+                'message' => 'Gagal memulihkan database: '.($errorMessage ?? 'Terjadi kesalahan saat mengeksekusi file backup.'),
+            ];
+        }
+
+        AuditLogger::log('database_backup_restored', [
+            'filename' => $filename,
+            'method' => $method,
+        ], $triggeredByUserId);
+
+        Log::info("SiPintu Database berhasil di-restore dari: {$filename} (metode: {$method}).");
+
+        return [
+            'success' => true,
+            'message' => "Database SiPintu berhasil dipulihkan dari cadangan {$filename} via {$method}.",
+            'method' => $method,
+        ];
+    }
+
+    /**
+     * Restore menggunakan binary client mysql CLI.
+     */
+    protected function restoreUsingMysqlCli(string $filepath): bool
+    {
+        $connection = config('database.default');
+        $config = config("database.connections.{$connection}");
+
+        if (! $config || ! in_array($config['driver'] ?? '', ['mysql', 'mariadb'])) {
+            return false;
+        }
+
+        $host = $config['host'] ?? '127.0.0.1';
+        $port = (string) ($config['port'] ?? '3306');
+        $database = $config['database'];
+        $username = $config['username'];
+        $password = (string) ($config['password'] ?? '');
+        $socket = $config['unix_socket'] ?? null;
+
+        $command = [
+            'mysql',
+            '--user='.$username,
+            '--default-character-set=utf8mb4',
+        ];
+
+        if ($socket) {
+            $command[] = '--socket='.$socket;
+        } else {
+            $command[] = '--host='.$host;
+            $command[] = '--port='.$port;
+        }
+
+        $command[] = $database;
+
+        $gz = gzopen($filepath, 'rb');
+        if (! $gz) {
+            return false;
+        }
+
+        $env = $_ENV;
+        if ($password !== '') {
+            $env['MYSQL_PWD'] = $password;
+        }
+
+        $process = new Process($command, null, $env);
+        $process->setTimeout(900); // 15 menit maksimal waktu restore
+
+        // Uncompress and feed into input stream
+        $sqlContent = '';
+        while (! gzeof($gz)) {
+            $sqlContent .= gzread($gz, 1024 * 1024); // 1MB chunks
+        }
+        gzclose($gz);
+
+        if (empty($sqlContent)) {
+            return false;
+        }
+
+        $process->setInput($sqlContent);
+        $process->run();
+
+        return $process->isSuccessful();
+    }
+
+    /**
+     * Restore menggunakan PDO connection Laravel.
+     */
+    protected function restoreUsingPdo(string $filepath): bool
+    {
+        $gz = gzopen($filepath, 'rb');
+        if (! $gz) {
+            return false;
+        }
+
+        $sql = '';
+        while (! gzeof($gz)) {
+            $sql .= gzread($gz, 1024 * 1024);
+        }
+        gzclose($gz);
+
+        if (empty($sql)) {
+            return false;
+        }
+
+        DB::statement('SET FOREIGN_KEY_CHECKS = 0;');
+        try {
+            DB::unprepared($sql);
+            DB::statement('SET FOREIGN_KEY_CHECKS = 1;');
+
+            return true;
+        } catch (\Throwable $e) {
+            DB::statement('SET FOREIGN_KEY_CHECKS = 1;');
+            throw $e;
+        }
+    }
+
+    /**
      * Format byte ke satuan yang mudah dibaca (KB, MB, GB).
      */
     public function formatBytes(int $bytes, int $precision = 2): string

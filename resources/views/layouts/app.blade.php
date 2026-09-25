@@ -435,6 +435,80 @@
                             Aktif
                         </span>
 
+                        @php
+                            $navAnnouncements = \App\Models\Announcement::active()
+                                ->forWeb()
+                                ->forRole(auth()->user()->role)
+                                ->latest()
+                                ->take(5)
+                                ->get();
+                            $hasUnreadNotif = $navAnnouncements->isNotEmpty();
+                        @endphp
+
+                        <!-- In-App Notification Center Dropdown -->
+                        <div class="relative" x-data="{ openNotif: false }">
+                            <button type="button" @click="openNotif = !openNotif" 
+                                    class="relative p-2 rounded-xl text-slate-600 hover:text-emerald-800 hover:bg-emerald-50 border border-slate-200 transition-colors cursor-pointer"
+                                    title="Pusat Notifikasi & Pengumuman">
+                                <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                                </svg>
+                                @if($hasUnreadNotif)
+                                    <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-600 border-2 border-white rounded-full animate-pulse"></span>
+                                @endif
+                            </button>
+
+                            <!-- Dropdown Notification Menu -->
+                            <div x-show="openNotif" 
+                                 @click.away="openNotif = false"
+                                 x-transition:enter="transition ease-out duration-200"
+                                 x-transition:enter-start="opacity-0 translate-y-2 scale-95"
+                                 x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                                 x-transition:leave="transition ease-in duration-150"
+                                 x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                                 x-transition:leave-end="opacity-0 translate-y-2 scale-95"
+                                 class="absolute right-0 mt-2 w-72 sm:w-88 bg-white rounded-2xl border border-slate-200 shadow-xl overflow-hidden z-50 divide-y divide-slate-100"
+                                 x-cloak>
+                                
+                                <div class="px-4 py-3 bg-slate-50 flex items-center justify-between">
+                                    <div class="flex items-center space-x-2">
+                                        <span class="font-black text-xs text-slate-900">Pusat Notifikasi</span>
+                                        <span class="px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                            {{ $navAnnouncements->count() }} Pengumuman
+                                        </span>
+                                    </div>
+                                    <span class="text-[10px] text-slate-400 font-medium">SiPintu</span>
+                                </div>
+
+                                <div class="max-h-72 overflow-y-auto divide-y divide-slate-100">
+                                    @forelse($navAnnouncements as $ann)
+                                        <div class="p-3.5 hover:bg-emerald-50/50 transition-colors">
+                                            <div class="flex items-start gap-2.5">
+                                                <span class="w-2 h-2 rounded-full bg-emerald-600 mt-1.5 shrink-0"></span>
+                                                <div class="space-y-1 min-w-0 flex-1">
+                                                    <h4 class="font-extrabold text-xs text-emerald-950 leading-snug">
+                                                        {{ $ann->title }}
+                                                    </h4>
+                                                    <p class="text-[11px] text-slate-600 line-clamp-2 leading-relaxed">
+                                                        {{ $ann->content }}
+                                                    </p>
+                                                    <span class="text-[9px] text-slate-400 font-medium block">
+                                                        {{ $ann->published_at ? $ann->published_at->diffForHumans() : $ann->created_at->diffForHumans() }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @empty
+                                        <div class="p-6 text-center text-slate-400 space-y-1">
+                                            <svg class="w-6 h-6 mx-auto text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                                            <p class="text-xs font-bold text-slate-600">Tidak ada pengumuman baru</p>
+                                            <p class="text-[10px]">Semua pemberitahuan sekolah sudah Anda baca.</p>
+                                        </div>
+                                    @endforelse
+                                </div>
+                            </div>
+                        </div>
+
                         <a href="{{ route('profile') }}" class="flex items-center space-x-1.5 sm:space-x-2 text-xs font-bold text-slate-700 hover:text-emerald-800 transition-colors whitespace-nowrap group shrink-0">
                             @if(auth()->user()->avatar_url)
                                 <img src="{{ auth()->user()->avatar_url }}" loading="lazy" decoding="async" class="w-7 h-7 rounded-full object-cover ring-2 ring-emerald-600/30 shadow-xs group-hover:scale-105 transition-transform shrink-0" alt="{{ auth()->user()->name }}">

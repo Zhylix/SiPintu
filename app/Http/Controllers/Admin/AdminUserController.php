@@ -7,8 +7,10 @@ use App\Models\Jurusan;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\AuditLogger;
+use App\Services\UserImportService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 
@@ -225,5 +227,53 @@ class AdminUserController extends Controller
         $phoneDisplay = $newPhone ?: '(kosong/dihapus)';
 
         return back()->with('success', "Nomor WhatsApp untuk {$user->name} berhasil diperbarui menjadi {$phoneDisplay}.");
+    }
+
+    /**
+     * Download template CSV file for bulk user import.
+     */
+    public function downloadTemplate(UserImportService $importService): Response
+    {
+        $csvContent = $importService->getCsvTemplate();
+
+        return response($csvContent, 200, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="template_import_user_sipintu.csv"',
+            'Pragma' => 'no-cache',
+            'Expires' => '0',
+        ]);
+    }
+
+    /**
+     * Handle bulk user import from CSV file.
+     */
+    public function import(Request $request, UserImportService $importService): RedirectResponse
+    {
+        $request->validate([
+            'file' => ['required', 'file', 'extensions:csv,txt', 'max:10240'], // Max 10MB
+            'update_existing' => ['nullable', 'boolean'],
+            'force_change_password' => ['nullable', 'boolean'],
+        ], [
+            'file.required' => 'Pilih file CSV yang akan diunggah.',
+            'file.extensions' => 'Format file harus berupa CSV (.csv atau .txt).',
+            'file.max' => 'Ukuran file maksimal adalah 10 MB.',
+        ]);
+
+        $updateExisting = $request->boolean('update_existing', true);
+        $forcePasswordChange = $request->boolean('force_change_password', true);
+
+        $result = $importService->importFromCsv($request->file('file'), $updateExisting, $forcePasswordChange);
+
+        if (! $result['success']) {
+            return back()->with('error', $result['message'])->with('import_errors', $result['errors'] ?? []);
+        }
+
+        if (! empty($result['errors'])) {
+            return back()
+                ->with('success', $result['message'])
+                ->with('import_warnings', $result['errors']);
+        }
+
+        return back()->with('success', $result['message']);
     }
 }

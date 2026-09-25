@@ -1,23 +1,46 @@
 @extends('layouts.app', ['headerTitle' => 'Kelola Pengguna'])
 
 @section('content')
-<div class="space-y-6 min-w-0 max-w-full">
+<div class="space-y-6 min-w-0 max-w-full" x-data="{ openImportModal: false }">
     <!-- Header Section -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-sm min-w-0 max-w-full">
         <div>
             <h2 class="text-xl font-black text-emerald-950 tracking-tight">Manajemen Pengguna Gateway</h2>
-            <p class="text-xs text-slate-600 font-medium mt-1">Kelola data pengguna.</p>
+            <p class="text-xs text-slate-600 font-medium mt-1">Kelola data pengguna, hak akses, dan import massal data akun.</p>
         </div>
-        <a href="{{ route('admin.users.create') }}" class="inline-flex items-center justify-center px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-extrabold rounded-xl transition-all shadow-md shadow-emerald-700/20">
-            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-            Tambah Pengguna Baru
-        </a>
+        <div class="flex items-center gap-2.5 flex-wrap">
+            <button type="button" @click="openImportModal = true" class="inline-flex items-center justify-center px-4 py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs font-extrabold rounded-xl transition-all shadow-xs cursor-pointer">
+                <svg class="w-4 h-4 mr-2 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                Import Excel / CSV
+            </button>
+            <a href="{{ route('admin.users.create') }}" class="inline-flex items-center justify-center px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-extrabold rounded-xl transition-all shadow-md shadow-emerald-700/20">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                Tambah Pengguna Baru
+            </a>
+        </div>
     </div>
 
     <!-- Alert Success / Error -->
     @if(session('success'))
-        <div class="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl text-xs font-bold shadow-sm">
-            {{ session('success') }}
+        <div class="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl text-xs font-bold shadow-sm flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+                <svg class="w-4 h-4 text-emerald-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                <span>{{ session('success') }}</span>
+            </div>
+        </div>
+    @endif
+
+    @if(session('import_warnings'))
+        <div class="p-4 bg-amber-50 border border-amber-200 text-amber-900 rounded-2xl text-xs space-y-1.5 shadow-sm">
+            <div class="font-black flex items-center gap-1.5 text-amber-800">
+                <svg class="w-4 h-4 text-amber-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                <span>Catatan Baris yang Dilewati / Peringatan Import:</span>
+            </div>
+            <ul class="list-disc list-inside space-y-0.5 text-amber-700 pl-1">
+                @foreach(session('import_warnings') as $warn)
+                    <li>{{ $warn }}</li>
+                @endforeach
+            </ul>
         </div>
     @endif
 
@@ -341,5 +364,113 @@
             </div>
         @endif
     </div>
+
+    <!-- Modal Import Data User dari CSV / Excel -->
+    <div x-show="openImportModal" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6"
+         x-cloak>
+        <div @click.away="openImportModal = false" 
+             x-show="openImportModal"
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 translate-y-4 sm:scale-95"
+             x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+             x-transition:leave-end="opacity-0 translate-y-4 sm:scale-95"
+             class="bg-white rounded-3xl shadow-2xl max-w-xl w-full border border-slate-200 overflow-hidden relative">
+            
+            <!-- Modal Header -->
+            <div class="px-6 py-5 bg-gradient-to-r from-emerald-800 to-teal-900 text-white flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="p-2 bg-white/10 rounded-xl">
+                        <svg class="w-5 h-5 text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                    </div>
+                    <div>
+                        <h3 class="font-black text-base">Import Data Pengguna (Excel / CSV)</h3>
+                        <p class="text-[11px] text-emerald-200 font-medium">Unggah file spreadsheet untuk menambahkan banyak akun sekaligus</p>
+                    </div>
+                </div>
+                <button type="button" @click="openImportModal = false" class="p-1 rounded-xl text-white/70 hover:text-white hover:bg-white/10 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <form action="{{ route('admin.users.import') }}" method="POST" enctype="multipart/form-data" class="p-6 space-y-5" onsubmit="this.querySelector('button[type=submit]').disabled = true; this.querySelector('button[type=submit] span').innerText = 'Memproses Import...';">
+                @csrf
+
+                <!-- Download Template Box -->
+                <div class="p-4 bg-emerald-50/70 border border-emerald-200 rounded-2xl flex items-center justify-between gap-3">
+                    <div class="space-y-0.5">
+                        <span class="text-xs font-black text-emerald-950 block">Belum punya format file yang sesuai?</span>
+                        <span class="text-[11px] text-emerald-800 font-medium block">Unduh contoh template CSV yang siap dibuka di Microsoft Excel.</span>
+                    </div>
+                    <a href="{{ route('admin.users.template') }}" class="px-3.5 py-2 bg-white hover:bg-emerald-100 text-emerald-900 border border-emerald-300 rounded-xl text-xs font-extrabold transition-all shadow-2xs shrink-0 flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                        <span>Unduh Template</span>
+                    </a>
+                </div>
+
+                <!-- File Input -->
+                <div class="space-y-1.5">
+                    <label class="block text-xs font-black text-slate-800">
+                        File Dokumen (.csv) <span class="text-rose-600">*</span>
+                    </label>
+                    <input type="file" name="file" required accept=".csv,text/csv,text/plain"
+                           class="w-full text-xs text-slate-700 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-emerald-700 file:text-white hover:file:bg-emerald-800 file:cursor-pointer border border-slate-200 rounded-2xl p-2 bg-slate-50 focus:outline-none focus:border-emerald-600">
+                    <p class="text-[10px] text-slate-500 font-medium">Format: CSV (*.csv) dengan pemisah koma (,) atau titik koma (;). Ukuran maksimal 10 MB.</p>
+                </div>
+
+                <!-- Checkboxes Options -->
+                <div class="space-y-3 pt-2 border-t border-slate-100">
+                    <label class="flex items-start gap-2.5 cursor-pointer">
+                        <input type="checkbox" name="update_existing" value="1" checked class="mt-0.5 rounded text-emerald-700 focus:ring-emerald-500 border-slate-300">
+                        <div>
+                            <span class="text-xs font-black text-slate-900 block">Perbarui Akun jika Sudah Ada (Update Existing)</span>
+                            <span class="text-[11px] text-slate-500 font-medium block">Jika Email atau NIS/NIP sudah terdaftar, data nama, kelas, jurusan, & telepon akan disinkronkan.</span>
+                        </div>
+                    </label>
+
+                    <label class="flex items-start gap-2.5 cursor-pointer">
+                        <input type="checkbox" name="force_change_password" value="1" checked class="mt-0.5 rounded text-emerald-700 focus:ring-emerald-500 border-slate-300">
+                        <div>
+                            <span class="text-xs font-black text-slate-900 block">Wajibkan Ganti Password saat Login Pertama</span>
+                            <span class="text-[11px] text-slate-500 font-medium block">User baru akan diminta membuat kata sandi baru yang aman saat pertama kali login ke SiPintu.</span>
+                        </div>
+                    </label>
+                </div>
+
+                <!-- Column Reference List -->
+                <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-[11px] space-y-1.5">
+                    <span class="font-extrabold text-slate-700 block text-xs">Kolom yang Didukung Template:</span>
+                    <p class="text-slate-600 leading-relaxed font-mono text-[10px]">
+                        name, email, username, external_id, role, jurusan, classroom, phone, password, force_change_password
+                    </p>
+                    <p class="text-slate-500 text-[10px]">
+                        • Role: <span class="font-bold">student</span>, <span class="font-bold">teacher</span>, <span class="font-bold">dudi</span>, <span class="font-bold">alumni</span>.<br>
+                        • Jurusan: <span class="font-bold">PPLG</span>, <span class="font-bold">TO</span>, <span class="font-bold">AKL</span>, <span class="font-bold">PM</span>, <span class="font-bold">MPLB</span>.
+                    </p>
+                </div>
+
+                <!-- Actions -->
+                <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2.5">
+                    <button type="button" @click="openImportModal = false" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all">
+                        Batal
+                    </button>
+                    <button type="submit" class="px-5 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-extrabold rounded-xl transition-all shadow-md shadow-emerald-700/20 flex items-center gap-1.5">
+                        <svg class="w-4 h-4 text-emerald-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                        <span>Mulai Proses Import</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 @endsection
+

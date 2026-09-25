@@ -1,2 +1,17 @@
 User-agent: *
-Disallow:
+Disallow: /admin/
+Disallow: /admin/*
+Disallow: /oauth/
+Disallow: /oauth/*
+Disallow: /api/
+Disallow: /api/*
+Disallow: /storage/backups/
+Disallow: /storage/backups/*
+Disallow: /forgot-password
+Disallow: /forgot-password/*
+
+Allow: /
+Allow: /login
+Allow: /manifest.webmanifest
+Allow: /manifest.json
+Allow: /icons/
