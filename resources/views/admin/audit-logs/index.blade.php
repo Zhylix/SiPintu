@@ -4,8 +4,8 @@
 <div class="space-y-6 min-w-0 max-w-full">
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-sm min-w-0 max-w-full">
         <div>
-            <h2 class="text-xl font-black text-emerald-950">Catatan Audit Log & Aktivitas Keamanan</h2>
-            <p class="text-xs text-slate-600 font-medium mt-1">Audit log mencatat login, SSO exchange, kegagalan autentikasi SSO, pembuatan user, dan perubahan hak akses secara permanen</p>
+            <h2 class="text-xl font-black text-emerald-950">History User SiPintu</h2>
+            <p class="text-xs text-slate-600 font-medium mt-1">History user mencatat login, SSO exchange, kegagalan autentikasi SSO, pembuatan user, dan perubahan hak akses secara permanen</p>
         </div>
     </div>
 
@@ -20,12 +20,12 @@
             <a href="{{ route('admin.audit-logs.index', array_merge(request()->except('type', 'page'), ['type' => 'sso_failed'])) }}"
                class="px-3.5 py-1.5 rounded-xl border transition-all flex items-center gap-1.5 shrink-0 {{ request('type') === 'sso_failed' ? 'bg-rose-700 text-white border-rose-700 shadow-sm' : 'bg-rose-50 text-rose-800 border-rose-200 hover:bg-rose-100' }}">
                 <svg class="w-3.5 h-3.5 {{ request('type') === 'sso_failed' ? 'text-white' : 'text-rose-600' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                <span>Gagal SSO (SSO Failure)</span>
+                <span>Gagal SSO</span>
             </a>
             <a href="{{ route('admin.audit-logs.index', array_merge(request()->except('type', 'page'), ['type' => 'sso'])) }}"
                class="px-3.5 py-1.5 rounded-xl border transition-all flex items-center gap-1.5 shrink-0 {{ request('type') === 'sso' ? 'bg-sky-700 text-white border-sky-700 shadow-sm' : 'bg-sky-50 text-sky-800 border-sky-200 hover:bg-sky-100' }}">
                 <svg class="w-3.5 h-3.5 {{ request('type') === 'sso' ? 'text-white' : 'text-sky-600' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
-                <span>Event SSO Gateway</span>
+                <span>Event SSO</span>
             </a>
             <a href="{{ route('admin.audit-logs.index', array_merge(request()->except('type', 'page'), ['type' => 'login'])) }}"
                class="px-3.5 py-1.5 rounded-xl border transition-all flex items-center gap-1.5 shrink-0 {{ request('type') === 'login' ? 'bg-emerald-700 text-white border-emerald-700 shadow-sm' : 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100' }}">
@@ -44,7 +44,7 @@
             </div>
 
             <button type="submit" class="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-extrabold rounded-xl shadow-md shadow-emerald-700/20 transition-all">
-                Cari Audit Log
+                Cari Log History
             </button>
             @if(request('search') || request('type'))
                 <a href="{{ route('admin.audit-logs.index') }}" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all">

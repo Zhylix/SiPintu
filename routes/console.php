@@ -14,3 +14,6 @@ Schedule::job(new CheckApplicationHealthJob)->everyFifteenMinutes();
 
 // Schedule automated maintenance & cleanup of expired tokens and old logs (daily at 03:00 AM)
 Schedule::command('sipintu:prune')->dailyAt('03:00');
+
+// Schedule automated daily database backup (daily at 02:00 AM)
+Schedule::command('sipintu:backup')->dailyAt('02:00');

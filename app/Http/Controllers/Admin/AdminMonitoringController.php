@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Jobs\CheckApplicationHealthJob;
 use App\Models\Application;
 use App\Models\OAuthAccessToken;
+use App\Services\DatabaseBackupService;
 use App\Services\GatewayHealthValidationService;
 use App\Services\SsoDiagnosticsService;
 use Illuminate\Http\JsonResponse;
@@ -15,7 +16,7 @@ use Illuminate\Support\Facades\Redis;
 
 class AdminMonitoringController extends Controller
 {
-    public function index(GatewayHealthValidationService $validator)
+    public function index(GatewayHealthValidationService $validator, DatabaseBackupService $backupService)
     {
         // 1. Full Gateway Diagnostics
         $gatewayDiagnostics = $validator->validateFullGateway();
@@ -44,12 +45,16 @@ class AdminMonitoringController extends Controller
             ->where('expires_at', '>', now())
             ->count();
 
+        // 6. Database Backups List
+        $backups = $backupService->listBackups();
+
         return view('admin.monitoring.index', compact(
             'dbStatus',
             'redisStatus',
             'applications',
             'activeTokens',
-            'gatewayDiagnostics'
+            'gatewayDiagnostics',
+            'backups'
         ));
     }
 
@@ -139,5 +144,49 @@ class AdminMonitoringController extends Controller
             'status' => 'success',
             'data' => $results,
         ]);
+    }
+
+    /**
+     * Buat backup database SiPintu secara langsung dari halaman Admin
+     */
+    public function createBackup(DatabaseBackupService $backupService)
+    {
+        $result = $backupService->createBackup(7, auth()->id());
+
+        if (! $result['success']) {
+            return back()->with('error', $result['message']);
+        }
+
+        return back()->with('success', $result['message']);
+    }
+
+    /**
+     * Unduh file backup database (.sql.gz)
+     */
+    public function downloadBackup(string $filename, DatabaseBackupService $backupService)
+    {
+        $path = $backupService->getBackupPath($filename);
+
+        if (! $path) {
+            abort(404, 'File backup database tidak ditemukan.');
+        }
+
+        return response()->download($path, $filename, [
+            'Content-Type' => 'application/gzip',
+        ]);
+    }
+
+    /**
+     * Hapus file backup database tertentu
+     */
+    public function deleteBackup(string $filename, DatabaseBackupService $backupService)
+    {
+        $deleted = $backupService->deleteBackup($filename);
+
+        if (! $deleted) {
+            return back()->with('error', 'Gagal menghapus file backup database.');
+        }
+
+        return back()->with('success', "File backup {$filename} berhasil dihapus.");
     }
 }

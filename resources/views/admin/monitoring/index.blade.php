@@ -210,8 +210,24 @@
         }
     }
 }">
+    @if(session('success'))
+
+        <div class="p-4 bg-emerald-50 border border-emerald-300 text-emerald-950 rounded-2xl text-xs font-bold flex items-center space-x-3 shadow-xs">
+            <svg class="w-5 h-5 text-emerald-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            <span>{{ session('success') }}</span>
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div class="p-4 bg-rose-50 border border-rose-300 text-rose-950 rounded-2xl text-xs font-bold flex items-center space-x-3 shadow-xs">
+            <svg class="w-5 h-5 text-rose-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <span>{{ session('error') }}</span>
+        </div>
+    @endif
+
     <!-- Bright & Vibrant Header Hero Banner-->
     <div class="relative overflow-hidden bg-white border border-emerald-200 rounded-3xl p-4 sm:p-8 shadow-sm min-w-0 max-w-full">
+
         <!-- Background Soft Accents -->
         <div class="absolute top-0 right-0 w-96 h-96 bg-emerald-100/50 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20"></div>
         <div class="absolute bottom-0 left-0 w-80 h-80 bg-teal-100/40 rounded-full blur-3xl pointer-events-none -ml-20 -mb-20"></div>
@@ -428,14 +444,152 @@
         </div>
     </div>
 
+    <!-- Database Daily Backup & Disaster Recovery Section -->
+    <div class="bg-white rounded-3xl border border-slate-200 p-6 space-y-6 shadow-sm">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-5">
+            <div class="space-y-1">
+                <div class="inline-flex items-center space-x-2 px-2.5 py-0.5 rounded-full bg-emerald-100 border border-emerald-300 text-emerald-800 text-[10px] font-black uppercase tracking-wider">
+                    <span class="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
+                    <span>Automated Daily Backup Engine</span>
+                </div>
+                <h3 class="text-base font-black text-emerald-950 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21 3.582 4 8 4s8-1.79 8-4"></path>
+                    </svg>
+                    Cadangan Database & Arsip Recovery SiPintu
+                </h3>
+                <p class="text-xs text-slate-600 font-medium">
+                    Pencadangan database MySQL/MariaDB otomatis berjalan setiap hari pukul <strong class="text-slate-800 font-bold">02:00 AM WIB</strong> dengan kompresi gzip. Retensi file otomatis dipertahankan selama 7 hari.
+                </p>
+            </div>
+
+            <div class="flex items-center gap-3 shrink-0">
+                <form action="{{ route('admin.monitoring.backup.create') }}" method="POST" onsubmit="this.querySelector('button').disabled = true; this.querySelector('button span').innerText = 'Membuat Cadangan...';">
+                    @csrf
+                    <button type="submit" class="px-5 py-2.5 bg-emerald-700 hover:bg-emerald-800 active:scale-95 text-white text-xs font-black rounded-2xl transition-all shadow-md shadow-emerald-700/20 flex items-center space-x-2 cursor-pointer">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
+                        </svg>
+                        <span>Backup Database Sekarang</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- 4 Backup Quick Info Badges -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl">
+                <span class="text-[10px] font-extrabold uppercase text-slate-500 block">Jadwal Harian</span>
+                <span class="text-sm font-black text-slate-900 flex items-center gap-1.5 mt-0.5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span>02:00 WIB</span>
+                </span>
+                <span class="text-[10px] text-slate-500 font-medium">Otomatis via Scheduler</span>
+            </div>
+
+            <div class="p-3.5 bg-emerald-50 border border-emerald-200 rounded-2xl">
+                <span class="text-[10px] font-extrabold uppercase text-emerald-800 block">Backup Terakhir</span>
+                <span class="text-sm font-black text-emerald-950 mt-0.5 block truncate">
+                    {{ !empty($backups) ? $backups[0]['created_at_human'] : 'Belum pernah' }}
+                </span>
+                <span class="text-[10px] text-emerald-700 font-medium truncate block">
+                    {{ !empty($backups) ? $backups[0]['created_at_formatted'] : '-' }}
+                </span>
+            </div>
+
+            <div class="p-3.5 bg-indigo-50 border border-indigo-200 rounded-2xl">
+                <span class="text-[10px] font-extrabold uppercase text-indigo-800 block">Total Arsip Tersedia</span>
+                <span class="text-sm font-black text-indigo-950 mt-0.5 block font-mono">
+                    {{ count($backups) }} File Cadangan
+                </span>
+                <span class="text-[10px] text-indigo-700 font-medium">Batas Retensi 7 Hari</span>
+            </div>
+
+            <div class="p-3.5 bg-teal-50 border border-teal-200 rounded-2xl">
+                <span class="text-[10px] font-extrabold uppercase text-teal-800 block">Ukuran Terkini</span>
+                <span class="text-sm font-black text-teal-950 mt-0.5 block font-mono">
+                    {{ !empty($backups) ? $backups[0]['size_human'] : '0 B' }}
+                </span>
+                <span class="text-[10px] text-teal-700 font-medium">Kompresi Gzip (.sql.gz)</span>
+            </div>
+        </div>
+
+        <!-- Backups List Table -->
+        <div class="overflow-x-auto border border-slate-200 rounded-2xl w-full max-w-full">
+            <table class="w-full text-left text-xs min-w-[650px]">
+                <thead class="bg-slate-50 text-slate-700 uppercase font-black text-[10px] border-b border-slate-200">
+                    <tr>
+                        <th class="px-4 py-3">Nama Arsip Backup</th>
+                        <th class="px-4 py-3">Waktu Pembuatan</th>
+                        <th class="px-4 py-3 text-center">Ukuran Terkompresi</th>
+                        <th class="px-4 py-3 text-center">Format</th>
+                        <th class="px-4 py-3 text-right">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    @forelse($backups as $b)
+                        <tr class="hover:bg-slate-50/80 transition-colors">
+                            <td class="px-4 py-3 font-mono font-bold text-slate-900 flex items-center gap-2">
+                                <div class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                </div>
+                                <span class="truncate">{{ $b['filename'] }}</span>
+                            </td>
+                            <td class="px-4 py-3 text-slate-700">
+                                <div class="font-bold text-slate-900">{{ $b['created_at_formatted'] }}</div>
+                                <div class="text-[10px] text-slate-500 font-medium">{{ $b['created_at_human'] }}</div>
+                            </td>
+                            <td class="px-4 py-3 text-center font-mono font-black text-emerald-800">
+                                {{ $b['size_human'] }}
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-200 uppercase">
+                                    GZIP SQL
+                                </span>
+                            </td>
+                            <td class="px-4 py-3 text-right">
+                                <div class="flex items-center justify-end gap-2">
+                                    <a href="{{ route('admin.monitoring.backup.download', $b['filename']) }}" class="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-900 text-xs font-bold rounded-xl transition-all inline-flex items-center gap-1.5 shadow-2xs" title="Unduh Arsip Cadangan">
+                                        <svg class="w-3.5 h-3.5 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                        <span>Unduh</span>
+                                    </a>
+                                    <form action="{{ route('admin.monitoring.backup.delete', $b['filename']) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus file backup {{ $b['filename'] }}?');" class="inline">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer" title="Hapus Backup">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="5" class="px-4 py-8 text-center text-slate-500 text-xs">
+                                <div class="max-w-xs mx-auto space-y-2">
+                                    <div class="w-10 h-10 mx-auto rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>
+                                    </div>
+                                    <p class="font-bold text-slate-700">Belum ada file cadangan database</p>
+                                    <p class="text-[11px] text-slate-500">Klik tombol "Backup Database Sekarang" di atas atau tunggu jadwal otomatis pukul 02:00 WIB.</p>
+                                </div>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+
     <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-6 shadow-sm">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-5">
+
             <div>
                 <h3 class="text-base font-black text-emerald-950 flex items-center gap-2">
                     <svg class="w-5 h-5 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
                     </svg>
-                    Katalog Telemetry Aplikasi Client Downstream
+                    Katalog Telemetry Aplikasi Client
                 </h3>
                 <p class="text-xs text-slate-600 font-medium mt-0.5">Filter dan pantau status koneksi individual aplikasi downstream yang mengakses REST API</p>
             </div>
@@ -444,7 +598,7 @@
             <div class="flex flex-wrap items-center gap-3">
                 <!-- Search Input -->
                 <div class="relative">
-                    <input type="text" x-model="searchQuery" placeholder="Cari nama / client_id..." class="pl-8 pr-3 py-1.5 text-xs rounded-xl border border-slate-300 focus:border-emerald-500 focus:ring-emerald-500 w-48">
+                    <input type="text" x-model="searchQuery" placeholder="Cari nama..." class="pl-8 pr-3 py-1.5 text-xs rounded-xl border border-slate-300 focus:border-emerald-500 focus:ring-emerald-500 w-48">
                     <svg class="w-4 h-4 text-slate-400 absolute left-2.5 top-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                     </svg>

@@ -141,11 +141,11 @@
             <div class="flex items-center space-x-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-bold w-full sm:w-auto overflow-x-auto max-w-full no-scrollbar min-w-0">
                 <button type="button" @click="filter = 'connected'" :class="filter === 'connected' ? 'bg-emerald-700 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'" class="px-3 py-1.5 rounded-lg transition-all flex items-center space-x-1.5 shrink-0 whitespace-nowrap">
                     <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-                    <span>Terkoneksi (Berhasil)</span>
+                    <span>Connected</span>
                 </button>
                 <button type="button" @click="filter = 'disconnected'" :class="filter === 'disconnected' ? 'bg-rose-700 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'" class="px-3 py-1.5 rounded-lg transition-all flex items-center space-x-1.5 shrink-0 whitespace-nowrap">
                     <span class="w-2 h-2 rounded-full bg-rose-500"></span>
-                    <span>Terputus / Problem</span>
+                    <span>Disconnected</span>
                 </button>
                 <button type="button" @click="filter = 'all'" :class="filter === 'all' ? 'bg-slate-800 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'" class="px-3 py-1.5 rounded-lg transition-all shrink-0 whitespace-nowrap">
                     <span>Semua Aplikasi</span>
@@ -265,7 +265,7 @@
     <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 space-y-4 shadow-sm min-w-0 max-w-full">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
             <div>
-                <h3 class="text-base font-black text-emerald-950">Audit Log Activity</h3>
+                <h3 class="text-base font-black text-emerald-950">User Activity Log</h3>
                 <p class="text-xs text-slate-600 font-medium mt-0.5">Catatan aktivitas autentikasi & SSO gateway.</p>
             </div>
             <a href="{{ route('admin.audit-logs.index') }}" class="text-xs font-extrabold text-emerald-700 hover:underline whitespace-nowrap shrink-0 inline-flex items-center gap-1">

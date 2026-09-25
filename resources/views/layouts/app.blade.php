@@ -146,7 +146,7 @@
 
                     <a href="{{ route('admin.sijuna.index') }}" class="flex items-center px-3 py-2 text-xs font-bold rounded-xl transition-all {{ request()->routeIs('admin.sijuna.*') ? 'bg-slate-700 text-white shadow-md shadow-slate-700/20' : 'text-slate-700 hover:text-slate-800 hover:bg-slate-50' }}">
                         <svg class="w-4 h-4 mr-2.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                        Integrasi SIJUNA API
+                        Integrasi API SIJUNA
                     </a>
 
                     <a href="{{ route('admin.audit-logs.index') }}" class="flex items-center px-3 py-2 text-xs font-bold rounded-xl transition-all {{ request()->routeIs('admin.audit-logs.*') ? 'bg-slate-700 text-white shadow-md shadow-slate-700/20' : 'text-slate-700 hover:text-slate-800 hover:bg-slate-50' }}">
@@ -324,7 +324,7 @@
 
                         <a href="{{ route('admin.sijuna.index') }}" class="flex items-center px-3 py-2.5 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('admin.sijuna.*') ? 'bg-emerald-700 text-white shadow-md shadow-emerald-700/20' : 'text-slate-700 hover:text-emerald-800 hover:bg-emerald-50' }}">
                             <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                            Integrasi SIJUNA API
+                            Integrasi API SIJUNA
                         </a>
 
                         <a href="{{ route('admin.audit-logs.index') }}" class="flex items-center px-3 py-2.5 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('admin.audit-logs.*') ? 'bg-emerald-700 text-white shadow-md shadow-emerald-700/20' : 'text-slate-700 hover:text-emerald-800 hover:bg-emerald-50' }}">

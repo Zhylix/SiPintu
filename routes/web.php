@@ -285,6 +285,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::post('/monitoring/validate-client', [AdminMonitoringController::class, 'validateClientApp'])->name('monitoring.validate-client');
     Route::post('/monitoring/diagnose-sso', [AdminMonitoringController::class, 'diagnoseSso'])->name('monitoring.diagnose-sso');
     Route::post('/monitoring/diagnose-all-sso', [AdminMonitoringController::class, 'diagnoseAllSso'])->name('monitoring.diagnose-all-sso');
+    Route::post('/monitoring/backup/create', [AdminMonitoringController::class, 'createBackup'])->name('monitoring.backup.create');
+    Route::get('/monitoring/backup/download/{filename}', [AdminMonitoringController::class, 'downloadBackup'])->name('monitoring.backup.download');
+    Route::delete('/monitoring/backup/{filename}', [AdminMonitoringController::class, 'deleteBackup'])->name('monitoring.backup.delete');
 
     // Analytics & Usage Reports
     Route::get('/analytics', [AdminAnalyticsController::class, 'index'])->name('analytics.index');
