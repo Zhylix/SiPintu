@@ -83,7 +83,9 @@ class ApiIdentityController extends Controller
         if ($user->external_id || $user->email) {
             if ($user->isTeacher()) {
                 $sijunaData = $sijunaService->getTeacherByExternalId($user->external_id ?: $user->email);
-            } elseif ($user->isStudent() || $user->isAlumni()) {
+            } elseif ($user->isAlumni()) {
+                $sijunaData = $sijunaService->getAlumniByExternalId($user->external_id ?: $user->username ?: $user->email);
+            } elseif ($user->isStudent()) {
                 $sijunaData = $sijunaService->getStudentByExternalId($user->external_id ?: $user->username ?: $user->email);
             }
         }
@@ -312,6 +314,128 @@ class ApiIdentityController extends Controller
             'status' => 'success',
             'source' => 'Gateway Proxy (SIJUNA Service + Redis Cache + DB Fallback)',
             'data' => $student,
+        ]);
+    }
+
+    /**
+     * Gateway Proxy API: Retrieve alumni data from SIJUNA (https://sijuna.com/api/external/alumni)
+     */
+    public function alumniProxy(Request $request, SijunaApiService $sijunaService): JsonResponse
+    {
+        $nis = $request->query('nis');
+
+        if ($nis) {
+            $alumni = $sijunaService->getAlumniByExternalId($nis);
+
+            if (! $alumni) {
+                $localUser = User::where('role', 'alumni')
+                    ->where(function ($q) use ($nis) {
+                        $q->where('username', $nis)
+                            ->orWhere('external_id', $nis);
+                    })
+                    ->first();
+
+                if ($localUser) {
+                    $alumni = [
+                        'id' => (string) $localUser->id,
+                        'external_id' => $localUser->external_id,
+                        'nis' => $localUser->username ?: $localUser->external_id,
+                        'nama' => $localUser->name,
+                        'name' => $localUser->name,
+                        'email' => $localUser->email,
+                        'phone' => $localUser->phone,
+                        'avatar_url' => $localUser->avatar_url,
+                        'avatar' => $localUser->avatar_url,
+                        'role' => $localUser->role,
+                        'status' => $localUser->status,
+                        'classroom' => $localUser->classroom,
+                        'tahun_masuk' => $localUser->tahun_masuk,
+                        'tahun_lulus' => $localUser->tahun_lulus,
+                    ];
+                }
+            }
+
+            if (! $alumni) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => "Data alumni dengan NIS {$nis} tidak ditemukan.",
+                ], 404);
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'source' => 'Gateway Proxy (SIJUNA Alumni Service + Cache + DB Fallback)',
+                'data' => $alumni,
+            ]);
+        }
+
+        $alumniList = $sijunaService->getAlumni();
+
+        $enrichedAlumni = array_map(function ($a) {
+            $createdYear = ! empty($a['created_at']) ? (int) Carbon::parse($a['created_at'])->format('Y') : null;
+            $updatedYear = ! empty($a['updated_at']) ? (int) Carbon::parse($a['updated_at'])->format('Y') : null;
+            $a['tahun_masuk'] = $createdYear;
+            $a['tahun_lulus'] = $updatedYear;
+
+            return $a;
+        }, $alumniList);
+
+        return response()->json([
+            'status' => 'success',
+            'source' => 'Gateway Proxy (SIJUNA Alumni Service + Redis Cache)',
+            'count' => count($enrichedAlumni),
+            'data' => $enrichedAlumni,
+        ]);
+    }
+
+    /**
+     * Gateway Proxy API: Retrieve specific alumni data from SIJUNA by External ID or NIS
+     */
+    public function alumniDetailProxy(Request $request, string $externalId, SijunaApiService $sijunaService): JsonResponse
+    {
+        $alumni = $sijunaService->getAlumniByExternalId($externalId);
+
+        if (! $alumni) {
+            $localUser = User::where('role', 'alumni')
+                ->where(function ($q) use ($externalId) {
+                    $q->where('username', $externalId)
+                        ->orWhere('external_id', $externalId);
+                })
+                ->first();
+
+            if ($localUser) {
+                $alumni = [
+                    'id' => (string) $localUser->id,
+                    'external_id' => $localUser->external_id,
+                    'nis' => $localUser->username ?: $localUser->external_id,
+                    'nama' => $localUser->name,
+                    'name' => $localUser->name,
+                    'email' => $localUser->email,
+                    'phone' => $localUser->phone,
+                    'avatar_url' => $localUser->avatar_url,
+                    'avatar' => $localUser->avatar_url,
+                    'role' => $localUser->role,
+                    'status' => $localUser->status,
+                    'classroom' => $localUser->classroom,
+                    'tahun_masuk' => $localUser->tahun_masuk,
+                    'tahun_lulus' => $localUser->tahun_lulus,
+                    'created_at' => $localUser->created_at?->toIso8601String(),
+                    'updated_at' => $localUser->updated_at?->toIso8601String(),
+                ];
+            }
+        }
+
+        if (! $alumni) {
+            return response()->json([
+                'status' => 'error',
+                'message' => "Data alumni dengan External ID / NIS {$externalId} tidak ditemukan.",
+            ], 404);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'source' => 'Gateway Proxy (SIJUNA Alumni Service + Redis Cache + DB Fallback)',
+            'data' => $alumni,
         ]);
     }
 

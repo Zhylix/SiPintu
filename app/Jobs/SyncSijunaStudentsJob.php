@@ -42,6 +42,15 @@ class SyncSijunaStudentsJob implements ShouldQueue
 
         try {
             $studentsData = $sijunaApi->getStudents();
+            $alumniData = $sijunaApi->getAlumni();
+
+            // Tandai item alumni agar konsisten teridentifikasi sebagai alumni
+            foreach ($alumniData as &$alumniItem) {
+                $alumniItem['graduated'] = true;
+            }
+            unset($alumniItem);
+
+            $allStudentsData = array_merge($studentsData, $alumniData);
             $processedCount = 0;
             $studentsCount = 0;
             $alumniCount = 0;
@@ -60,7 +69,7 @@ class SyncSijunaStudentsJob implements ShouldQueue
             $now = now()->toDateTimeString();
             $defaultPasswordHash = Hash::make('password');
 
-            foreach ($studentsData as $index => $student) {
+            foreach ($allStudentsData as $index => $student) {
                 $nis = isset($student['nis']) ? trim((string) $student['nis']) : null;
                 $externalId = trim((string) ($nis ?? $student['external_id'] ?? $student['id'] ?? ''));
                 $name = $student['nama'] ?? $student['name'] ?? null;
@@ -224,8 +233,9 @@ class SyncSijunaStudentsJob implements ShouldQueue
                 DB::table('model_has_roles')->insertOrIgnore($chunk);
             }
 
-            $apiWarning = $sijunaApi->getLastStudentError();
-            $usedFallback = $sijunaApi->usedStudentFallback();
+            $warnings = array_filter([$sijunaApi->getLastStudentError(), $sijunaApi->getLastAlumniError()]);
+            $apiWarning = ! empty($warnings) ? implode('; ', $warnings) : null;
+            $usedFallback = $sijunaApi->usedStudentFallback() || $sijunaApi->usedAlumniFallback();
 
             $noteParts = [];
             if ($usedFallback) {

@@ -56,7 +56,6 @@ Route::get('/sw.js', function () {
     $content = file_exists($path) ? file_get_contents($path) : '';
     $version = Setting::getIconVersion();
 
-    // Dynamically update cache version so client SW automatically purges old icons
     $content = preg_replace('/const CACHE_NAME = \'[^\']+\';/', "const CACHE_NAME = 'sipintu-pwa-v{$version}';", $content);
 
     return response($content, 200, [
@@ -137,7 +136,10 @@ Route::get('/', function () {
         if ($user->isDudi()) {
             return redirect()->route('dudi.dashboard');
         }
-        if ($user->isStudent() || $user->isAlumni()) {
+        if ($user->isAlumni()) {
+            return redirect()->route('alumni.dashboard');
+        }
+        if ($user->isStudent()) {
             return redirect()->route('student.dashboard');
         }
 
@@ -176,7 +178,10 @@ Route::middleware('auth')->group(function () {
         if ($user->isDudi()) {
             return redirect()->route('dudi.dashboard');
         }
-        if ($user->isStudent() || $user->isAlumni()) {
+        if ($user->isAlumni()) {
+            return redirect()->route('alumni.dashboard');
+        }
+        if ($user->isStudent()) {
             return redirect()->route('student.dashboard');
         }
 
@@ -223,6 +228,16 @@ Route::get('/oauth/jwks.json', [OAuthController::class, 'jwks'])->name('oauth.jw
 |--------------------------------------------------------------------------
 */
 Route::prefix('siswa')->name('student.')->middleware(['auth', 'role:student,alumni'])->group(function () {
+    Route::get('/dashboard', [StudentDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/apps', [StudentDashboardController::class, 'apps'])->name('apps');
+});
+
+/*
+|--------------------------------------------------------------------------
+| Portal Alumni Routes (Protected by auth and role:alumni middleware)
+|--------------------------------------------------------------------------
+*/
+Route::prefix('alumni')->name('alumni.')->middleware(['auth', 'role:alumni'])->group(function () {
     Route::get('/dashboard', [StudentDashboardController::class, 'index'])->name('dashboard');
     Route::get('/apps', [StudentDashboardController::class, 'apps'])->name('apps');
 });

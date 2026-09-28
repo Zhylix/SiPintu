@@ -28,6 +28,10 @@ class SijunaApiService
 
     protected bool $usedTeacherFallback = false;
 
+    protected ?string $lastAlumniError = null;
+
+    protected bool $usedAlumniFallback = false;
+
     public function __construct()
     {
         $this->baseUrl = config('services.sijuna.url', 'https://sijuna.com/api/external');
@@ -57,6 +61,16 @@ class SijunaApiService
         return $this->usedTeacherFallback;
     }
 
+    public function getLastAlumniError(): ?string
+    {
+        return $this->lastAlumniError;
+    }
+
+    public function usedAlumniFallback(): bool
+    {
+        return $this->usedAlumniFallback;
+    }
+
     /**
      * Fetch all students data from SIJUNA API across all pages with full error handling and retry mechanism
      */
@@ -70,15 +84,19 @@ class SijunaApiService
         $page = 1;
         $lastPage = 1;
 
+        $timeout = max($this->timeout, 25);
+        $retryTimes = max($this->retryTimes, 3);
+        $retrySleep = max($this->retrySleep, 500);
+
         try {
             do {
                 $response = Http::withHeaders([
                     'X-API-Token' => $this->apiToken,
                     'Accept' => 'application/json',
                 ])
-                    ->connectTimeout(5)
-                    ->timeout($this->timeout)
-                    ->retry($this->retryTimes, $this->retrySleep, function (Throwable $exception) {
+                    ->connectTimeout(10)
+                    ->timeout($timeout)
+                    ->retry($retryTimes, $retrySleep, function (Throwable $exception) {
                         return $exception instanceof ConnectionException;
                     })
                     ->get($endpoint, ['page' => $page]);
@@ -178,15 +196,19 @@ class SijunaApiService
         $page = 1;
         $lastPage = 1;
 
+        $timeout = max($this->timeout, 25);
+        $retryTimes = max($this->retryTimes, 3);
+        $retrySleep = max($this->retrySleep, 500);
+
         try {
             do {
                 $response = Http::withHeaders([
                     'X-API-Token' => $this->apiToken,
                     'Accept' => 'application/json',
                 ])
-                    ->connectTimeout(5)
-                    ->timeout($this->timeout)
-                    ->retry($this->retryTimes, $this->retrySleep, function (Throwable $exception) {
+                    ->connectTimeout(10)
+                    ->timeout($timeout)
+                    ->retry($retryTimes, $retrySleep, function (Throwable $exception) {
                         return $exception instanceof ConnectionException;
                     })
                     ->get($endpoint, ['page' => $page]);
@@ -272,5 +294,114 @@ class SijunaApiService
             ['id' => '102', 'nip' => '199002022015022002', 'nama' => 'Siti Nurhaliza M.Pd (SIJUNA)', 'email' => 'siti.guru@sijuna.sch.id', 'phone' => '081234567891', 'role' => 'teacher', 'status' => 'active'],
             ['id' => '103', 'nip' => '199203032018031003', 'nama' => 'Drs. Agus Wijaya (SIJUNA)', 'email' => 'agus.guru@sijuna.sch.id', 'phone' => '081234567892', 'role' => 'teacher', 'status' => 'active'],
         ];
+    }
+
+    /**
+     * Fetch all alumni data from SIJUNA API (https://sijuna.com/api/external/alumni)
+     */
+    public function getAlumni(): array
+    {
+        $this->lastAlumniError = null;
+        $this->usedAlumniFallback = false;
+
+        $endpoint = rtrim($this->baseUrl, '/').'/alumni';
+        $allAlumni = [];
+        $page = 1;
+        $lastPage = 1;
+
+        $timeout = max($this->timeout, 25);
+        $retryTimes = max($this->retryTimes, 3);
+        $retrySleep = max($this->retrySleep, 500);
+
+        try {
+            do {
+                $response = Http::withHeaders([
+                    'X-API-Token' => $this->apiToken,
+                    'Accept' => 'application/json',
+                ])
+                    ->connectTimeout(10)
+                    ->timeout($timeout)
+                    ->retry($retryTimes, $retrySleep, function (Throwable $exception) {
+                        return $exception instanceof ConnectionException;
+                    })
+                    ->get($endpoint, ['page' => $page]);
+
+                if ($response->successful()) {
+                    $json = $response->json();
+
+                    $paginationData = $json['data'] ?? $json;
+                    $items = [];
+
+                    if (isset($paginationData['data']) && is_array($paginationData['data'])) {
+                        $items = $paginationData['data'];
+                        $lastPage = $paginationData['last_page'] ?? $json['meta']['last_page'] ?? $lastPage;
+                    } elseif (is_array($paginationData)) {
+                        $items = $paginationData;
+                        $lastPage = $json['last_page'] ?? $json['meta']['last_page'] ?? $lastPage;
+                    }
+
+                    if (empty($items)) {
+                        break;
+                    }
+
+                    $allAlumni = array_merge($allAlumni, $items);
+                    $page++;
+                } else {
+                    $this->lastAlumniError = 'SIJUNA API Alumni HTTP '.$response->status().': '.($response->json('message') ?? 'Respon tidak sukses');
+                    break;
+                }
+            } while ($page <= $lastPage);
+        } catch (Throwable $e) {
+            $this->lastAlumniError = 'Koneksi ke endpoint alumni gagal: '.$e->getMessage();
+            Log::info('SIJUNA external alumni URL unreachable, using fallback alumni: '.$e->getMessage());
+        }
+
+        if (empty($allAlumni)) {
+            $this->usedAlumniFallback = true;
+
+            return $this->getFallbackMockAlumni();
+        }
+
+        return $allAlumni;
+    }
+
+    /**
+     * Fallback mock alumni data when SIJUNA external API server is offline or unreachable
+     */
+    protected function getFallbackMockAlumni(): array
+    {
+        return [
+            ['id' => '401', 'nis' => '4439', 'nama' => 'Afrillia Fifa Ananta (Alumni)', 'classroom' => ['name' => 'XII AKL 1'], 'email' => '4439@smkn1bangsri.sch.id', 'graduated' => true, 'status' => 'active'],
+            ['id' => '402', 'nis' => '4440', 'nama' => 'Alfira Dwi Khoirunnisa (Alumni)', 'classroom' => ['name' => 'XII AKL 1'], 'email' => '4440@smkn1bangsri.sch.id', 'graduated' => true, 'status' => 'active'],
+            ['id' => '403', 'nis' => '4499', 'nama' => 'Rian Ardianto (Alumni PPLG)', 'classroom' => ['name' => 'XII PPLG 1'], 'email' => 'rian.alumni@smkn1bangsri.sch.id', 'graduated' => true, 'status' => 'active'],
+        ];
+    }
+
+    /**
+     * Get alumni details by external ID with Redis Caching (alumni:{external_id})
+     */
+    public function getAlumniByExternalId(string $externalId): ?array
+    {
+        $searchKey = trim((string) $externalId);
+        $cacheKey = "alumni:{$searchKey}";
+
+        return Cache::remember($cacheKey, 3600, function () use ($searchKey) {
+            $alumniList = $this->getAlumni();
+            foreach ($alumniList as $alumni) {
+                $nis = isset($alumni['nis']) ? (string) $alumni['nis'] : null;
+                $extId = isset($alumni['external_id']) ? (string) $alumni['external_id'] : null;
+                $id = isset($alumni['id']) ? (string) $alumni['id'] : null;
+
+                if (
+                    ($nis && $searchKey === $nis) ||
+                    ($extId && $searchKey === $extId) ||
+                    ($id && $searchKey === $id)
+                ) {
+                    return $alumni;
+                }
+            }
+
+            return null;
+        });
     }
 }

@@ -46,12 +46,14 @@ class AuthController extends Controller
         $identity = match ($accountType) {
             'guru' => trim((string) ($request->input('nip') ?: $request->input('identity', ''))),
             'dudi' => trim((string) ($request->input('kode_dudi') ?: $request->input('identity', ''))),
+            'admin' => trim((string) ($request->input('identity') ?: ($request->input('username') ?: ($request->input('email') ?: $request->input('nis', ''))))),
             default => trim((string) ($request->input('nis') ?: ($request->input('email_nis') ?: $request->input('identity', '')))),
         };
 
         $identityFieldName = match ($accountType) {
             'guru' => 'nip',
             'dudi' => 'kode_dudi',
+            'admin' => 'identity',
             default => 'nis',
         };
 
@@ -66,6 +68,7 @@ class AuthController extends Controller
             $label = match ($accountType) {
                 'guru' => 'NIP atau Email Guru',
                 'dudi' => 'Kode Mitra DUDI atau Email Perusahaan',
+                'admin' => 'Username atau Email Administrator',
                 default => 'NIS atau Email NIS Siswa',
             };
 
@@ -124,6 +127,31 @@ class AuthController extends Controller
 
         if (! $user && in_array(strtolower($identity), $allowedAdminIdentities)) {
             $user = User::where('role', 'admin')->first();
+
+            // Auto-provision default admin from .env configuration if database was refreshed or empty
+            if (! $user) {
+                $adminConfig = config('auth.admin', [
+                    'name' => env('ADMIN_NAME', 'Administrator SiPintu'),
+                    'username' => env('ADMIN_USERNAME', 'admin'),
+                    'email' => env('ADMIN_EMAIL', 'admin@smkn1bangsri.sch.id'),
+                    'password' => env('ADMIN_PASSWORD', 'password'),
+                ]);
+
+                $adminRole = Role::firstOrCreate(
+                    ['name' => 'admin', 'guard_name' => 'web'],
+                    ['slug' => 'admin']
+                );
+
+                $user = User::create([
+                    'name' => $adminConfig['name'] ?? 'Administrator SiPintu',
+                    'username' => $adminConfig['username'] ?? 'admin',
+                    'email' => $adminConfig['email'] ?? 'admin@smkn1bangsri.sch.id',
+                    'password' => Hash::make($adminConfig['password'] ?? 'password'),
+                    'role' => 'admin',
+                    'status' => 'active',
+                ]);
+                $user->syncRoles([$adminRole]);
+            }
         }
 
         if ($user) {
@@ -411,7 +439,10 @@ class AuthController extends Controller
         $failedMessage = match ($accountType) {
             'guru' => 'Akun Guru dengan NIP, Email, atau Username yang dimasukkan tidak ditemukan/tidak valid.',
             'dudi' => 'Akun DUDI dengan Kode Mitra, Email, atau Username yang dimasukkan tidak ditemukan/tidak valid.',
-            default => 'Akun Siswa dengan NIS atau NISN yang dimasukkan tidak ditemukan/tidak valid.',
+            'admin' => 'Akun Administrator dengan Username atau Email yang dimasukkan tidak ditemukan.',
+            default => in_array(strtolower($identity), $allowedAdminIdentities)
+                ? 'Akun Administrator tidak ditemukan atau belum aktif.'
+                : 'Akun Siswa dengan NIS atau NISN yang dimasukkan tidak ditemukan/tidak valid.',
         };
 
         return back()->withErrors([
