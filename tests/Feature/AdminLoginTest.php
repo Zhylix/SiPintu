@@ -10,32 +10,20 @@ use Tests\TestCase;
 
 class AdminLoginTest extends TestCase
 {
-    public function test_admin_can_login_via_admin_tab(): void
+    public function test_login_page_does_not_contain_admin_tab(): void
     {
-        $role = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web'], ['slug' => 'admin']);
-        $admin = User::firstOrCreate(
-            ['username' => 'admin'],
-            [
-                'name' => 'Administrator SiPintu',
-                'email' => 'admin@smkn1bangsri.sch.id',
-                'password' => Hash::make('password'),
-                'role' => 'admin',
-                'status' => 'active',
-            ]
-        );
-        $admin->syncRoles([$role]);
+        $response = $this->get(route('login'));
 
-        $response = $this->post(route('login.store'), [
-            'account_type' => 'admin',
-            'identity' => 'admin',
-            'password' => 'password',
-        ]);
-
-        $response->assertRedirect(route('admin.dashboard'));
-        $this->assertAuthenticatedAs($admin);
+        $response->assertStatus(200);
+        $response->assertSee('Siswa');
+        $response->assertSee('Guru');
+        $response->assertSee('DUDI');
+        $response->assertDontSee('accountType === \'admin\'', false);
+        $response->assertDontSee('accountType = \'admin\'', false);
+        $response->assertDontSee('>Admin<', false);
     }
 
-    public function test_admin_can_login_even_if_siswa_tab_is_selected(): void
+    public function test_admin_can_login_via_siswa_tab(): void
     {
         $role = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web'], ['slug' => 'admin']);
         $admin = User::firstOrCreate(
@@ -60,14 +48,64 @@ class AdminLoginTest extends TestCase
         $this->assertAuthenticatedAs($admin);
     }
 
+    public function test_admin_can_login_via_guru_tab(): void
+    {
+        $role = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web'], ['slug' => 'admin']);
+        $admin = User::firstOrCreate(
+            ['username' => 'admin'],
+            [
+                'name' => 'Administrator SiPintu',
+                'email' => 'admin@smkn1bangsri.sch.id',
+                'password' => Hash::make('password'),
+                'role' => 'admin',
+                'status' => 'active',
+            ]
+        );
+        $admin->syncRoles([$role]);
+
+        $response = $this->post(route('login.store'), [
+            'account_type' => 'guru',
+            'nip' => 'admin',
+            'password' => 'password',
+        ]);
+
+        $response->assertRedirect(route('admin.dashboard'));
+        $this->assertAuthenticatedAs($admin);
+    }
+
+    public function test_admin_can_login_via_dudi_tab(): void
+    {
+        $role = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web'], ['slug' => 'admin']);
+        $admin = User::firstOrCreate(
+            ['username' => 'admin'],
+            [
+                'name' => 'Administrator SiPintu',
+                'email' => 'admin@smkn1bangsri.sch.id',
+                'password' => Hash::make('password'),
+                'role' => 'admin',
+                'status' => 'active',
+            ]
+        );
+        $admin->syncRoles([$role]);
+
+        $response = $this->post(route('login.store'), [
+            'account_type' => 'dudi',
+            'kode_dudi' => 'admin',
+            'password' => 'password',
+        ]);
+
+        $response->assertRedirect(route('admin.dashboard'));
+        $this->assertAuthenticatedAs($admin);
+    }
+
     public function test_admin_auto_provisions_if_missing_from_database(): void
     {
         // Delete all admin users to simulate fresh unseeded database
         User::where('role', 'admin')->orWhere('username', 'admin')->delete();
 
         $response = $this->post(route('login.store'), [
-            'account_type' => 'admin',
-            'identity' => 'admin',
+            'account_type' => 'siswa',
+            'nis' => 'admin',
             'password' => 'password',
         ]);
 

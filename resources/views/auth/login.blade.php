@@ -29,7 +29,7 @@
         accountType: '{{ old('account_type', 'siswa') }}', 
         password: '', 
         showPassword: false,
-        validTypes: ['siswa', 'guru', 'dudi', 'admin'],
+        validTypes: ['siswa', 'guru', 'dudi'],
         init() {
             const serverType = '{{ old('account_type', '') }}';
             const hashType = window.location.hash.replace('#', '');
@@ -73,7 +73,7 @@
         <!-- Account Type Helper Tabs -->
         <div>
             <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Pilih Tipe Akun</label>
-            <div class="grid grid-cols-4 gap-1.5 p-1.5 bg-slate-100 rounded-xl border border-slate-200 text-xs">
+            <div class="grid grid-cols-3 gap-1.5 p-1.5 bg-slate-100 rounded-xl border border-slate-200 text-xs">
                 <button type="button" @click="accountType = 'siswa'" :class="accountType === 'siswa' ? 'bg-emerald-600 text-white font-extrabold shadow-md shadow-emerald-600/30' : 'text-slate-600 hover:text-emerald-700 hover:bg-white'" class="py-2.5 rounded-lg transition-all text-center">
                     Siswa
                 </button>
@@ -82,9 +82,6 @@
                 </button>
                 <button type="button" @click="accountType = 'dudi'" :class="accountType === 'dudi' ? 'bg-emerald-600 text-white font-extrabold shadow-md shadow-emerald-600/30' : 'text-slate-600 hover:text-emerald-700 hover:bg-white'" class="py-2.5 rounded-lg transition-all text-center">
                     DUDI
-                </button>
-                <button type="button" @click="accountType = 'admin'" :class="accountType === 'admin' ? 'bg-emerald-600 text-white font-extrabold shadow-md shadow-emerald-600/30' : 'text-slate-600 hover:text-emerald-700 hover:bg-white'" class="py-2.5 rounded-lg transition-all text-center">
-                    Admin
                 </button>
             </div>
         </div>
@@ -120,17 +117,6 @@
                 value="{{ old('kode_dudi', old('identity')) }}" placeholder="Contoh Kode: dudi atau Email"
                 class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-all text-sm font-semibold">
             <p class="text-[11px] text-slate-600 mt-1 font-medium">Gunakan Email resmi yang telah disediakan.</p>
-        </div>
-
-        <!-- Group 4: Admin Field (Username / Email Admin) -->
-        <div x-show="accountType === 'admin'">
-            <label for="admin_identity" class="block text-xs font-bold text-slate-700 mb-1.5">
-                Username atau Email Administrator
-            </label>
-            <input type="text" id="admin_identity" name="identity" :required="accountType === 'admin'" :disabled="accountType !== 'admin'"
-                value="{{ old('identity', old('nis')) }}" placeholder="admin atau admin@smkn1bangsri.sch.id"
-                class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-all text-sm font-semibold">
-            <p class="text-[11px] text-slate-600 mt-1 font-medium">Gunakan username atau email resmi Administrator SiPintu Gateway.</p>
         </div>
 
         <!-- Password Input with Toggle -->
