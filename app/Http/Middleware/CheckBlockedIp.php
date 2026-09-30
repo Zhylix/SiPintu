@@ -24,8 +24,8 @@ class CheckBlockedIp
             return $next($request);
         }
 
-        // 2. Bypass Admin unblocking actions so admins are never locked out of recovery
-        if ($request->is('monitoring/blocked-ips/*') || $request->is('admin/monitoring/blocked-ips/*')) {
+        // 2. Bypass Admin monitoring actions so admins are never locked out of recovery
+        if ($request->is('*admin/monitoring*') || $request->is('*monitoring/blocked-ips*')) {
             return $next($request);
         }
 
@@ -34,8 +34,8 @@ class CheckBlockedIp
             return $next($request);
         }
 
-        // 4. Protect active sessions of legitimately logged-in users (do not disrupt active classes)
-        if (Auth::check() && ! $request->is('login*') && ! $request->is('oauth/authorize*')) {
+        // 4. Protect active sessions of legitimately logged-in users (do not disrupt active classes or SSO)
+        if (Auth::check() && ! $request->is('login*')) {
             return $next($request);
         }
 

@@ -329,7 +329,7 @@ class AuthController extends Controller
                         ]);
 
                         return back()->withErrors([
-                            'password' => 'Akun Guru Anda terdaftar di SIJUNA tetapi baru pertama kali masuk ke SiPintu Gateway. Silakan gunakan kata sandi awal ("password") untuk masuk.',
+                            'password' => 'Kata sandi yang Anda masukkan salah. Jika ini login perdana Anda, silakan gunakan kata sandi awal yang telah dibagikan oleh pihak sekolah.',
                         ])->onlyInput('account_type', 'nis', 'nip', 'kode_dudi', 'identity');
                     }
 
@@ -349,6 +349,7 @@ class AuthController extends Controller
                         'phone' => $phone,
                         'status' => 'active',
                         'password' => Hash::make('password'),
+                        'must_change_password' => true,
                     ]);
 
                     $teacherRole = Role::firstOrCreate(['name' => 'teacher', 'guard_name' => 'web']);
@@ -394,7 +395,7 @@ class AuthController extends Controller
                         ]);
 
                         return back()->withErrors([
-                            'password' => 'Akun Siswa Anda terdaftar di SIJUNA tetapi baru pertama kali masuk ke SiPintu Gateway. Silakan gunakan kata sandi awal ("password") untuk masuk.',
+                            'password' => 'Kata sandi yang Anda masukkan salah. Jika ini login perdana Anda, silakan gunakan kata sandi awal yang telah dibagikan oleh pihak sekolah.',
                         ])->onlyInput('account_type', 'nis', 'nip', 'kode_dudi', 'identity');
                     }
 
@@ -413,6 +414,7 @@ class AuthController extends Controller
                         'phone' => $phone,
                         'status' => 'active',
                         'password' => Hash::make('password'),
+                        'must_change_password' => true,
                     ]);
 
                     $studentRole = Role::firstOrCreate(['name' => 'student', 'guard_name' => 'web']);
@@ -976,7 +978,9 @@ class AuthController extends Controller
         // Generate 6 digit numeric OTP
         $otp = (string) random_int(100000, 999999);
         $otpKey = "wa_reset_otp:{$user->id}";
+        $attemptsKey = "wa_reset_otp_attempts:{$user->id}";
 
+        Cache::forget($attemptsKey);
         Cache::put($otpKey, [
             'otp' => $otp,
             'phone' => $cleanPhone,
@@ -1052,17 +1056,42 @@ class AuthController extends Controller
 
         $user = User::findOrFail($request->user_id);
         $otpKey = "wa_reset_otp:{$user->id}";
+        $attemptsKey = "wa_reset_otp_attempts:{$user->id}";
         $cached = Cache::get($otpKey);
 
-        if (! $cached || ! hash_equals((string) $cached['otp'], trim((string) $request->otp))) {
-            return back()->withErrors(['otp' => 'Kode OTP salah atau telah kedaluwarsa. Silakan periksa kembali pesan WhatsApp Anda.'])->withInput();
+        if (! $cached) {
+            return redirect()->route('password.request')->withErrors(['identity' => 'Kode OTP Anda telah kedaluwarsa atau belum diajukan. Silakan ajukan ulang.']);
+        }
+
+        $failedAttempts = (int) Cache::get($attemptsKey, 0);
+
+        if (! hash_equals((string) $cached['otp'], trim((string) $request->otp))) {
+            $failedAttempts++;
+            if ($failedAttempts >= 3) {
+                Cache::forget($otpKey);
+                Cache::forget($attemptsKey);
+                AuditLogger::log('wa_otp_max_attempts_exceeded', ['user_id' => $user->id], $user->id);
+
+                return redirect()->route('password.request')->withErrors([
+                    'identity' => 'Kode OTP telah hangus karena salah dimasukkan sebanyak 3 kali. Demi keamanan akun Anda, silakan minta kode OTP baru.',
+                ]);
+            }
+
+            Cache::put($attemptsKey, $failedAttempts, 300);
+            $remaining = 3 - $failedAttempts;
+
+            return back()->withErrors([
+                'otp' => "Kode OTP salah. Sisa kesempatan mencoba: {$remaining}x lagi sebelum kode hangus.",
+            ])->withInput();
         }
 
         $user->update([
             'password' => Hash::make($request->password),
+            'must_change_password' => false,
         ]);
 
         Cache::forget($otpKey);
+        Cache::forget($attemptsKey);
 
         // Broadcast to downstream apps
         app(PasswordSyncService::class)->broadcastPasswordChange($user);

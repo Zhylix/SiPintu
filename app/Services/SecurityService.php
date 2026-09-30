@@ -224,12 +224,18 @@ class SecurityService
     {
         $ip = $ip ?: request()->ip();
         if ($ip) {
-            $identifier = $user->email ?? $user->username ?? (string) $user->id;
-            $identifierKey = strtolower(trim((string) $identifier));
+            $identifiersToClear = array_filter(array_unique([
+                strtolower(trim((string) $user->email)),
+                strtolower(trim((string) $user->username)),
+                strtolower(trim((string) $user->external_id)),
+                (string) $user->id,
+            ]));
 
-            // Clear account failure count and lock state
-            Cache::forget("security:failed_login_account:".md5($identifierKey.'|'.$ip));
-            Cache::forget("security:account_locked:".md5($identifierKey.'|'.$ip));
+            // Clear account failure count and lock state for all identifiers of this user
+            foreach ($identifiersToClear as $idKey) {
+                Cache::forget("security:failed_login_account:".md5($idKey.'|'.$ip));
+                Cache::forget("security:account_locked:".md5($idKey.'|'.$ip));
+            }
 
             // Decrement IP failure count on legitimate login so school networks stay healthy
             $blockMinutes = (int) config('auth.security.block_minutes', self::BLOCK_MINUTES);

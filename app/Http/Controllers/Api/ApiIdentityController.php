@@ -160,9 +160,18 @@ class ApiIdentityController extends Controller
     public function passwordSync(Request $request, PasswordSyncService $passwordSyncService): JsonResponse
     {
         $user = $request->attributes->get('oauth_user');
+        $app = $request->attributes->get('oauth_application');
 
         $identifier = $request->input('email') ?: $request->input('external_id') ?: $request->input('user_id');
         if ($identifier) {
+            // Only authenticated client applications with secret can look up arbitrary other users
+            if (! $app) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Hanya aplikasi downstream terdaftar yang dapat memverifikasi sinkronisasi akun pengguna lain.',
+                ], 403);
+            }
+
             $targetUser = User::where('email', $identifier)
                 ->orWhere('external_id', $identifier)
                 ->orWhere('id', $identifier)
@@ -694,12 +703,23 @@ class ApiIdentityController extends Controller
         // Catat koneksi jika downstream mengirimkan kredensial (Bearer token atau X-Client-ID)
         $tokenString = $request->bearerToken();
         $clientId = $request->header('X-Client-ID') ?: $request->input('client_id');
+        $clientSecret = $request->header('X-Client-Secret') ?: $request->input('client_secret');
+        $isAuthenticatedApp = false;
+
         if ($tokenString) {
-            $token = OAuthAccessToken::where('token', $tokenString)->first();
-            $token?->application?->recordApiConnection($request->ip());
+            $token = OAuthAccessToken::where('token', $tokenString)->where('revoked', false)->where('expires_at', '>', now())->first();
+            if ($token) {
+                $isAuthenticatedApp = true;
+                $token->application?->recordApiConnection($request->ip());
+            }
         } elseif ($clientId) {
-            $app = Application::where('client_id', $clientId)->first();
-            $app?->recordApiConnection($request->ip());
+            $app = Application::where('client_id', $clientId)->where('status', 'active')->first();
+            if ($app) {
+                if ($clientSecret && ($clientSecret === $app->client_secret || (is_string($app->client_secret) && Hash::check((string) $clientSecret, $app->client_secret)))) {
+                    $isAuthenticatedApp = true;
+                }
+                $app->recordApiConnection($request->ip());
+            }
         }
 
         $query = User::where('role', 'alumni')->with('jurusan');
@@ -748,14 +768,14 @@ class ApiIdentityController extends Controller
                 'per_page' => $paginated->perPage(),
                 'total' => $paginated->total(),
             ],
-            'data' => $paginated->map(function ($u) {
+            'data' => $paginated->map(function ($u) use ($isAuthenticatedApp) {
                 return [
                     'id' => (string) $u->id,
                     'external_id' => $u->external_id,
                     'nis' => $u->nis,
                     'name' => $u->name,
-                    'email' => $u->email,
-                    'phone' => $u->phone,
+                    'email' => $isAuthenticatedApp ? $u->email : $this->maskEmail($u->email),
+                    'phone' => $isAuthenticatedApp ? $u->phone : $this->maskPhone($u->phone),
                     'avatar_url' => $u->avatar_url,
                     'avatar' => $u->avatar_url,
                     'role' => $u->role,
@@ -784,12 +804,23 @@ class ApiIdentityController extends Controller
     {
         $tokenString = $request->bearerToken();
         $clientId = $request->header('X-Client-ID') ?: $request->input('client_id');
+        $clientSecret = $request->header('X-Client-Secret') ?: $request->input('client_secret');
+        $isAuthenticatedApp = false;
+
         if ($tokenString) {
-            $token = OAuthAccessToken::where('token', $tokenString)->first();
-            $token?->application?->recordApiConnection($request->ip());
+            $token = OAuthAccessToken::where('token', $tokenString)->where('revoked', false)->where('expires_at', '>', now())->first();
+            if ($token) {
+                $isAuthenticatedApp = true;
+                $token->application?->recordApiConnection($request->ip());
+            }
         } elseif ($clientId) {
-            $app = Application::where('client_id', $clientId)->first();
-            $app?->recordApiConnection($request->ip());
+            $app = Application::where('client_id', $clientId)->where('status', 'active')->first();
+            if ($app) {
+                if ($clientSecret && ($clientSecret === $app->client_secret || (is_string($app->client_secret) && Hash::check((string) $clientSecret, $app->client_secret)))) {
+                    $isAuthenticatedApp = true;
+                }
+                $app->recordApiConnection($request->ip());
+            }
         }
 
         $alumni = User::where('role', 'alumni')
@@ -816,8 +847,8 @@ class ApiIdentityController extends Controller
                 'external_id' => $alumni->external_id,
                 'nis' => $alumni->nis,
                 'name' => $alumni->name,
-                'email' => $alumni->email,
-                'phone' => $alumni->phone,
+                'email' => $isAuthenticatedApp ? $alumni->email : $this->maskEmail($alumni->email),
+                'phone' => $isAuthenticatedApp ? $alumni->phone : $this->maskPhone($alumni->phone),
                 'avatar_url' => $alumni->avatar_url,
                 'avatar' => $alumni->avatar_url,
                 'role' => $alumni->role,
@@ -836,5 +867,47 @@ class ApiIdentityController extends Controller
                 'status' => $alumni->status,
             ],
         ]);
+    }
+
+    /**
+     * Mask email address for unauthenticated public requests to protect student/alumni privacy.
+     */
+    protected function maskEmail(?string $email): ?string
+    {
+        if (empty($email)) {
+            return null;
+        }
+
+        $parts = explode('@', $email, 2);
+        $name = $parts[0];
+        $domain = $parts[1] ?? '';
+
+        $len = strlen($name);
+        if ($len <= 2) {
+            $maskedName = substr($name, 0, 1).'*';
+        } elseif ($len <= 4) {
+            $maskedName = substr($name, 0, 1).str_repeat('*', $len - 1);
+        } else {
+            $maskedName = substr($name, 0, 2).str_repeat('*', $len - 3).substr($name, -1);
+        }
+
+        return $domain ? "{$maskedName}@{$domain}" : $maskedName;
+    }
+
+    /**
+     * Mask phone number for unauthenticated public requests to protect student/alumni privacy.
+     */
+    protected function maskPhone(?string $phone): ?string
+    {
+        if (empty($phone)) {
+            return null;
+        }
+
+        $len = strlen($phone);
+        if ($len >= 8) {
+            return substr($phone, 0, 4).str_repeat('*', max(2, $len - 7)).substr($phone, -3);
+        }
+
+        return substr($phone, 0, 2).'****';
     }
 }

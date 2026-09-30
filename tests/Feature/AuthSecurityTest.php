@@ -186,4 +186,48 @@ class AuthSecurityTest extends TestCase
 
         $teacher->delete();
     }
+
+    public function test_authenticated_user_can_access_sso_even_if_ip_is_blocked(): void
+    {
+        $student = User::factory()->create([
+            'username' => 'student_sso_test_'.rand(100, 999),
+            'password' => Hash::make('password'),
+            'role' => 'student',
+            'status' => 'active',
+        ]);
+
+        $testIp = '198.51.100.99';
+        BlockedIp::updateOrCreate(
+            ['ip_address' => $testIp],
+            ['reason' => 'Test IP Block', 'is_active' => true]
+        );
+
+        // Authenticated student accessing /oauth/authorize should not be blocked by CheckBlockedIp with 403
+        $response = $this->actingAs($student)
+            ->withServerVariables(['REMOTE_ADDR' => $testIp])
+            ->get('/oauth/authorize');
+
+        // Without query params, OAuthController returns 400 (Client Aplikasi Tidak Valid), NOT 403 (ip_blocked)
+        $response->assertStatus(400);
+
+        BlockedIp::where('ip_address', $testIp)->delete();
+        $student->delete();
+    }
+
+    public function test_artisan_security_unblock_command_unblocks_ip(): void
+    {
+        $testIp = '198.51.100.99';
+        $blocked = BlockedIp::updateOrCreate(
+            ['ip_address' => $testIp],
+            ['reason' => 'Test IP Block', 'is_active' => true]
+        );
+
+        $this->artisan('security:unblock', ['ip' => $testIp])
+            ->expectsOutputToContain("Blokir pada IP address [{$testIp}] berhasil dibuka")
+            ->assertSuccessful();
+
+        $this->assertFalse((bool) $blocked->fresh()->is_active);
+
+        $blocked->delete();
+    }
 }

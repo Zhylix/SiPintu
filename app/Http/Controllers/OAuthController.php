@@ -468,6 +468,7 @@ class OAuthController extends Controller
         $primaryRole = $user->roles->first()?->slug ?? $user->role;
 
         $passwordSync = app(PasswordSyncService::class)->getPasswordPayload($user);
+        unset($passwordSync['password'], $passwordSync['password_hash']);
 
         $payload = $base64UrlEncode(array_merge([
             'iss' => config('app.url', 'http://localhost:8000'),
@@ -511,21 +512,26 @@ class OAuthController extends Controller
         $signature = $request->header('X-SiPintu-Signature');
         $clientSecret = config('services.sipintu.client_secret') ?: env('SIPINTU_CLIENT_SECRET');
 
-        if ($clientSecret) {
-            if (! $signature) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Missing X-SiPintu-Signature header.',
-                ], 401);
-            }
+        if (! $clientSecret) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Endpoint webhook sync-user dinonaktifkan di server Identity Gateway SiPintu. Webhook ini hanya ditujukan untuk aplikasi downstream.',
+            ], 403);
+        }
 
-            $computed = hash_hmac('sha256', $request->getContent(), $clientSecret);
-            if (! hash_equals($computed, $signature)) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Invalid signature.',
-                ], 401);
-            }
+        if (! $signature) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Missing X-SiPintu-Signature header.',
+            ], 401);
+        }
+
+        $computed = hash_hmac('sha256', $request->getContent(), $clientSecret);
+        if (! hash_equals($computed, $signature)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Invalid signature.',
+            ], 401);
         }
 
         // 2. Extract and Normalize Payload
@@ -546,6 +552,14 @@ class OAuthController extends Controller
             ], 400);
         }
 
+        // Prevent privilege escalation to admin via webhook
+        if (isset($userData['role']) && in_array(strtolower($userData['role']), ['admin', 'administrator'])) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Role administrator tidak dapat dimodifikasi via webhook.',
+            ], 403);
+        }
+
         // 3. Locate User by external_id, new email, or previous email
         $user = null;
         if (! empty($userData['external_id'])) {
@@ -558,6 +572,13 @@ class OAuthController extends Controller
                     $q->orWhere('email', $previous['email']);
                 })
                 ->first();
+        }
+
+        if ($user && $user->isAdmin()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Akun administrator tidak dapat dimodifikasi via webhook.',
+            ], 403);
         }
 
         $syncTime = now();
