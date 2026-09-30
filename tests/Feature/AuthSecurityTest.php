@@ -37,22 +37,51 @@ class AuthSecurityTest extends TestCase
         $user->delete();
     }
 
-    public function test_multiple_failed_login_attempts_triggers_ip_block(): void
+    public function test_multiple_failed_logins_locks_target_account_without_blocking_entire_ip(): void
     {
+        $securityService = app(SecurityService::class);
+        $testIp = '198.51.100.99';
+
+        Cache::forget("security:failed_login_count:{$testIp}");
+        Cache::forget('security:account_locked:'.md5('target_user|'.$testIp));
+        BlockedIp::where('ip_address', $testIp)->delete();
+
+        // 4 failed attempts should not lock yet
+        for ($i = 1; $i <= 4; $i++) {
+            $securityService->recordFailedLogin($testIp, 'target_user');
+            $this->assertFalse($securityService->isAccountLocked('target_user', $testIp));
+            $this->assertFalse($securityService->isIpBlocked($testIp));
+        }
+
+        // 5th failed attempt should lock THIS account, but NOT block the whole school IP
+        $securityService->recordFailedLogin($testIp, 'target_user');
+        $this->assertTrue($securityService->isAccountLocked('target_user', $testIp));
+        $this->assertFalse($securityService->isIpBlocked($testIp));
+
+        // Other accounts from the same IP can still access and are NOT locked
+        $this->assertFalse($securityService->isAccountLocked('other_student', $testIp));
+
+        // Clean up
+        Cache::forget("security:failed_login_count:{$testIp}");
+        Cache::forget('security:account_locked:'.md5('target_user|'.$testIp));
+    }
+
+    public function test_cumulative_ip_brute_force_triggers_ip_block(): void
+    {
+        config(['auth.security.max_ip_attempts' => 5]);
         $securityService = app(SecurityService::class);
         $testIp = '198.51.100.99';
 
         Cache::forget("security:failed_login_count:{$testIp}");
         BlockedIp::where('ip_address', $testIp)->delete();
 
-        // 4 failed attempts should not block yet
         for ($i = 1; $i <= 4; $i++) {
-            $securityService->recordFailedLogin($testIp, 'target_user');
+            $securityService->recordFailedLogin($testIp, "user_{$i}");
             $this->assertFalse($securityService->isIpBlocked($testIp));
         }
 
-        // 5th failed attempt should trigger auto-block
-        $securityService->recordFailedLogin($testIp, 'target_user');
+        // 5th failed attempt from IP triggers auto-block
+        $securityService->recordFailedLogin($testIp, 'user_5');
         $this->assertTrue($securityService->isIpBlocked($testIp));
 
         // Test middleware intercepts request with blocked IP
@@ -64,6 +93,52 @@ class AuthSecurityTest extends TestCase
         // Clean up
         Cache::forget("security:failed_login_count:{$testIp}");
         BlockedIp::where('ip_address', $testIp)->delete();
+    }
+
+    public function test_pwa_static_assets_bypass_blocked_ip_middleware(): void
+    {
+        $testIp = '198.51.100.99';
+        BlockedIp::updateOrCreate(
+            ['ip_address' => $testIp],
+            ['reason' => 'Test IP Block', 'is_active' => true]
+        );
+
+        $response = $this->withServerVariables(['REMOTE_ADDR' => $testIp])
+            ->get('/manifest.json');
+        $response->assertStatus(200);
+
+        BlockedIp::where('ip_address', $testIp)->delete();
+    }
+
+    public function test_admin_can_access_unblock_route_even_if_on_blocked_ip(): void
+    {
+        $admin = User::firstOrCreate(
+            ['username' => 'admin_test_security'],
+            [
+                'name' => 'Admin Test',
+                'email' => 'admin_test_sec@smkn1bangsri.sch.id',
+                'password' => Hash::make('password'),
+                'role' => 'admin',
+                'status' => 'active',
+            ]
+        );
+
+        $testIp = '198.51.100.99';
+        $blocked = BlockedIp::updateOrCreate(
+            ['ip_address' => $testIp],
+            ['reason' => 'Test Block', 'is_active' => true]
+        );
+
+        // Admin can call unblock route from that IP
+        $response = $this->actingAs($admin)
+            ->withServerVariables(['REMOTE_ADDR' => $testIp])
+            ->delete(route('admin.monitoring.blocked-ips.destroy', $blocked->id));
+
+        $response->assertRedirect();
+        $this->assertFalse((bool) $blocked->fresh()->is_active);
+
+        $blocked->delete();
+        $admin->delete();
     }
 
     public function test_different_users_failing_login_does_not_prematurely_block_school_ip(): void

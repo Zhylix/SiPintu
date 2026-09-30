@@ -11,6 +11,7 @@ use App\Models\SecurityLog;
 use App\Services\AuditLogger;
 use App\Services\DatabaseBackupService;
 use App\Services\GatewayHealthValidationService;
+use App\Services\SecurityService;
 use App\Services\SsoDiagnosticsService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -246,7 +247,7 @@ class AdminMonitoringController extends Controller
         ]);
 
         // Clear failed login counter in cache for this IP
-        Cache::forget("security:failed_login_count:{$ip}");
+        app(SecurityService::class)->clearAllIpSecurityCache($ip);
 
         AuditLogger::log('security_ip_unblocked', [
             'ip_address' => $ip,

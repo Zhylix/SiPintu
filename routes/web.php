@@ -17,6 +17,8 @@ use App\Http\Controllers\OAuthController;
 use App\Http\Controllers\Student\StudentDashboardController;
 use App\Http\Controllers\Teacher\TeacherDashboardController;
 use App\Http\Controllers\UserApplicationFavoriteController;
+use App\Models\Setting;
+use App\Services\PwaIconService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -153,10 +155,10 @@ Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:120,1')->name('login.store');
     Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.request');
-    Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->middleware('throttle:5,1')->name('password.email');
-    Route::post('/forgot-password/whatsapp-otp', [AuthController::class, 'sendResetOtpWhatsapp'])->middleware('throttle:5,1')->name('password.whatsapp.otp');
+    Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->middleware('throttle:15,1')->name('password.email');
+    Route::post('/forgot-password/whatsapp-otp', [AuthController::class, 'sendResetOtpWhatsapp'])->middleware('throttle:20,1')->name('password.whatsapp.otp');
     Route::get('/forgot-password/verify-otp', [AuthController::class, 'showVerifyOtp'])->name('password.whatsapp.verify_form');
-    Route::post('/forgot-password/verify-otp', [AuthController::class, 'verifyResetOtp'])->middleware('throttle:10,1')->name('password.whatsapp.verify');
+    Route::post('/forgot-password/verify-otp', [AuthController::class, 'verifyResetOtp'])->middleware('throttle:30,1')->name('password.whatsapp.verify');
 });
 
 // Explicit 404 response for any registration attempt
@@ -340,8 +342,6 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
 |--------------------------------------------------------------------------
 */
 use App\Http\Controllers\Demo\ExternalAppDemoController;
-use App\Models\Setting;
-use App\Services\PwaIconService;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 
 Route::prefix('demo')->name('demo.')->group(function () {

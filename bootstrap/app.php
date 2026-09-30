@@ -28,7 +28,8 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->append(SecurityHeadersMiddleware::class);
-        $middleware->append(CheckBlockedIp::class);
+        $middleware->appendToGroup('web', CheckBlockedIp::class);
+        $middleware->appendToGroup('api', CheckBlockedIp::class);
 
         $middleware->alias([
             'admin' => AdminMiddleware::class,

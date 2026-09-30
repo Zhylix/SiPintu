@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Services\SecurityService;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
 class CheckBlockedIp
@@ -18,6 +19,26 @@ class CheckBlockedIp
      */
     public function handle(Request $request, Closure $next): Response
     {
+        // 1. Bypass static PWA and asset routes so service workers and icons are never blocked
+        if ($this->isBypassableAsset($request)) {
+            return $next($request);
+        }
+
+        // 2. Bypass Admin unblocking actions so admins are never locked out of recovery
+        if ($request->is('monitoring/blocked-ips/*') || $request->is('admin/monitoring/blocked-ips/*')) {
+            return $next($request);
+        }
+
+        // 3. Bypass already authenticated administrator
+        if (Auth::check() && (Auth::user()->isAdmin() || Auth::user()->hasPermission('access-admin'))) {
+            return $next($request);
+        }
+
+        // 4. Protect active sessions of legitimately logged-in users (do not disrupt active classes)
+        if (Auth::check() && ! $request->is('login*') && ! $request->is('oauth/authorize*')) {
+            return $next($request);
+        }
+
         $ip = $request->ip();
 
         if ($this->securityService->isIpBlocked($ip)) {
@@ -43,5 +64,21 @@ class CheckBlockedIp
         }
 
         return $next($request);
+    }
+
+    /**
+     * Determine if request is for static PWA assets or manifest files.
+     */
+    protected function isBypassableAsset(Request $request): bool
+    {
+        return $request->is([
+            'manifest.webmanifest',
+            'manifest.json',
+            'sw.js',
+            'icons/*',
+            'apple-touch-icon.png',
+            'offline.html',
+            'favicon.ico',
+        ]);
     }
 }

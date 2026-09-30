@@ -83,7 +83,17 @@ class AuthController extends Controller
             $expiryText = $block?->expires_at ? $block->expires_at->diffForHumans() : 'beberapa saat';
 
             return back()->withErrors([
-                $identityFieldName => "Akses IP Anda ({$request->ip()}) diblokir sementara karena terlalu banyak percobaan login yang gagal. Silakan coba lagi {$expiryText}.",
+                $identityFieldName => "Akses IP Anda ({$request->ip()}) diblokir sementara karena terdeteksi aktivitas mencurigakan. Silakan coba lagi nanti ({$expiryText}).",
+            ])->onlyInput('account_type', 'nis', 'nip', 'kode_dudi', 'identity');
+        }
+
+        if (! empty($identity) && $securityService->isAccountLocked($identity, $request->ip())) {
+            $remaining = $securityService->getAccountLockRemainingMinutes($identity, $request->ip());
+            $timeText = $remaining > 1 ? "{$remaining} menit" : '1 menit';
+            $maxLimit = SecurityService::MAX_ATTEMPTS;
+
+            return back()->withErrors([
+                $identityFieldName => "Akun ({$identity}) sementara dikunci karena terlalu banyak percobaan login yang gagal ({$maxLimit}x). Silakan coba lagi dalam {$timeText} atau gunakan menu Lupa Password.",
             ])->onlyInput('account_type', 'nis', 'nip', 'kode_dudi', 'identity');
         }
 
@@ -313,7 +323,10 @@ class AuthController extends Controller
                 $teacherData = $sijunaService->getTeacherByExternalId($identity);
                 if ($teacherData) {
                     if ($password !== 'password') {
-                        $securityService->recordFailedLogin($request->ip(), $identity);
+                        AuditLogger::log('login_notice_sijuna_default_password_required', [
+                            'identity' => $identity,
+                            'role' => 'teacher',
+                        ]);
 
                         return back()->withErrors([
                             'password' => 'Akun Guru Anda terdaftar di SIJUNA tetapi baru pertama kali masuk ke SiPintu Gateway. Silakan gunakan kata sandi awal ("password") untuk masuk.',
@@ -375,7 +388,10 @@ class AuthController extends Controller
                     ?: ($nisSearch !== $identity ? $sijunaService->getStudentByExternalId($nisSearch) : null);
                 if ($studentData) {
                     if ($password !== 'password') {
-                        $securityService->recordFailedLogin($request->ip(), $identity);
+                        AuditLogger::log('login_notice_sijuna_default_password_required', [
+                            'identity' => $identity,
+                            'role' => 'student',
+                        ]);
 
                         return back()->withErrors([
                             'password' => 'Akun Siswa Anda terdaftar di SIJUNA tetapi baru pertama kali masuk ke SiPintu Gateway. Silakan gunakan kata sandi awal ("password") untuk masuk.',
