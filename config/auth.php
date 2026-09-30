@@ -131,4 +131,21 @@ return [
         'password' => env('ADMIN_PASSWORD', 'password'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Login Security & Brute-Force Thresholds
+    |--------------------------------------------------------------------------
+    |
+    | Configuration for rate limiting and IP blocking. Geared for school
+    | environments where multiple users share the same network / public IP.
+    |
+    */
+
+    'security' => [
+        'max_attempts' => (int) env('SECURITY_MAX_ATTEMPTS', 5),
+        'max_ip_attempts' => (int) env('SECURITY_MAX_IP_ATTEMPTS', 30),
+        'block_minutes' => (int) env('SECURITY_BLOCK_MINUTES', 15),
+        'ip_whitelist' => env('SECURITY_IP_WHITELIST', ''),
+    ],
+
 ];

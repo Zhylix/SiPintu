@@ -65,4 +65,50 @@ class AuthSecurityTest extends TestCase
         Cache::forget("security:failed_login_count:{$testIp}");
         BlockedIp::where('ip_address', $testIp)->delete();
     }
+
+    public function test_different_users_failing_login_does_not_prematurely_block_school_ip(): void
+    {
+        $securityService = app(SecurityService::class);
+        $schoolIp = '198.51.100.88';
+
+        Cache::forget("security:failed_login_count:{$schoolIp}");
+        BlockedIp::where('ip_address', $schoolIp)->delete();
+
+        // 5 different students in a school lab each fail 1 time with their own NIS
+        for ($i = 1; $i <= 5; $i++) {
+            $securityService->recordFailedLogin($schoolIp, "student_{$i}");
+            $this->assertFalse($securityService->isIpBlocked($schoolIp));
+        }
+
+        // Clean up
+        Cache::forget("security:failed_login_count:{$schoolIp}");
+        BlockedIp::where('ip_address', $schoolIp)->delete();
+    }
+
+    public function test_role_mismatch_error_does_not_penalize_ip_counter(): void
+    {
+        $schoolIp = '198.51.100.77';
+        Cache::forget("security:failed_login_count:{$schoolIp}");
+
+        // Create a teacher
+        $teacher = User::factory()->create([
+            'username' => 'guru_test_'.rand(100, 999),
+            'password' => Hash::make('secret123'),
+            'role' => 'teacher',
+            'status' => 'active',
+        ]);
+
+        // Teacher accidentally submits on 'siswa' tab
+        $response = $this->withServerVariables(['REMOTE_ADDR' => $schoolIp])
+            ->post(route('login.store'), [
+                'account_type' => 'siswa',
+                'nis' => $teacher->username,
+                'password' => 'secret123',
+            ]);
+
+        $response->assertSessionHasErrors(['nis']);
+        $this->assertEquals(0, (int) Cache::get("security:failed_login_count:{$schoolIp}", 0));
+
+        $teacher->delete();
+    }
 }

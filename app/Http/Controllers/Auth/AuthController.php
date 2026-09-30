@@ -233,8 +233,7 @@ class AuthController extends Controller
                 ];
                 $targetTab = $tabMap[$user->role] ?? $userRoleName;
 
-                $securityService->recordFailedLogin($request->ip(), $identity, $user->id);
-
+                // Do not count UI tab selection mismatch as a brute-force failed login
                 AuditLogger::log($isSso ? 'sso_login_failed_role_mismatch' : 'login_failed_role_mismatch', [
                     'identity' => $identity,
                     'selected_tab' => $accountType,

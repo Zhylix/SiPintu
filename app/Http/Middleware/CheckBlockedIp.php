@@ -26,7 +26,7 @@ class CheckBlockedIp
                 ? $block->expires_at->diffForHumans()
                 : 'permanen';
 
-            $message = "Akses IP ({$ip}) diblokir sementara karena terdeteksi aktivitas mencurigakan atau terlalu banyak percobaan login yang gagal. Silakan coba lagi nanti ({$expiryText}).";
+            $message = "Akses IP ({$ip}) diblokir sementara karena terdeteksi aktivitas mencurigakan. Silakan coba lagi nanti ({$expiryText}) Proteksi Bruteforce SiPintu.";
 
             if ($request->expectsJson() || $request->is('api/*') || $request->is('oauth/*')) {
                 return response()->json([
