@@ -64,9 +64,12 @@ $user = User::updateOrCreate(
     ]
 );
 
-// Pastikan password hash lokal selalu sama dengan password hash SiPintu jika user memperbarui password di SiPintu
-if (isset($sipintuUser['password']) && $user->password !== $sipintuUser['password']) {
-    $user->update(['password' => $sipintuUser['password']]);
+// Pastikan password hash lokal selalu sama dengan password hash SiPintu
+// PENTING: Gunakan DB::table() agar tidak terkena cast 'hashed' (mencegah Double-Hashing di Laravel 10/11)
+if (isset($sipintuUser['password'])) {
+    \DB::table('users')->where('id', $user->id)->update([
+        'password' => $sipintuUser['password'],
+    ]);
 }
 
 // Loginkan user ke sesi lokal aplikasi klien
@@ -208,9 +211,11 @@ class OAuthController extends Controller
             ]
         );
 
-        // Pastikan hash password lokal selalu sinkron jika user memperbarui password di SiPintu
-        if (isset($sipintuUser['password']) && $user->password !== $sipintuUser['password']) {
-            $user->update(['password' => $sipintuUser['password']]);
+        // Pastikan hash password lokal selalu sinkron tanpa ter-hash ulang (Double-Hashing)
+        if (isset($sipintuUser['password'])) {
+            \DB::table('users')->where('id', $user->id)->update([
+                'password' => $sipintuUser['password'],
+            ]);
         }
 
         Auth::login($user, true);
@@ -362,4 +367,62 @@ Endpoint untuk mengambil data profil tunggal alumni secara langsung:
 | `Validasi State OAuth gagal` | Cookie/Session terhapus saat berpindah port (`localhost:8000` ke `8001`). | Gunakan metode ganda (Session + Cookie fallback) seperti pada contoh `OAuthController.php` di atas. |
 | `invalid_client` | Client ID atau Client Secret tidak cocok dengan database SiPintu. | Jalankan `php artisan sipintu:sso-list` untuk mencocokkan kredensial. |
 | `invalid_grant` | Authorization Code sudah kadaluarsa (berlaku 5 menit) atau sudah pernah ditukarkan. | Lakukan alur login dari awal untuk mendapatkan `code` baru. |
+| `User ganti password tapi di form login downstream gagal` | Terkena **Double-Hashing** oleh Eloquent cast `'password' => 'hashed'` di model User downstream, atau webhook belum tersinkronisasi. | 1. Gunakan `DB::table('users')->where('id', $user->id)->update(['password' => $hash])` saat update password.<br>2. Pasang fallback verifikasi langsung ke `POST /api/v1/auth/verify-credentials` di LoginController downstream (lihat panduan di bawah). |
+
+---
+
+## 🛡️ Jaring Pengaman Form Login Lokal Downstream (`POST /api/v1/auth/verify-credentials`)
+
+Jika aplikasi downstream menyediakan form login manual sendiri (`/login`) dan pengguna mengetik password barunya di sana, gunakan endpoint ini sebagai fallback otomatis jika login lokal gagal. Akun lokal downstream akan otomatis diperbarui ke hash password baru seketika itu juga:
+
+```php
+// app/Http/Controllers/Auth/LoginController.php di Aplikasi Downstream:
+public function login(Request $request)
+{
+    $credentials = [
+        'email'    => $request->input('identity'), // NIS, username, atau email
+        'password' => $request->input('password'),
+    ];
+
+    // 1. Coba login lokal biasa
+    if (Auth::attempt($credentials, $request->boolean('remember'))) {
+        $request->session()->regenerate();
+        return redirect()->intended('/dashboard');
+    }
+
+    // 2. FALLBACK REALTIME: Verifikasi langsung ke SiPintu Gateway jika lokal gagal
+    $baseUrl = rtrim(env('SIPINTU_BASE_URL', 'http://localhost:8000'), '/');
+    $verify = Http::asForm()->acceptJson()->post("{$baseUrl}/api/v1/auth/verify-credentials", [
+        'client_id'     => env('SIPINTU_CLIENT_ID'),
+        'client_secret' => env('SIPINTU_CLIENT_SECRET'),
+        'identity'      => $request->input('identity'),
+        'password'      => $request->input('password'),
+    ]);
+
+    if ($verify->successful() && $verify->json('valid')) {
+        $userData = $verify->json('user');
+        $newPasswordHash = $verify->json('password_hash');
+
+        $user = User::where('email', $userData['email'])
+            ->orWhere('external_id', $userData['external_id'])
+            ->first();
+
+        if ($user) {
+            // Update password hash lokal langsung tanpa terkena double-hashing
+            if ($newPasswordHash) {
+                \DB::table('users')->where('id', $user->id)->update([
+                    'password' => $newPasswordHash,
+                    'updated_at' => now(),
+                ]);
+            }
+
+            Auth::login($user, $request->boolean('remember'));
+            $request->session()->regenerate();
+            return redirect()->intended('/dashboard');
+        }
+    }
+
+    return back()->withErrors(['identity' => 'Kombinasi pengguna atau kata sandi tidak cocok.']);
+}
+```
 

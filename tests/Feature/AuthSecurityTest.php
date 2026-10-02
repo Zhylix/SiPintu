@@ -39,6 +39,10 @@ class AuthSecurityTest extends TestCase
 
     public function test_multiple_failed_logins_locks_target_account_without_blocking_entire_ip(): void
     {
+        config([
+            'auth.security.max_attempts' => 15,
+            'auth.security.max_ip_attempts' => 30,
+        ]);
         $securityService = app(SecurityService::class);
         $testIp = '198.51.100.99';
 
@@ -46,14 +50,14 @@ class AuthSecurityTest extends TestCase
         Cache::forget('security:account_locked:'.md5('target_user|'.$testIp));
         BlockedIp::where('ip_address', $testIp)->delete();
 
-        // 4 failed attempts should not lock yet
-        for ($i = 1; $i <= 4; $i++) {
+        // 14 failed attempts should not lock yet
+        for ($i = 1; $i <= 14; $i++) {
             $securityService->recordFailedLogin($testIp, 'target_user');
             $this->assertFalse($securityService->isAccountLocked('target_user', $testIp));
             $this->assertFalse($securityService->isIpBlocked($testIp));
         }
 
-        // 5th failed attempt should lock THIS account, but NOT block the whole school IP
+        // 15th failed attempt should lock THIS account, but NOT block the whole school IP
         $securityService->recordFailedLogin($testIp, 'target_user');
         $this->assertTrue($securityService->isAccountLocked('target_user', $testIp));
         $this->assertFalse($securityService->isIpBlocked($testIp));
@@ -66,25 +70,27 @@ class AuthSecurityTest extends TestCase
         Cache::forget('security:account_locked:'.md5('target_user|'.$testIp));
     }
 
-    public function test_cumulative_ip_brute_force_triggers_ip_block(): void
+    public function test_cumulative_ip_brute_force_triggers_ip_timeout_without_database_block(): void
     {
-        config(['auth.security.max_ip_attempts' => 5]);
+        config(['auth.security.max_ip_attempts' => 15]);
         $securityService = app(SecurityService::class);
         $testIp = '198.51.100.99';
 
         Cache::forget("security:failed_login_count:{$testIp}");
+        Cache::forget("security:ip_timeout:{$testIp}");
         BlockedIp::where('ip_address', $testIp)->delete();
 
-        for ($i = 1; $i <= 4; $i++) {
+        for ($i = 1; $i <= 14; $i++) {
             $securityService->recordFailedLogin($testIp, "user_{$i}");
             $this->assertFalse($securityService->isIpBlocked($testIp));
         }
 
-        // 5th failed attempt from IP triggers auto-block
-        $securityService->recordFailedLogin($testIp, 'user_5');
+        // 15th failed attempt from IP triggers 15-minute timeout in cache (no DB row inserted)
+        $securityService->recordFailedLogin($testIp, 'user_15');
         $this->assertTrue($securityService->isIpBlocked($testIp));
+        $this->assertDatabaseMissing('blocked_ips', ['ip_address' => $testIp]);
 
-        // Test middleware intercepts request with blocked IP
+        // Test middleware intercepts request with timed out IP
         $response = $this->withServerVariables(['REMOTE_ADDR' => $testIp])
             ->get(route('login'));
 
@@ -92,6 +98,7 @@ class AuthSecurityTest extends TestCase
 
         // Clean up
         Cache::forget("security:failed_login_count:{$testIp}");
+        Cache::forget("security:ip_timeout:{$testIp}");
         BlockedIp::where('ip_address', $testIp)->delete();
     }
 

@@ -83,7 +83,7 @@ class AuthController extends Controller
             $expiryText = $block?->expires_at ? $block->expires_at->diffForHumans() : 'beberapa saat';
 
             return back()->withErrors([
-                $identityFieldName => "Akses IP Anda ({$request->ip()}) diblokir sementara karena terdeteksi aktivitas mencurigakan. Silakan coba lagi nanti ({$expiryText}).",
+                $identityFieldName => "Akses dari IP Anda ({$request->ip()}) sementara mengalami time out ({$expiryText}) karena terdeteksi 15 kali percobaan gagal dalam 3 menit. Silakan coba lagi nanti.",
             ])->onlyInput('account_type', 'nis', 'nip', 'kode_dudi', 'identity');
         }
 
@@ -93,7 +93,7 @@ class AuthController extends Controller
             $maxLimit = SecurityService::MAX_ATTEMPTS;
 
             return back()->withErrors([
-                $identityFieldName => "Akun ({$identity}) sementara dikunci karena terlalu banyak percobaan login yang gagal ({$maxLimit}x). Silakan coba lagi dalam {$timeText} atau gunakan menu Lupa Password.",
+                $identityFieldName => "Akun ({$identity}) sementara mengalami time out ({$timeText}) karena telah mencoba login {$maxLimit} kali dalam 3 menit. Silakan coba lagi nanti atau gunakan menu Lupa Password.",
             ])->onlyInput('account_type', 'nis', 'nip', 'kode_dudi', 'identity');
         }
 

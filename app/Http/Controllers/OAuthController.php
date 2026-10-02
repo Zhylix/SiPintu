@@ -9,6 +9,7 @@ use App\Models\OAuthRefreshToken;
 use App\Models\User;
 use App\Services\AuditLogger;
 use App\Services\PasswordSyncService;
+use App\Services\SecurityService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -362,6 +363,98 @@ class OAuthController extends Controller
                 'refresh_token' => $newRefreshTokenStr,
                 'id_token' => $idToken,
                 'scope' => $refreshToken->accessToken->scopes,
+            ], app(PasswordSyncService::class)->getPasswordPayload($user)));
+        }
+
+        if ($grantType === 'password') {
+            $identity = trim((string) ($request->input('username') ?? $request->input('email') ?? $request->input('identity')));
+            $rawPassword = (string) $request->input('password');
+
+            if (empty($identity) || empty($rawPassword)) {
+                return response()->json([
+                    'error' => 'invalid_request',
+                    'error_description' => 'Username/identity and password are required for password grant.',
+                ], 400);
+            }
+
+            $securityService = app(SecurityService::class);
+            $clientIp = $request->ip() ?: '127.0.0.1';
+
+            if ($securityService->isAccountLocked($identity, $clientIp)) {
+                $remaining = $securityService->getAccountLockRemainingMinutes($identity, $clientIp);
+
+                return response()->json([
+                    'error' => 'invalid_grant',
+                    'error_description' => "Akun ini sementara terkunci karena terlalu banyak percobaan gagal. Silakan coba lagi dalam {$remaining} menit.",
+                ], 429);
+            }
+
+            $user = User::where('email', $identity)
+                ->orWhere('username', $identity)
+                ->orWhere('external_id', $identity)
+                ->first();
+
+            if (! $user && ! str_contains($identity, '@')) {
+                $user = User::where('email', 'like', $identity.'@%')->first();
+            }
+
+            if (! $user || ! Hash::check($rawPassword, $user->password)) {
+                $securityService->recordFailedLogin($clientIp, $identity, $user?->id);
+
+                AuditLogger::log('token_password_grant_failed', [
+                    'client_id' => $clientId,
+                    'identity' => $identity,
+                    'ip' => $clientIp,
+                    'via_sso' => true,
+                    'is_sso_failure' => true,
+                ]);
+
+                return response()->json([
+                    'error' => 'invalid_grant',
+                    'error_description' => 'Identitas atau kata sandi tidak cocok di SiPintu Gateway.',
+                ], 400);
+            }
+
+            \Illuminate\Support\Facades\Cache::forget('security:failed_login_account:'.md5(strtolower(trim($identity)).'|'.$clientIp));
+
+            if ($user->status !== 'active') {
+                return response()->json([
+                    'error' => 'invalid_grant',
+                    'error_description' => 'Akun pengguna sedang dinonaktifkan atau ditangguhkan.',
+                ], 403);
+            }
+
+            $accessTokenStr = Str::random(80);
+            $refreshTokenStr = Str::random(80);
+            $accessTokenId = (string) Str::uuid();
+
+            OAuthAccessToken::create([
+                'id' => $accessTokenId,
+                'user_id' => $user->id,
+                'application_id' => $application->id,
+                'token' => $accessTokenStr,
+                'scopes' => 'openid profile email',
+                'expires_at' => now()->addHours(24),
+                'revoked' => false,
+            ]);
+
+            OAuthRefreshToken::create([
+                'id' => (string) Str::uuid(),
+                'access_token_id' => $accessTokenId,
+                'token' => $refreshTokenStr,
+                'expires_at' => now()->addDays(30),
+                'revoked' => false,
+            ]);
+
+            $idToken = $this->generateIdToken($user, $application);
+
+            return response()->json(array_merge([
+                'access_token' => $accessTokenStr,
+                'token_type' => 'Bearer',
+                'expires_in' => 86400,
+                'refresh_token' => $refreshTokenStr,
+                'id_token' => $idToken,
+                'scope' => 'openid profile email',
             ], app(PasswordSyncService::class)->getPasswordPayload($user)));
         }
 

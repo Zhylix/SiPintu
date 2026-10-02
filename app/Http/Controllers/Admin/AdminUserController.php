@@ -171,8 +171,10 @@ class AdminUserController extends Controller
             'status' => $validated['status'],
         ];
 
+        $passwordChanged = false;
         if (! empty($validated['password'])) {
             $updateData['password'] = Hash::make($validated['password']);
+            $passwordChanged = true;
         }
 
         $user->update($updateData);
@@ -181,9 +183,14 @@ class AdminUserController extends Controller
         $role = Role::firstOrCreate(['name' => $validated['role'], 'guard_name' => 'web']);
         $user->syncRoles([$role]);
 
+        if ($passwordChanged) {
+            app(\App\Services\PasswordSyncService::class)->broadcastPasswordChange($user);
+        }
+
         AuditLogger::log('admin_update_user', [
             'updated_user_id' => $user->id,
             'email' => $user->email,
+            'password_synced' => $passwordChanged,
         ]);
 
         return redirect()->route('admin.users.index')->with('success', "Data pengguna {$user->name} berhasil diperbarui dan disinkronkan ke seluruh aplikasi downstream.");

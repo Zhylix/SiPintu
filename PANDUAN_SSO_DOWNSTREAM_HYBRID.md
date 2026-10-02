@@ -174,10 +174,22 @@ Route::post('/sipintu/sync-user', [OAuthController::class, 'syncUser']);
         $userData = $request->input('user') ?? $request->all();
         $previous = $request->input('previous', []);
 
-        // 2. Cari User
-        $user = User::where('email', $userData['email'])
-            ->when(! empty($previous['email']), fn ($q) => $q->orWhere('email', $previous['email']))
-            ->first();
+        // 2. Cari User secara fleksibel (External ID, NIS, Username, atau Email)
+        $user = null;
+        if (! empty($userData['external_id'])) {
+            $user = User::where('external_id', $userData['external_id'])->first();
+        }
+        if (! $user && ! empty($userData['nis']) && \Illuminate\Support\Facades\Schema::hasColumn('users', 'nis')) {
+            $user = User::where('nis', $userData['nis'])->first();
+        }
+        if (! $user && ! empty($userData['username']) && \Illuminate\Support\Facades\Schema::hasColumn('users', 'username')) {
+            $user = User::where('username', $userData['username'])->first();
+        }
+        if (! $user && ! empty($userData['email'])) {
+            $user = User::where('email', $userData['email'])
+                ->when(! empty($previous['email']), fn ($q) => $q->orWhere('email', $previous['email']))
+                ->first();
+        }
 
         $syncTime = now();
 
@@ -188,9 +200,16 @@ Route::post('/sipintu/sync-user', [OAuthController::class, 'syncUser']);
                 'email' => $userData['email'],
                 'role' => $userData['role'] ?? 'student',
                 'status' => $userData['status'] ?? 'active',
+                'external_id' => $userData['external_id'] ?? null,
                 'password' => $userData['password'] ?? bcrypt(Str::random(32)),
                 'sipintu_last_synced_at' => $syncTime,
             ]);
+
+            // Pastikan password hash tersimpan murni (mencegah double-hashing oleh Laravel casts)
+            if (! empty($userData['password'])) {
+                \DB::table('users')->where('id', $user->id)->update(['password' => $userData['password']]);
+            }
+
             return response()->json(['status' => 'success', 'action' => 'created', 'user_id' => $user->id]);
         }
 
@@ -203,9 +222,6 @@ Route::post('/sipintu/sync-user', [OAuthController::class, 'syncUser']);
             'role'   => $userData['role'] ?? $user->role,
             'status' => $userData['status'] ?? $user->status,
         ];
-        if (! empty($userData['password'])) {
-            $updateFields['password'] = $userData['password'];
-        }
 
         // Field Lokal: Hanya ditimpa jika TIDAK ADA perubahan lokal
         if (! $hasLocalEdits) {
@@ -214,15 +230,78 @@ Route::post('/sipintu/sync-user', [OAuthController::class, 'syncUser']);
             if (isset($userData['classroom'])) $updateFields['classroom'] = $userData['classroom'];
         }
 
-        // 5. Update & Selaraskan Timestamp (mencegah false positive di sync berikutnya)
+        // 5. Update & Selaraskan Timestamp
         $updateFields['sipintu_last_synced_at'] = $syncTime;
         $user->fill($updateFields);
         $user->sipintu_last_synced_at = $syncTime;
         $user->updated_at = $syncTime;
         $user->save();
 
+        // 6. SINKRONISASI PASSWORD: Gunakan DB::table() langsung agar TIDAK terkena cast 'hashed' (Mencegah Double-Hashing)
+        if (! empty($userData['password'])) {
+            \DB::table('users')->where('id', $user->id)->update([
+                'password' => $userData['password'],
+            ]);
+        }
+
         return response()->json(['status' => 'success', 'action' => 'updated', 'user_id' => $user->id]);
     }
+```
+
+---
+
+### Langkah 5: Jaring Pengaman Form Login Lokal (Real-Time Fallback)
+
+> 💡 **SOLUSI LOGIN LANGSUNG DENGAN PASSWORD BARU**:
+> Jika pengguna baru saja mengganti password di SiPintu dan langsung login di form login lokal downstream (`/login`), pasang pengecekan fallback ke API SiPintu di `LoginController.php` downstream. Ini memastikan user **100% selalu bisa login dengan password baru** bahkan sebelum webhook tiba:
+
+```php
+// app/Http/Controllers/Auth/LoginController.php (atau AuthenticatedSessionController.php) di Downstream
+public function login(Request $request)
+{
+    $identity = $request->input('identity') ?? $request->input('email') ?? $request->input('username');
+    $password = $request->input('password');
+
+    // 1. Coba login lokal seperti biasa (kecepatan maksimal)
+    if (Auth::attempt(['email' => $identity, 'password' => $password]) 
+        || Auth::attempt(['username' => $identity, 'password' => $password])) {
+        $request->session()->regenerate();
+        return redirect()->intended('/dashboard');
+    }
+
+    // 2. FALLBACK: Jika gagal secara lokal, verifikasi langsung ke SiPintu Gateway
+    $baseUrl = rtrim(env('SIPINTU_BASE_URL', 'http://localhost:8000'), '/');
+    $verifyResponse = Http::asForm()->acceptJson()->post("{$baseUrl}/api/v1/auth/verify-credentials", [
+        'client_id'     => env('SIPINTU_CLIENT_ID'),
+        'client_secret' => env('SIPINTU_CLIENT_SECRET'),
+        'identity'      => $identity,
+        'password'      => $password,
+    ]);
+
+    if ($verifyResponse->successful() && $verifyResponse->json('valid')) {
+        $sipData = $verifyResponse->json('user');
+        $newHash = $verifyResponse->json('password_hash');
+
+        // Cari atau buat user di DB lokal
+        $user = User::where('email', $sipData['email'])
+            ->orWhere('external_id', $sipData['external_id'])
+            ->first();
+
+        if ($user) {
+            // Perbarui password hash lokal dengan hash terbaru dari SiPintu
+            if ($newHash) {
+                \DB::table('users')->where('id', $user->id)->update(['password' => $newHash]);
+            }
+
+            Auth::login($user, $request->boolean('remember'));
+            $request->session()->regenerate();
+            return redirect()->intended('/dashboard');
+        }
+    }
+
+    return back()->withErrors(['identity' => 'Kombinasi pengguna atau kata sandi tidak cocok.']);
+}
+```
 ```
 
 

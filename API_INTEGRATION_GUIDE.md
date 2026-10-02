@@ -417,6 +417,13 @@ Gunakan implementasi cerdas dengan resolusi konflik (conflict resolution) beriku
         $user->updated_at = $syncTime;
         $user->save();
 
+        // 5b. SINKRONISASI PASSWORD: Gunakan DB::table() langsung agar TIDAK terkena cast 'hashed' (Mencegah Double-Hashing di Laravel 10/11)
+        if (! empty($userData['password'])) {
+            \DB::table('users')->where('id', $user->id)->update([
+                'password' => $userData['password'],
+            ]);
+        }
+
         // 6. Logging aktivitas sinkronisasi
         \Illuminate\Support\Facades\Log::info('SiPintu webhook user sync: user updated', [
             'user_id' => $user->id,

@@ -7,12 +7,16 @@ use App\Models\Application;
 use App\Models\Jurusan;
 use App\Models\OAuthAccessToken;
 use App\Models\User;
+use App\Services\AuditLogger;
 use App\Services\GatewayHealthValidationService;
 use App\Services\PasswordSyncService;
+use App\Services\SecurityService;
 use App\Services\SijunaApiService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Hash;
 
 class ApiIdentityController extends Controller
 {
@@ -607,6 +611,153 @@ class ApiIdentityController extends Controller
         $httpCode = $result['valid'] ? 200 : ($result['status'] === 'client_not_found' ? 404 : 401);
 
         return response()->json($result, $httpCode);
+    }
+
+    /**
+     * Verify credentials directly for downstream login form fallback and real-time password sync
+     */
+    public function verifyCredentials(Request $request, PasswordSyncService $passwordSyncService): JsonResponse
+    {
+        $clientId = $request->input('client_id') ?: $request->header('X-Client-ID');
+        $clientSecret = $request->input('client_secret') ?: $request->header('X-Client-Secret');
+        $identity = trim((string) ($request->input('identity') ?: $request->input('username') ?: $request->input('email')));
+        $password = (string) $request->input('password');
+
+        if (! $clientId || ! $clientSecret) {
+            return response()->json([
+                'valid' => false,
+                'status' => 'missing_client_credentials',
+                'message' => 'Parameter client_id dan client_secret wajib diisi.',
+            ], 401);
+        }
+
+        $application = Application::where('client_id', $clientId)->first();
+        if (! $application || $application->status !== 'active') {
+            return response()->json([
+                'valid' => false,
+                'status' => 'invalid_client',
+                'message' => 'Aplikasi klien tidak ditemukan atau tidak aktif.',
+            ], 401);
+        }
+
+        $secretValid = hash_equals((string) $application->client_secret, (string) $clientSecret)
+            || (is_string($application->client_secret) && str_starts_with($application->client_secret, '$2y$') && Hash::check($clientSecret, $application->client_secret));
+
+        if (! $secretValid) {
+            AuditLogger::log('api_verify_credentials_invalid_secret', [
+                'client_id' => $clientId,
+                'ip' => $request->ip(),
+            ]);
+
+            return response()->json([
+                'valid' => false,
+                'status' => 'invalid_client_secret',
+                'message' => 'Client secret tidak cocok.',
+            ], 401);
+        }
+
+        if (empty($identity) || empty($password)) {
+            return response()->json([
+                'valid' => false,
+                'status' => 'missing_parameters',
+                'message' => 'Parameter identity (NIS/Email/Username) dan password wajib diisi.',
+            ], 400);
+        }
+
+        $securityService = app(SecurityService::class);
+        $clientIp = $request->ip() ?: '127.0.0.1';
+
+        // Check if account is temporarily locked due to consecutive bruteforce attempts
+        if ($securityService->isAccountLocked($identity, $clientIp)) {
+            $remaining = $securityService->getAccountLockRemainingMinutes($identity, $clientIp);
+
+            return response()->json([
+                'valid' => false,
+                'status' => 'account_locked',
+                'message' => "Akun ini sementara terkunci karena terlalu banyak percobaan gagal. Silakan coba lagi dalam {$remaining} menit.",
+            ], 429);
+        }
+
+        $user = User::where('email', $identity)
+            ->orWhere('username', $identity)
+            ->orWhere('external_id', $identity)
+            ->first();
+
+        // Support prefix email lookup for NIS (e.g. 12345@smkn1bangsri.sch.id)
+        if (! $user && ! str_contains($identity, '@')) {
+            $user = User::where('email', 'like', $identity.'@%')->first();
+        }
+
+        if (! $user) {
+            $securityService->recordFailedLogin($clientIp, $identity, null);
+
+            return response()->json([
+                'valid' => false,
+                'status' => 'user_not_found',
+                'message' => 'Akun pengguna tidak ditemukan di SiPintu Gateway.',
+            ], 404);
+        }
+
+        if ($user->status !== 'active') {
+            return response()->json([
+                'valid' => false,
+                'status' => 'user_inactive',
+                'message' => 'Akun pengguna sedang dinonaktifkan atau ditangguhkan.',
+            ], 403);
+        }
+
+        if (! Hash::check($password, $user->password)) {
+            $securityService->recordFailedLogin($clientIp, $identity, $user->id);
+
+            AuditLogger::log('api_verify_credentials_failed', [
+                'client_id' => $clientId,
+                'identity' => $identity,
+                'ip' => $clientIp,
+            ]);
+
+            return response()->json([
+                'valid' => false,
+                'status' => 'invalid_credentials',
+                'message' => 'Kata sandi tidak cocok dengan data master SiPintu Gateway.',
+            ], 401);
+        }
+
+        // Reset failed attempt cache on success
+        Cache::forget('security:failed_login_account:'.md5(strtolower(trim($identity)).'|'.$clientIp));
+
+        AuditLogger::log('api_verify_credentials_success', [
+            'client_id' => $clientId,
+            'user_id' => $user->id,
+            'email' => $user->email,
+        ]);
+
+        $primaryRole = $user->roles->first()?->name ?? $user->role;
+        $isAdmin = $user->isAdmin() || $user->hasRole('admin');
+
+        return response()->json([
+            'valid' => true,
+            'status' => 'success',
+            'message' => 'Kredensial pengguna valid.',
+            'user' => [
+                'id' => (string) $user->id,
+                'external_id' => $user->external_id,
+                'username' => $user->username,
+                'nis' => $user->nis,
+                'nip' => $user->nip,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $primaryRole,
+                'classroom' => $user->classroom,
+                'phone' => $user->phone,
+                'status' => $user->status,
+                'jurusan_id' => $user->jurusan_id,
+                'kode_jurusan' => $user->jurusan?->kode_jurusan,
+                'nama_jurusan' => $user->jurusan?->nama_jurusan,
+            ],
+            'password_hash' => $isAdmin ? null : $user->password,
+            'password_sync_required' => ! $isAdmin,
+            'password_change_policy' => $isAdmin ? 'ADMIN_EXEMPT' : 'MUST_CHANGE_IN_SIPINTU_ONLY',
+        ]);
     }
 
     /**

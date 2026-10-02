@@ -142,9 +142,11 @@ return [
     */
 
     'security' => [
-        'max_attempts' => (int) env('SECURITY_MAX_ATTEMPTS', 5),
-        'max_ip_attempts' => (int) env('SECURITY_MAX_IP_ATTEMPTS', 30),
-        'block_minutes' => (int) env('SECURITY_BLOCK_MINUTES', 15),
+        'max_attempts' => (int) env('SECURITY_MAX_ATTEMPTS', 15),
+        'window_minutes' => (int) env('SECURITY_WINDOW_MINUTES', 3),
+        'timeout_minutes' => (int) env('SECURITY_TIMEOUT_MINUTES', 15),
+        'max_ip_attempts' => (int) env('SECURITY_MAX_IP_ATTEMPTS', 15),
+        'block_minutes' => (int) env('SECURITY_TIMEOUT_MINUTES', 15),
         'ip_whitelist' => env('SECURITY_IP_WHITELIST', ''),
     ],
 

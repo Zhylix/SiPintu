@@ -148,23 +148,41 @@ class UserDataSyncService
             try {
                 $startTime = microtime(true);
 
+                $headers = [
+                    'X-SiPintu-Event' => 'user.updated',
+                    'X-SiPintu-Client-ID' => $app->client_id,
+                    'X-SiPintu-Client-Id' => $app->client_id,
+                    'X-SiPintu-Signature' => $signature,
+                    'X-SiPintu-Timestamp' => (string) now()->timestamp,
+                    'Accept' => 'application/json',
+                    'Content-Type' => 'application/json',
+                ];
+
                 // 1. Attempt sending to modern /api/sipintu/sync-user webhook
-                $response = Http::connectTimeout(2)->timeout(3)
-                    ->withHeaders([
-                        'X-SiPintu-Event' => 'user.updated',
-                        'X-SiPintu-Client-ID' => $app->client_id,
-                        'X-SiPintu-Signature' => $signature,
-                        'X-SiPintu-Timestamp' => (string) now()->timestamp,
-                        'Accept' => 'application/json',
-                        'Content-Type' => 'application/json',
-                    ])
+                $response = Http::connectTimeout(3)->timeout(5)
+                    ->withHeaders($headers)
                     ->withBody($payloadJson, 'application/json')
                     ->post($targetUrl);
 
+                // 2. If 404, attempt alternate route without /api prefix: /sipintu/sync-user
+                if ($response->status() === 404) {
+                    $altTargetUrl = rtrim($baseUrl, '/').'/sipintu/sync-user';
+                    $altResponse = Http::connectTimeout(3)->timeout(5)
+                        ->withHeaders($headers)
+                        ->withBody($payloadJson, 'application/json')
+                        ->post($altTargetUrl);
+
+                    if ($altResponse->successful() || $altResponse->status() !== 404) {
+                        $response = $altResponse;
+                        $targetUrl = $altTargetUrl;
+                    }
+                }
+
                 $latency = round((microtime(true) - $startTime) * 1000, 2);
 
-                // 2. If 404 and changes contain password, try legacy fallback endpoint /api/sipintu/sync-password
-                if ($response->status() === 404 && in_array('password', $changes) && ! $user->isAdmin()) {
+                // 3. If still 404 and user is not admin, try password-specific sync endpoints
+                $isPasswordSync = empty($changes) || in_array('password', $changes) || isset($payload['user']['password']);
+                if ($response->status() === 404 && $isPasswordSync && ! $user->isAdmin()) {
                     $passwordPayload = [
                         'event' => 'user.password_updated',
                         'user_id' => (string) $user->id,
@@ -178,16 +196,32 @@ class UserDataSyncService
                     ];
 
                     $fallbackSignature = hash_hmac('sha256', (string) json_encode($passwordPayload), $clientSecret);
+                    $fallbackHeaders = [
+                        'X-SiPintu-Event' => 'user.password_updated',
+                        'X-SiPintu-Client-ID' => $app->client_id,
+                        'X-SiPintu-Client-Id' => $app->client_id,
+                        'X-SiPintu-Signature' => $fallbackSignature,
+                        'X-SiPintu-Timestamp' => (string) now()->timestamp,
+                        'Accept' => 'application/json',
+                    ];
 
-                    $response = Http::connectTimeout(2)->timeout(3)
-                        ->withHeaders([
-                            'X-SiPintu-Event' => 'user.password_updated',
-                            'X-SiPintu-Client-ID' => $app->client_id,
-                            'X-SiPintu-Signature' => $fallbackSignature,
-                            'X-SiPintu-Timestamp' => (string) now()->timestamp,
-                            'Accept' => 'application/json',
-                        ])
+                    $response = Http::connectTimeout(3)->timeout(5)
+                        ->withHeaders($fallbackHeaders)
                         ->post($fallbackUrl, $passwordPayload);
+
+                    if ($response->status() === 404) {
+                        $altFallbackUrl = rtrim($baseUrl, '/').'/sipintu/sync-password';
+                        $altFallbackResponse = Http::connectTimeout(3)->timeout(5)
+                            ->withHeaders($fallbackHeaders)
+                            ->post($altFallbackUrl, $passwordPayload);
+
+                        if ($altFallbackResponse->successful() || $altFallbackResponse->status() !== 404) {
+                            $response = $altFallbackResponse;
+                            $targetUrl = $altFallbackUrl;
+                        }
+                    } else {
+                        $targetUrl = $fallbackUrl;
+                    }
                 }
 
                 $results[$app->id] = [

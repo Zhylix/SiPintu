@@ -21,6 +21,7 @@ Route::prefix('v1')->group(function () {
     Route::get('/ping', [ApiIdentityController::class, 'ping'])->name('api.v1.ping');
     Route::get('/health', [ApiIdentityController::class, 'ping']);
     Route::post('/validate-client', [ApiIdentityController::class, 'validateClientCredentials'])->name('api.v1.validate_client');
+    Route::post('/auth/verify-credentials', [ApiIdentityController::class, 'verifyCredentials'])->middleware('throttle:60,1')->name('api.v1.auth.verify_credentials');
 
     // Jurusan Public Endpoints (Accessible for Downstream Client Applications)
     Route::get('/jurusans', [ApiIdentityController::class, 'jurusans'])->name('api.v1.jurusans');

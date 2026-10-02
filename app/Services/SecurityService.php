@@ -9,9 +9,13 @@ use Illuminate\Support\Facades\Cache;
 
 class SecurityService
 {
-    public const MAX_ATTEMPTS = 5;
+    public const MAX_ATTEMPTS = 15;
 
-    public const MAX_IP_ATTEMPTS = 30;
+    public const WINDOW_MINUTES = 3;
+
+    public const TIMEOUT_MINUTES = 15;
+
+    public const MAX_IP_ATTEMPTS = 15;
 
     public const BLOCK_MINUTES = 15;
 
@@ -42,7 +46,7 @@ class SecurityService
     }
 
     /**
-     * Check if the given IP address is currently blocked.
+     * Check if the given IP address is currently blocked (manual admin block) or under temporary timeout.
      */
     public function isIpBlocked(?string $ip = null): bool
     {
@@ -51,6 +55,7 @@ class SecurityService
             return false;
         }
 
+        // 1. Manual Block by Administrator in Database
         $activeBlock = BlockedIp::where('ip_address', $ip)
             ->where('is_active', true)
             ->where(function ($q) {
@@ -59,21 +64,24 @@ class SecurityService
             })
             ->first();
 
-        if (! $activeBlock) {
-            return false;
-        }
+        if ($activeBlock) {
+            if ($activeBlock->blocked_by !== null) {
+                return true;
+            }
 
-        // If block was set manually by an administrator, respect the block
-        if ($activeBlock->blocked_by !== null) {
+            if ($this->isWhitelistedIp($ip)) {
+                return false;
+            }
+
             return true;
         }
 
-        // If auto-blocked by system, bypass if whitelisted
-        if ($this->isWhitelistedIp($ip)) {
-            return false;
+        // 2. Temporary 15-minute timeout for 15 failures in 3 minutes (in cache, no DB blocking)
+        if (Cache::has("security:ip_timeout:{$ip}")) {
+            return ! $this->isWhitelistedIp($ip);
         }
 
-        return true;
+        return false;
     }
 
     /**
@@ -86,13 +94,43 @@ class SecurityService
             return null;
         }
 
-        return BlockedIp::where('ip_address', $ip)
+        $activeBlock = BlockedIp::where('ip_address', $ip)
             ->where('is_active', true)
             ->where(function ($q) {
                 $q->whereNull('expires_at')
                     ->orWhere('expires_at', '>', now());
             })
             ->first();
+
+        if ($activeBlock) {
+            return $activeBlock;
+        }
+
+        $timeoutExpiry = Cache::get("security:ip_timeout:{$ip}");
+        if ($timeoutExpiry) {
+            return new BlockedIp([
+                'ip_address' => $ip,
+                'reason' => 'Time out 15 menit karena terdeteksi 15 kali percobaan login gagal dalam 3 menit.',
+                'expires_at' => $timeoutExpiry,
+                'is_active' => true,
+            ]);
+        }
+
+        return null;
+    }
+
+    /**
+     * Get remaining timeout minutes for an IP under temporary timeout.
+     */
+    public function getIpTimeoutRemainingMinutes(?string $ip = null): int
+    {
+        $ip = $ip ?: (request()->ip() ?: '127.0.0.1');
+        $timeoutExpiry = Cache::get("security:ip_timeout:{$ip}");
+        if (! $timeoutExpiry) {
+            return 0;
+        }
+
+        return max(1, (int) now()->diffInMinutes($timeoutExpiry, false));
     }
 
     /**
@@ -134,9 +172,7 @@ class SecurityService
 
     /**
      * Record a failed login attempt for an IP and identifier.
-     * Accurately distinguishes between single-account mistakes and IP brute force:
-     * - Reaching account limit locks ONLY that account on this IP (does not block other students).
-     * - Reaching cumulative IP limit blocks the entire IP.
+     * Enforces temporary 15-minute timeout for 15 failed attempts within 3 minutes (No permanent IP blocking).
      */
     public function recordFailedLogin(?string $ip, ?string $identifier, ?int $userId = null): int
     {
@@ -144,74 +180,54 @@ class SecurityService
         $identifierKey = strtolower(trim((string) $identifier));
 
         $maxAttempts = (int) config('auth.security.max_attempts', self::MAX_ATTEMPTS);
+        $windowMinutes = (int) config('auth.security.window_minutes', self::WINDOW_MINUTES);
+        $timeoutMinutes = (int) config('auth.security.timeout_minutes', self::TIMEOUT_MINUTES);
         $maxIpAttempts = (int) config('auth.security.max_ip_attempts', self::MAX_IP_ATTEMPTS);
-        $blockMinutes = (int) config('auth.security.block_minutes', self::BLOCK_MINUTES);
 
-        // 1. Track cumulative failures for this IP
+        // 1. Track cumulative failures for this IP within 3 minutes
         $ipCacheKey = "security:failed_login_count:{$ip}";
-        $isFreshIp = Cache::get($ipCacheKey) === null;
         $ipAttempts = (int) Cache::get($ipCacheKey, 0) + 1;
-        Cache::put($ipCacheKey, $ipAttempts, now()->addMinutes($blockMinutes));
+        Cache::put($ipCacheKey, $ipAttempts, now()->addMinutes($windowMinutes));
 
-        // 2. Track failures specifically for this target account on this IP
+        // 2. Track failures specifically for this target account on this IP within 3 minutes
         $accountCacheKey = "security:failed_login_account:".md5($identifierKey.'|'.$ip);
-        $accountAttempts = ($isFreshIp ? 0 : (int) Cache::get($accountCacheKey, 0)) + 1;
-        Cache::put($accountCacheKey, $accountAttempts, now()->addMinutes($blockMinutes));
+        $accountAttempts = (int) Cache::get($accountCacheKey, 0) + 1;
+        Cache::put($accountCacheKey, $accountAttempts, now()->addMinutes($windowMinutes));
 
         $isAccountLocked = false;
         if (! empty($identifierKey) && $accountAttempts >= $maxAttempts) {
-            $lockExpiry = now()->addMinutes($blockMinutes);
+            $lockExpiry = now()->addMinutes($timeoutMinutes);
             Cache::put("security:account_locked:".md5($identifierKey.'|'.$ip), $lockExpiry, $lockExpiry);
+            Cache::forget($accountCacheKey);
             $isAccountLocked = true;
         }
 
         $isIpThresholdReached = $ipAttempts >= $maxIpAttempts;
-        $shouldBlockIp = $isIpThresholdReached && ! $this->isWhitelistedIp($ip);
+        $shouldTimeoutIp = $isIpThresholdReached && ! $this->isWhitelistedIp($ip);
+
+        if ($shouldTimeoutIp) {
+            $ipTimeoutExpiry = now()->addMinutes($timeoutMinutes);
+            Cache::put("security:ip_timeout:{$ip}", $ipTimeoutExpiry, $ipTimeoutExpiry);
+            Cache::forget($ipCacheKey);
+        }
 
         SecurityLog::create([
             'user_id' => $userId,
             'target_identifier' => $identifier,
-            'event_type' => $isAccountLocked ? 'account_locked' : 'login_failed',
-            'severity' => ($shouldBlockIp || $isAccountLocked) ? 'critical' : 'warning',
+            'event_type' => $isAccountLocked ? 'account_timeout' : 'login_failed',
+            'severity' => ($shouldTimeoutIp || $isAccountLocked) ? 'warning' : 'info',
             'ip_address' => $ip,
             'user_agent' => request()->userAgent(),
             'payload' => [
                 'account_attempts' => $accountAttempts,
                 'ip_total_attempts' => $ipAttempts,
                 'max_attempts' => $maxAttempts,
-                'max_ip_attempts' => $maxIpAttempts,
-                'account_locked' => $isAccountLocked,
+                'window_minutes' => $windowMinutes,
+                'timeout_minutes' => $timeoutMinutes,
+                'account_timed_out' => $isAccountLocked,
+                'ip_timed_out' => $shouldTimeoutIp,
             ],
         ]);
-
-        if ($shouldBlockIp) {
-            $expiresAt = now()->addMinutes($blockMinutes);
-            $reason = "Diblokir otomatis oleh sistem: Terdeteksi aktivitas brute-force beruntun pada IP ini ({$ipAttempts}x gagal).";
-
-            BlockedIp::updateOrCreate(
-                ['ip_address' => $ip],
-                [
-                    'reason' => $reason,
-                    'expires_at' => $expiresAt,
-                    'is_active' => true,
-                ]
-            );
-
-            SecurityLog::create([
-                'user_id' => $userId,
-                'target_identifier' => $identifier,
-                'event_type' => 'brute_force_detected',
-                'severity' => 'critical',
-                'ip_address' => $ip,
-                'user_agent' => request()->userAgent(),
-                'payload' => [
-                    'action' => 'ip_auto_blocked',
-                    'blocked_until' => $expiresAt->toDateTimeString(),
-                    'ip_failed_attempts' => $ipAttempts,
-                    'reason' => $reason,
-                ],
-            ]);
-        }
 
         return $accountAttempts;
     }
@@ -238,10 +254,10 @@ class SecurityService
             }
 
             // Decrement IP failure count on legitimate login so school networks stay healthy
-            $blockMinutes = (int) config('auth.security.block_minutes', self::BLOCK_MINUTES);
+            $windowMinutes = (int) config('auth.security.window_minutes', self::WINDOW_MINUTES);
             $ipAttempts = (int) Cache::get("security:failed_login_count:{$ip}", 0);
             if ($ipAttempts > 0) {
-                Cache::put("security:failed_login_count:{$ip}", max(0, $ipAttempts - 1), now()->addMinutes($blockMinutes));
+                Cache::put("security:failed_login_count:{$ip}", max(0, $ipAttempts - 1), now()->addMinutes($windowMinutes));
             }
         }
 
@@ -264,5 +280,6 @@ class SecurityService
     public function clearAllIpSecurityCache(string $ip): void
     {
         Cache::forget("security:failed_login_count:{$ip}");
+        Cache::forget("security:ip_timeout:{$ip}");
     }
 }
