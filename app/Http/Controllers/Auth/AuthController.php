@@ -14,6 +14,7 @@ use App\Services\AuditLogger;
 use App\Services\PasswordSyncService;
 use App\Services\SecurityService;
 use App\Services\SijunaApiService;
+use App\Services\UserDataSyncService;
 use App\Services\WhatsAppService;
 use Exception;
 use Illuminate\Http\RedirectResponse;
@@ -886,24 +887,40 @@ class AuthController extends Controller
         $request->validate([
             'current_password' => ['required', 'current_password'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'phone' => ['required', 'string', 'min:9', 'max:25', 'regex:/^(\+?[0-9\s\-()]{9,25})$/'],
         ], [
             'current_password.current_password' => 'Kata sandi saat ini tidak cocok.',
             'password.confirmed' => 'Konfirmasi kata sandi baru tidak cocok.',
             'password.min' => 'Kata sandi baru minimal 8 karakter.',
+            'phone.required' => 'Nomor WhatsApp aktif wajib diisi saat mengganti kata sandi.',
+            'phone.min' => 'Nomor WhatsApp minimal 9 digit.',
+            'phone.regex' => 'Format nomor WhatsApp tidak valid. Masukkan nomor telepon yang valid (contoh: 081234567890 atau +6281234567890).',
         ]);
+
+        $rawPhone = trim((string) $request->phone);
+        $cleanPhone = preg_replace('/[^\d+]/', '', $rawPhone);
 
         $user->update([
             'password' => Hash::make($request->password),
+            'phone' => $cleanPhone,
             'must_change_password' => false,
+            'wa_notify' => true,
         ]);
 
-        // Broadcast password change to connected downstream SSO applications (KEC ADMIN)
-        app(PasswordSyncService::class)->broadcastPasswordChange($user);
+        // Broadcast updated user data (password & phone) to all active downstream SSO client applications
+        $syncResult = app(UserDataSyncService::class)->broadcastUserUpdate(
+            $user,
+            ['password', 'phone'],
+            force: true
+        );
 
-        AuditLogger::log('change_password_success', [], $user->id);
+        AuditLogger::log('change_password_and_phone_success', [
+            'phone' => $cleanPhone,
+            'synced_apps_count' => $syncResult['synced_apps_count'] ?? 0,
+        ], $user->id);
 
         return back()
-            ->with('success', 'Kata sandi Anda berhasil diperbarui di SiPintu Gateway dan telah disinkronkan ke seluruh aplikasi terhubung.')
+            ->with('success', 'Kata sandi dan nomor WhatsApp Anda berhasil diperbarui serta langsung disinkronkan ke seluruh aplikasi downstream.')
             ->with('active_section', 'ganti_password');
     }
 

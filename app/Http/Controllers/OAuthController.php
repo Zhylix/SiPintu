@@ -675,6 +675,30 @@ class OAuthController extends Controller
         }
 
         $syncTime = now();
+        $eventName = $request->header('X-SiPintu-Event') ?: $request->input('event');
+        $action = $request->input('action');
+
+        // Handle user deletion / deactivation event from SiPintu
+        if ($eventName === 'user.deleted' || $action === 'deleted') {
+            if ($user) {
+                $user->update([
+                    'status' => 'inactive',
+                    'sipintu_last_synced_at' => $syncTime,
+                ]);
+
+                return response()->json([
+                    'status' => 'success',
+                    'action' => 'deactivated',
+                    'message' => "User {$user->email} berhasil dinonaktifkan sesuai sinkronisasi SiPintu.",
+                    'user_id' => $user->id,
+                ]);
+            }
+
+            return response()->json([
+                'status' => 'skipped',
+                'message' => 'User to deactivate not found locally.',
+            ]);
+        }
 
         // 4. If User does not exist locally, create new user with all data from SiPintu (Rule 7)
         if (! $user) {
@@ -704,6 +728,9 @@ class OAuthController extends Controller
             }
             if (isset($userData['external_id'])) {
                 $createFields['external_id'] = $userData['external_id'];
+            }
+            if (isset($userData['jurusan_id']) && Schema::hasColumn('users', 'jurusan_id')) {
+                $createFields['jurusan_id'] = $userData['jurusan_id'];
             }
             if (isset($userData['avatar_url']) || isset($userData['avatar'])) {
                 $avatarVal = $userData['avatar_url'] ?? $userData['avatar'];
@@ -784,6 +811,9 @@ class OAuthController extends Controller
         }
 
         // 7. Fields protected against local edits (Rule 3: name, phone, classroom, avatar_url)
+        // EXCEPTION: If a field was explicitly modified in SiPintu (in changed_fields), prioritize SiPintu!
+        $changedFields = (array) $request->input('changed_fields', []);
+
         $candidateLocalFields = [
             'name' => $userData['name'] ?? null,
             'phone' => $userData['phone'] ?? null,
@@ -792,7 +822,7 @@ class OAuthController extends Controller
 
         foreach ($candidateLocalFields as $field => $val) {
             if ($val !== null) {
-                if ($hasLocalEdits) {
+                if ($hasLocalEdits && ! in_array($field, $changedFields, true)) {
                     $skippedFields[] = $field;
                 } else {
                     $updateFields[$field] = $val;
@@ -803,7 +833,7 @@ class OAuthController extends Controller
 
         if (isset($userData['avatar_url']) || isset($userData['avatar'])) {
             $avatarVal = $userData['avatar_url'] ?? $userData['avatar'];
-            if ($hasLocalEdits) {
+            if ($hasLocalEdits && ! in_array('avatar', $changedFields, true) && ! in_array('avatar_url', $changedFields, true)) {
                 $skippedFields[] = 'avatar_url';
             } else {
                 if (Schema::hasColumn('users', 'avatar_url')) {
@@ -816,12 +846,15 @@ class OAuthController extends Controller
             }
         }
 
-        // Keep external_id / username synced if provided
+        // Keep external_id / username / jurusan_id synced if provided
         if (isset($userData['external_id']) && Schema::hasColumn('users', 'external_id')) {
             $updateFields['external_id'] = $userData['external_id'];
         }
         if (isset($userData['username']) && Schema::hasColumn('users', 'username')) {
             $updateFields['username'] = $userData['username'];
+        }
+        if (isset($userData['jurusan_id']) && Schema::hasColumn('users', 'jurusan_id')) {
+            $updateFields['jurusan_id'] = $userData['jurusan_id'];
         }
 
         // 8. Update user and ensure updated_at does not exceed sipintu_last_synced_at (Rule 4)

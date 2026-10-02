@@ -28,9 +28,11 @@ class UserDataSyncService
             'username' => $user->username,
             'nis' => $user->nis,
             'nip' => $user->nip,
+            'dudi_code' => $user->dudi_code,
             'name' => $user->name,
             'email' => $user->email,
             'role' => $user->role,
+            'user_type' => $user->role,
             'classroom' => $user->classroom,
             'phone' => $user->phone,
             'status' => $user->status,
@@ -39,6 +41,11 @@ class UserDataSyncService
             'jurusan_id' => $user->jurusan_id,
             'kode_jurusan' => $user->jurusan?->kode_jurusan,
             'nama_jurusan' => $user->jurusan?->nama_jurusan,
+            'jurusan' => $user->jurusan ? [
+                'id' => $user->jurusan->id,
+                'kode_jurusan' => $user->jurusan->kode_jurusan,
+                'nama_jurusan' => $user->jurusan->nama_jurusan,
+            ] : null,
             'tahun_masuk' => $user->tahun_masuk,
             'tahun_lulus' => $user->isAlumni() ? $user->tahun_lulus : null,
             'created_at' => $user->created_at?->toIso8601String(),
@@ -189,7 +196,9 @@ class UserDataSyncService
                         'external_id' => $user->external_id,
                         'email' => $user->email,
                         'username' => $user->username,
+                        'name' => $user->name,
                         'role' => $user->role,
+                        'phone' => $user->phone,
                         'password' => $user->password,
                         'password_hash' => $user->password,
                         'updated_at' => now()->toIso8601String(),
@@ -264,5 +273,143 @@ class UserDataSyncService
         static::$broadcastedInRequest[$cacheKey] = $output;
 
         return $output;
+    }
+
+    /**
+     * Broadcast user deletion / deactivation to all active downstream SSO client applications.
+     */
+    public function broadcastUserDeletion(User $user): array
+    {
+        $activeApps = Application::where('status', 'active')->get();
+        if ($activeApps->isEmpty()) {
+            return [
+                'status' => 'skipped',
+                'message' => 'No active downstream applications registered.',
+                'synced_apps_count' => 0,
+                'details' => [],
+            ];
+        }
+
+        $payload = [
+            'event' => 'user.deleted',
+            'event_id' => (string) Str::uuid(),
+            'timestamp' => now()->toIso8601String(),
+            'user' => [
+                'id' => (string) $user->id,
+                'external_id' => $user->external_id,
+                'username' => $user->username,
+                'email' => $user->email,
+                'role' => $user->role,
+                'status' => 'inactive',
+            ],
+            'action' => 'deleted',
+        ];
+        $payloadJson = json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+
+        $results = [];
+        $currentSchemeAndHost = request()->getSchemeAndHttpHost();
+        $currentHost = parse_url($currentSchemeAndHost, PHP_URL_HOST);
+        $currentPort = parse_url($currentSchemeAndHost, PHP_URL_PORT) ?? (request()->isSecure() ? 443 : 80);
+        $loopbackHosts = array_filter(array_unique([
+            'localhost',
+            '127.0.0.1',
+            '::1',
+            '0.0.0.0',
+            $currentHost,
+        ]));
+
+        foreach ($activeApps as $app) {
+            $baseUrl = trim((string) ($app->base_url ?? ''));
+            if (empty($baseUrl) || ! filter_var($baseUrl, FILTER_VALIDATE_URL)) {
+                $results[$app->id] = [
+                    'app_name' => $app->name,
+                    'client_id' => $app->client_id,
+                    'target_url' => $baseUrl,
+                    'status' => 'skipped',
+                    'message' => 'Skipped downstream synchronization due to empty or invalid base_url.',
+                ];
+                continue;
+            }
+
+            $targetUrl = rtrim($baseUrl, '/').'/api/sipintu/sync-user';
+            $clientSecret = $app->client_secret ?? '';
+            $signature = hash_hmac('sha256', $payloadJson, $clientSecret);
+
+            $appHost = parse_url($baseUrl, PHP_URL_HOST);
+            $appPort = parse_url($baseUrl, PHP_URL_PORT) ?? (parse_url($baseUrl, PHP_URL_SCHEME) === 'https' ? 443 : 80);
+            $isSelfRequest = ($appHost && in_array($appHost, $loopbackHosts, true) && (int) $appPort === (int) $currentPort)
+                || ($currentHost && $appHost && $appHost === $currentHost && (int) $appPort === (int) $currentPort);
+
+            if ($isSelfRequest) {
+                $results[$app->id] = [
+                    'app_name' => $app->name,
+                    'client_id' => $app->client_id,
+                    'target_url' => $targetUrl,
+                    'status' => 'skipped',
+                    'message' => 'Skipped self-synchronization to prevent server deadlock.',
+                ];
+                continue;
+            }
+
+            try {
+                $headers = [
+                    'X-SiPintu-Event' => 'user.deleted',
+                    'X-SiPintu-Client-ID' => $app->client_id,
+                    'X-SiPintu-Client-Id' => $app->client_id,
+                    'X-SiPintu-Signature' => $signature,
+                    'X-SiPintu-Timestamp' => (string) now()->timestamp,
+                    'Accept' => 'application/json',
+                    'Content-Type' => 'application/json',
+                ];
+
+                $response = Http::connectTimeout(3)->timeout(5)
+                    ->withHeaders($headers)
+                    ->withBody($payloadJson, 'application/json')
+                    ->post($targetUrl);
+
+                if ($response->status() === 404) {
+                    $altTargetUrl = rtrim($baseUrl, '/').'/sipintu/sync-user';
+                    $altResponse = Http::connectTimeout(3)->timeout(5)
+                        ->withHeaders($headers)
+                        ->withBody($payloadJson, 'application/json')
+                        ->post($altTargetUrl);
+
+                    if ($altResponse->successful() || $altResponse->status() !== 404) {
+                        $response = $altResponse;
+                        $targetUrl = $altTargetUrl;
+                    }
+                }
+
+                $results[$app->id] = [
+                    'app_name' => $app->name,
+                    'client_id' => $app->client_id,
+                    'target_url' => $targetUrl,
+                    'status' => $response->successful() ? 'synced' : 'failed',
+                    'http_code' => $response->status(),
+                ];
+            } catch (\Throwable $e) {
+                Log::warning("[UserDataSyncService] Failed broadcasting user deletion {$user->id} to {$app->name}: ".$e->getMessage());
+                $results[$app->id] = [
+                    'app_name' => $app->name,
+                    'client_id' => $app->client_id,
+                    'target_url' => $targetUrl,
+                    'status' => 'error',
+                    'error' => $e->getMessage(),
+                ];
+            }
+        }
+
+        AuditLogger::log('user_deletion_broadcast', [
+            'user_id' => $user->id,
+            'email' => $user->email,
+            'apps_count' => $activeApps->count(),
+            'results' => $results,
+        ], $user->id);
+
+        return [
+            'status' => 'success',
+            'synced_apps_count' => $activeApps->count(),
+            'details' => $results,
+        ];
     }
 }

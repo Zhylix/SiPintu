@@ -172,7 +172,7 @@
                         :class="activeSection === 'ganti_password' ? 'bg-emerald-700 text-white shadow-xs' : 'bg-slate-50 text-slate-700 hover:bg-slate-100'"
                         class="shrink-0 px-3 py-2 rounded-xl text-xs font-black flex items-center space-x-1.5 transition-all">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-                        <span>Kata Sandi</span>
+                        <span>Sandi & WhatsApp</span>
                     </button>
 
                     <button @click="navigateToSection('perangkat_login')" type="button" 
@@ -235,7 +235,7 @@
                             <div class="p-1.5 rounded-lg bg-emerald-100 text-emerald-800 shrink-0">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
                             </div>
-                            <span>Ganti Password</span>
+                            <span>Sandi & WhatsApp</span>
                         </div>
                         <svg class="w-4 h-4 text-slate-400 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                     </button>
@@ -436,62 +436,153 @@
                 </form>
             </div>
 
-            <!-- SECTION 4: Ganti Password -->
+            <!-- SECTION 4: Ganti Password & Nomor WhatsApp -->
             <div x-show="activeSection === 'ganti_password'" 
                  x-transition:enter="transition ease-out duration-200" 
                  x-transition:enter-start="opacity-0 translate-y-2" 
                  x-transition:enter-end="opacity-100 translate-y-0" 
-                 :class="{'ring-2 ring-emerald-500 shadow-lg': isHighlighted}"
-                 class="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-6 transition-all duration-300">
+                 :class="{'ring-2 ring-emerald-500/20 shadow-lg': isHighlighted}"
+                 class="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200/80 shadow-xs space-y-6 transition-all duration-300"
+                 x-data="{
+                     showCurrent: false,
+                     showNew: false,
+                     showConfirm: false
+                 }">
                 
-                <div class="flex items-center justify-between pb-4 border-b border-slate-100">
-                    <div>
-                        <div class="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-emerald-100 text-emerald-800 border border-emerald-200 mb-1">
-                            <svg class="w-3 h-3 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-                            <span>Keamanan Kata Sandi</span>
+                <!-- Minimalist Header -->
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-5 border-b border-slate-100 gap-3">
+                    <div class="space-y-1">
+                        <div class="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-800 border border-emerald-200/60">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                            <span>Keamanan & Kontak Terpadu</span>
                         </div>
-                        <h3 class="text-lg font-black text-emerald-950 flex items-center space-x-2">
-                            <span>Ganti Kata Sandi Akun</span>
+                        <h3 class="text-lg font-black text-slate-900 tracking-tight flex items-center gap-2">
+                            <span>Ganti Kata Sandi & Nomor WhatsApp</span>
                         </h3>
-                        <p class="text-xs text-slate-500 mt-1 font-medium">Perbarui kata sandi secara berkala untuk perlindungan maksimal akun Anda.</p>
+                        <p class="text-xs text-slate-500 font-medium">Perbarui kata sandi login dan nomor WhatsApp aktif. Data akan langsung disinkronkan ke seluruh aplikasi downstream.</p>
+                    </div>
+
+                    <!-- Sync Status Pill -->
+                    <div class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200/70 text-slate-600 text-xs font-semibold">
+                        <svg class="w-3.5 h-3.5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                        <span>Real-Time Sync Aktif</span>
                     </div>
                 </div>
 
-                <form method="POST" action="{{ route('profile.password') }}" class="space-y-4">
+                <form method="POST" action="{{ route('profile.password') }}" class="space-y-6">
                     @csrf
                     @method('PUT')
                     <input type="hidden" name="active_section" value="ganti_password">
 
-                    <div>
-                        <label class="block text-xs font-extrabold text-slate-700 mb-1.5">Kata Sandi Saat Ini <span class="text-rose-500">*</span></label>
-                        <input type="password" name="current_password" required
-                            class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm font-semibold focus:bg-white focus:border-emerald-600 focus:outline-none transition-all">
-                        @error('current_password')
-                            <p class="text-xs text-rose-500 font-bold mt-1.5">{{ $message }}</p>
-                        @enderror
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Left Column: Password Fields -->
+                        <div class="space-y-4">
+                            <div class="flex items-center gap-2 pb-1 border-b border-slate-100">
+                                <svg class="w-4 h-4 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                                <span class="text-xs font-black text-slate-800 uppercase tracking-wider">Kredensial Kata Sandi</span>
+                            </div>
+
+                            <!-- Kata Sandi Saat Ini -->
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1.5">Kata Sandi Saat Ini <span class="text-rose-500">*</span></label>
+                                <div class="relative">
+                                    <input :type="showCurrent ? 'text' : 'password'" name="current_password" required
+                                        placeholder="Ketik kata sandi saat ini"
+                                        class="w-full pl-4 pr-11 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm font-medium focus:bg-white focus:border-emerald-600 focus:ring-4 focus:ring-emerald-500/10 focus:outline-none transition-all">
+                                    <button type="button" @click="showCurrent = !showCurrent"
+                                        class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none">
+                                        <svg x-show="!showCurrent" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                        <svg x-show="showCurrent" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"/></svg>
+                                    </button>
+                                </div>
+                                @error('current_password')
+                                    <p class="text-xs text-rose-500 font-bold mt-1.5">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <!-- Kata Sandi Baru -->
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1.5">Kata Sandi Baru <span class="text-rose-500">*</span></label>
+                                <div class="relative">
+                                    <input :type="showNew ? 'text' : 'password'" name="password" required minlength="8"
+                                        placeholder="Minimal 8 karakter baru"
+                                        class="w-full pl-4 pr-11 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm font-medium focus:bg-white focus:border-emerald-600 focus:ring-4 focus:ring-emerald-500/10 focus:outline-none transition-all">
+                                    <button type="button" @click="showNew = !showNew"
+                                        class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none">
+                                        <svg x-show="!showNew" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                        <svg x-show="showNew" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"/></svg>
+                                    </button>
+                                </div>
+                                <p class="text-[11px] text-slate-400 mt-1 font-medium">Minimal 8 karakter (disarankan kombinasi huruf dan angka).</p>
+                                @error('password')
+                                    <p class="text-xs text-rose-500 font-bold mt-1.5">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <!-- Konfirmasi Kata Sandi Baru -->
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1.5">Konfirmasi Kata Sandi Baru <span class="text-rose-500">*</span></label>
+                                <div class="relative">
+                                    <input :type="showConfirm ? 'text' : 'password'" name="password_confirmation" required minlength="8"
+                                        placeholder="Ketik ulang kata sandi baru"
+                                        class="w-full pl-4 pr-11 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm font-medium focus:bg-white focus:border-emerald-600 focus:ring-4 focus:ring-emerald-500/10 focus:outline-none transition-all">
+                                    <button type="button" @click="showConfirm = !showConfirm"
+                                        class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none">
+                                        <svg x-show="!showConfirm" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                        <svg x-show="showConfirm" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"/></svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Column: WhatsApp & Downstream Sync Info -->
+                        <div class="space-y-4">
+                            <div class="flex items-center gap-2 pb-1 border-b border-slate-100">
+                                <svg class="w-4 h-4 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+                                <span class="text-xs font-black text-slate-800 uppercase tracking-wider">Kontak WhatsApp Aktif</span>
+                            </div>
+
+                            <!-- Nomor WhatsApp Input -->
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1.5">Nomor WhatsApp Aktif <span class="text-rose-500">*</span></label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-emerald-600">
+                                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.04 2zm0 18.17c-1.48 0-2.93-.4-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.19 8.19 0 01-1.26-4.4c0-4.54 3.7-8.24 8.25-8.24 2.2 0 4.27.86 5.82 2.42a8.18 8.18 0 012.41 5.83c.02 4.54-3.68 8.25-8.23 8.25zm4.52-6.17c-.25-.12-1.47-.72-1.7-.81-.23-.08-.39-.12-.56.12-.17.25-.64.81-.79.97-.14.17-.29.19-.54.06-.25-.12-1.05-.39-1.99-1.23-.74-.66-1.23-1.47-1.37-1.72-.14-.25-.02-.38.11-.51.11-.11.25-.29.37-.43.12-.15.17-.25.25-.42.08-.17.04-.31-.02-.43s-.56-1.34-.76-1.84c-.2-.48-.41-.42-.56-.43h-.48c-.17 0-.43.06-.66.31-.22.25-.86.84-.86 2.05s.88 2.38 1 2.55c.12.17 1.74 2.65 4.21 3.72.59.25 1.05.41 1.41.52.59.19 1.13.16 1.56.1.48-.07 1.47-.6 1.68-1.18.21-.58.21-1.07.15-1.18-.06-.11-.23-.17-.48-.3z"/>
+                                        </svg>
+                                    </div>
+                                    <input type="text" name="phone" value="{{ old('phone', $user->phone) }}" required
+                                        placeholder="Contoh: 081234567890"
+                                        class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm font-semibold focus:bg-white focus:border-emerald-600 focus:ring-4 focus:ring-emerald-500/10 focus:outline-none transition-all">
+                                </div>
+                                <p class="text-[11px] text-slate-500 mt-1 font-medium">Nomor WhatsApp aktif untuk kode OTP pemulihan akun & notifikasi sekolah.</p>
+                                @error('phone')
+                                    <p class="text-xs text-rose-500 font-bold mt-1.5">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <!-- Minimalist Downstream Info Card -->
+                            <div class="p-3.5 rounded-2xl bg-emerald-50/60 border border-emerald-100 text-slate-700 text-xs space-y-2">
+                                <div class="flex items-center gap-2 font-bold text-emerald-900">
+                                    <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    <span>Penyelarasan Real-Time Downstream</span>
+                                </div>
+                                <p class="text-[11px] text-slate-600 leading-relaxed">
+                                    Ketika Anda menyimpan formulir ini, kata sandi baru dan nomor WhatsApp Anda akan <strong>langsung dikirimkan otomatis ke seluruh aplikasi downstream</strong> yang terhubung (CBT, Perpustakaan, dsb).
+                                </p>
+                            </div>
+                        </div>
                     </div>
 
-                    <div>
-                        <label class="block text-xs font-extrabold text-slate-700 mb-1.5">Kata Sandi Baru <span class="text-rose-500">*</span></label>
-                        <input type="password" name="password" required minlength="8"
-                            class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm font-semibold focus:bg-white focus:border-emerald-600 focus:outline-none transition-all">
-                        <p class="text-[10px] text-slate-400 mt-1 font-medium">Minimal 8 karakter kombinasi huruf dan angka.</p>
-                        @error('password')
-                            <p class="text-xs text-rose-500 font-bold mt-1.5">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-extrabold text-slate-700 mb-1.5">Konfirmasi Kata Sandi Baru <span class="text-rose-500">*</span></label>
-                        <input type="password" name="password_confirmation" required
-                            class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm font-semibold focus:bg-white focus:border-emerald-600 focus:outline-none transition-all">
-                    </div>
-
-                    <div class="pt-2 flex items-center justify-between">
-                        <button type="submit" class="px-6 py-3 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-extrabold rounded-xl transition-all shadow-md shadow-emerald-700/20 cursor-pointer">
-                            Perbarui Kata Sandi
+                    <!-- Minimalist Footer Actions -->
+                    <div class="pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3">
+                        <button type="submit" class="w-full sm:w-auto px-6 py-2.5 bg-emerald-700 hover:bg-emerald-800 active:scale-95 text-white text-xs font-extrabold rounded-xl transition-all shadow-md shadow-emerald-700/20 flex items-center justify-center gap-2 cursor-pointer">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                            <span>Simpan & Sinkronkan Akun</span>
                         </button>
-                        <span class="text-[11px] text-slate-400 font-medium">Kata sandi baru langsung tersinkron ke semua aplikasi sekolah.</span>
+                        <span class="text-[11px] text-slate-400 font-medium text-center sm:text-right">
+                            Kredensial baru langsung aktif seketika tanpa perlu login ulang.
+                        </span>
                     </div>
                 </form>
             </div>

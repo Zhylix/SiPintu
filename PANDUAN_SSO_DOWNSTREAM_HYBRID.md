@@ -193,6 +193,15 @@ Route::post('/sipintu/sync-user', [OAuthController::class, 'syncUser']);
 
         $syncTime = now();
 
+        // 2b. Handle event penonaktifan / penghapusan akun dari SiPintu
+        if ($request->header('X-SiPintu-Event') === 'user.deleted' || $request->input('event') === 'user.deleted') {
+            if ($user) {
+                $user->update(['status' => 'inactive', 'sipintu_last_synced_at' => $syncTime]);
+                return response()->json(['status' => 'success', 'action' => 'deactivated', 'user_id' => $user->id]);
+            }
+            return response()->json(['status' => 'skipped', 'message' => 'User not found']);
+        }
+
         // 3. Jika belum ada: Auto-provision akun baru
         if (! $user) {
             $user = User::create([
@@ -215,6 +224,7 @@ Route::post('/sipintu/sync-user', [OAuthController::class, 'syncUser']);
 
         // 4. Deteksi Perubahan Lokal Pengguna
         $hasLocalEdits = $user->sipintu_last_synced_at !== null && $user->updated_at->gt($user->sipintu_last_synced_at);
+        $changedFields = (array) $request->input('changed_fields', []);
 
         // Field Selalu Mengikuti SiPintu (Source of Truth)
         $updateFields = [
@@ -223,10 +233,14 @@ Route::post('/sipintu/sync-user', [OAuthController::class, 'syncUser']);
             'status' => $userData['status'] ?? $user->status,
         ];
 
-        // Field Lokal: Hanya ditimpa jika TIDAK ADA perubahan lokal
-        if (! $hasLocalEdits) {
+        // Field Lokal: Ditimpa jika TIDAK ADA perubahan lokal, ATAU jika field baru saja diubah di SiPintu (masuk changed_fields, misal nomor WhatsApp baru)
+        if (! $hasLocalEdits || in_array('name', $changedFields, true)) {
             if (isset($userData['name'])) $updateFields['name'] = $userData['name'];
+        }
+        if (! $hasLocalEdits || in_array('phone', $changedFields, true)) {
             if (isset($userData['phone'])) $updateFields['phone'] = $userData['phone'];
+        }
+        if (! $hasLocalEdits || in_array('classroom', $changedFields, true)) {
             if (isset($userData['classroom'])) $updateFields['classroom'] = $userData['classroom'];
         }
 

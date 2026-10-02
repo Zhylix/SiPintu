@@ -243,4 +243,161 @@ class PasswordSyncAndFallbackTest extends TestCase
         $this->assertEquals('success', $result['status']);
         $this->assertEquals('synced', $result['details'][$app->id]['status']);
     }
+
+    public function test_user_payload_includes_full_jurusan_object_user_type_and_dudi_code(): void
+    {
+        $jurusan = \App\Models\Jurusan::firstOrCreate(
+            ['kode_jurusan' => 'PPLG'],
+            ['nama_jurusan' => 'Pengembangan Perangkat Lunak dan Gim']
+        );
+
+        $user = User::factory()->create([
+            'name' => 'Fauzi Test',
+            'email' => 'fauzi@smkn1bangsri.sch.id',
+            'role' => 'student',
+            'phone' => '081234567890',
+            'jurusan_id' => $jurusan->id,
+            'external_id' => '12345',
+        ]);
+
+        $syncService = app(\App\Services\UserDataSyncService::class);
+        $payload = $syncService->getUserPayload($user, ['phone', 'password']);
+
+        $this->assertArrayHasKey('user', $payload);
+        $u = $payload['user'];
+
+        $this->assertEquals('student', $u['user_type']);
+        $this->assertEquals('081234567890', $u['phone']);
+        $this->assertArrayHasKey('jurusan', $u);
+        $this->assertIsArray($u['jurusan']);
+        $this->assertEquals('PPLG', $u['jurusan']['kode_jurusan']);
+        $this->assertEquals('Pengembangan Perangkat Lunak dan Gim', $u['jurusan']['nama_jurusan']);
+    }
+
+    public function test_verify_credentials_returns_avatar_jurusan_user_type_and_password(): void
+    {
+        $app = Application::create([
+            'name' => 'Downstream App',
+            'slug' => 'downstream-app',
+            'client_id' => 'app_verify_enrich',
+            'client_secret' => 'sec_verify_enrich',
+            'redirect_uri' => 'http://localhost:8004/callback',
+            'base_url' => 'http://localhost:8004',
+            'status' => 'active',
+        ]);
+
+        $jurusan = \App\Models\Jurusan::firstOrCreate(
+            ['kode_jurusan' => 'TO'],
+            ['nama_jurusan' => 'Teknik Otomotif']
+        );
+
+        $user = User::factory()->create([
+            'name' => 'Budi Siswa',
+            'email' => 'budisiswa@smkn1.sch.id',
+            'username' => 'budisiswa',
+            'external_id' => '2023099',
+            'password' => Hash::make('password123'),
+            'role' => 'student',
+            'status' => 'active',
+            'phone' => '089988776655',
+            'jurusan_id' => $jurusan->id,
+        ]);
+
+        $response = $this->postJson('/api/v1/auth/verify-credentials', [
+            'client_id' => 'app_verify_enrich',
+            'client_secret' => 'sec_verify_enrich',
+            'identity' => 'budisiswa',
+            'password' => 'password123',
+        ]);
+
+        $response->assertStatus(200);
+        $data = $response->json();
+
+        $this->assertTrue($data['valid']);
+        $this->assertNotNull($data['password']);
+        $this->assertNotNull($data['password_hash']);
+        $this->assertEquals('student', $data['user']['user_type']);
+        $this->assertEquals('089988776655', $data['user']['phone']);
+        $this->assertIsArray($data['user']['jurusan']);
+        $this->assertEquals('TO', $data['user']['jurusan']['kode_jurusan']);
+    }
+
+    public function test_user_deletion_broadcasts_to_downstream(): void
+    {
+        Http::fake([
+            'http://localhost:8005/api/sipintu/sync-user' => Http::response(['status' => 'success', 'action' => 'deactivated'], 200),
+        ]);
+
+        $app = Application::create([
+            'name' => 'Delete Test App',
+            'slug' => 'delete-test-app',
+            'client_id' => 'app_delete_1',
+            'client_secret' => 'sec_delete_1',
+            'redirect_uri' => 'http://localhost:8005/callback',
+            'base_url' => 'http://localhost:8005',
+            'status' => 'active',
+        ]);
+
+        $user = User::factory()->create([
+            'email' => 'usertodelete@smkn1.sch.id',
+            'role' => 'student',
+            'status' => 'active',
+        ]);
+
+        $syncService = app(\App\Services\UserDataSyncService::class);
+        $result = $syncService->broadcastUserDeletion($user);
+
+        $this->assertEquals('success', $result['status']);
+        $this->assertEquals(1, $result['synced_apps_count']);
+        $this->assertEquals('synced', $result['details'][$app->id]['status']);
+    }
+
+    public function test_downstream_sync_user_prioritizes_explicitly_changed_phone_over_local_edits(): void
+    {
+        config(['services.sipintu.client_secret' => 'downstream_secret_123']);
+
+        $user = User::factory()->create([
+            'email' => 'conflict_user@smkn1.sch.id',
+            'name' => 'Nama Downstream',
+            'phone' => '081111111111',
+            'role' => 'student',
+            'status' => 'active',
+            'sipintu_last_synced_at' => now()->subHours(2),
+            'updated_at' => now()->subHour(1), // local edits present!
+        ]);
+
+        $payload = [
+            'event' => 'user.updated',
+            'user' => [
+                'email' => 'conflict_user@smkn1.sch.id',
+                'name' => 'Nama SiPintu Baru',
+                'phone' => '089999999999', // explicitly updated phone in SiPintu
+            ],
+            'changed_fields' => ['password', 'phone'], // phone is explicitly changed
+        ];
+
+        $payloadJson = json_encode($payload);
+        $signature = hash_hmac('sha256', $payloadJson, 'downstream_secret_123');
+
+        $response = $this->call(
+            'POST',
+            '/api/sipintu/sync-user',
+            [],
+            [],
+            [],
+            [
+                'HTTP_X-SiPintu-Signature' => $signature,
+                'CONTENT_TYPE' => 'application/json',
+            ],
+            $payloadJson
+        );
+
+        $response->assertStatus(200);
+
+        $user->refresh();
+        // Phone must be updated because it was in changed_fields!
+        $this->assertEquals('089999999999', $user->phone);
+        // Name should be preserved locally because it was NOT in changed_fields!
+        $this->assertEquals('Nama Downstream', $user->name);
+    }
 }

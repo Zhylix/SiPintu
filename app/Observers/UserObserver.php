@@ -23,6 +23,7 @@ class UserObserver
         'external_id',
         'role',
         'classroom',
+        'jurusan_id',
         'phone',
         'avatar',
         'status',
@@ -86,6 +87,30 @@ class UserObserver
                 app(UserDataSyncService::class)->broadcastUserUpdate($user, $intersect, $previous);
             } catch (\Throwable $e) {
                 Log::error("[UserObserver] Downstream sync error for user ID {$user->id}: ".$e->getMessage());
+            }
+        };
+
+        if (app()->runningInConsole()) {
+            $syncAction();
+        } else {
+            dispatch($syncAction)->afterResponse();
+        }
+    }
+
+    /**
+     * Handle the User "deleted" event.
+     */
+    public function deleted(User $user): void
+    {
+        if (! static::$syncEnabled) {
+            return;
+        }
+
+        $syncAction = function () use ($user) {
+            try {
+                app(UserDataSyncService::class)->broadcastUserDeletion($user);
+            } catch (\Throwable $e) {
+                Log::error("[UserObserver] Downstream sync error for deleted user ID {$user->id}: ".$e->getMessage());
             }
         };
 
