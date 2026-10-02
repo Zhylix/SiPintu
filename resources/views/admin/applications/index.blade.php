@@ -458,7 +458,7 @@
                         <div class="flex items-center gap-1.5">
                             <!-- Diagnosa SSO Button -->
                             <a href="{{ route('admin.monitoring.index') }}?diagnose={{ $app->client_id }}" 
-                               class="px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-[11px] font-extrabold inline-flex items-center gap-1 transition-all" title="Jalankan Diagnosa SSO Otomatis">
+                               class="px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-[11px] font-extrabold inline-flex items-center gap-1 transition-all" title="Jalankan Diagnosa Otomatis">
                                 <svg class="w-3.5 h-3.5 text-indigo-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                 <span>Diagnosa</span>
                             </a>
@@ -926,7 +926,7 @@
                 <div class="flex items-center space-x-2" x-show="selectedApp">
                     <a :href="selectedApp ? selectedApp.diagnose_url : '#'" class="px-3.5 py-2 bg-indigo-700 hover:bg-indigo-800 text-white rounded-xl font-extrabold text-xs transition-all shadow-xs flex items-center gap-1.5">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        <span>Diagnosa SSO</span>
+                        <span>Diagnosa</span>
                     </a>
 
                     <a :href="selectedApp ? selectedApp.edit_url : '#'" class="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl font-extrabold text-xs transition-all shadow-md shadow-emerald-700/20 flex items-center gap-1.5">

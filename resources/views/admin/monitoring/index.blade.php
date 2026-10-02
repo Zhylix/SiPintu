@@ -99,7 +99,7 @@
             if (json.status === 'success') {
                 this.ssoDiagnosis = json.data;
             } else {
-                alert(json.message || 'Gagal menjalankan diagnosa SSO.');
+                alert(json.message || 'Gagal menjalankan diagnosa.');
                 this.showSsoModal = false;
             }
         } catch (e) {
@@ -864,7 +864,7 @@
                                 <svg class="w-3.5 h-3.5 text-indigo-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                 </svg>
-                                <span>Diagnosa SSO</span>
+                                <span>Diagnosa</span>
                             </button>
                         </div>
                     </div>
