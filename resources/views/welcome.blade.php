@@ -380,6 +380,12 @@
         </footer>
     </div>
 
+    <!-- Popup Notifikasi -->
+    @include('partials.toast-notification')
+
+    <!-- Popup Pengumuman Prioritas UI/UX -->
+    @include('partials.announcement-modal')
+
     <!-- PWA Installation Component -->
     @include('partials.pwa-installer')
 </body>

@@ -93,15 +93,56 @@
             </label>
         </div>
 
-        <!-- Submit Button -->
-        <div class="pt-4 border-t border-slate-100 flex justify-end space-x-3">
-            <a href="{{ route('admin.announcements.index') }}" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 text-xs font-bold rounded-xl transition-all">
-                Batal
-            </a>
-            <button type="submit" class="px-5 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-extrabold rounded-xl transition-all shadow-md shadow-emerald-700/20">
-                Simpan Perubahan
+        <!-- Action Buttons -->
+        <div class="pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
+            <button type="button" 
+                    onclick="previewFormAnnouncement()" 
+                    class="px-4 py-2.5 bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-300 text-xs font-bold rounded-xl transition-all inline-flex items-center gap-1.5 shadow-2xs cursor-pointer">
+                <svg class="w-4 h-4 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                <span>Pratinjau Pop Up</span>
             </button>
+
+            <div class="flex items-center space-x-3">
+                <a href="{{ route('admin.announcements.index') }}" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 text-xs font-bold rounded-xl transition-all">
+                    Batal
+                </a>
+                <button type="submit" class="px-5 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-extrabold rounded-xl transition-all shadow-md shadow-emerald-700/20 cursor-pointer">
+                    Simpan Perubahan
+                </button>
+            </div>
         </div>
     </form>
 </div>
+
+<script>
+    function previewFormAnnouncement() {
+        const title = document.getElementById('title')?.value?.trim();
+        const content = document.getElementById('content')?.value?.trim();
+        const type = document.getElementById('type')?.value || 'info';
+        const targetRole = document.getElementById('target_role')?.value || 'all';
+
+        if (!title || !content) {
+            if (window.toast && window.toast.warning) {
+                window.toast.warning('Silakan masukkan judul dan isi pesan terlebih dahulu untuk melihat pratinjau.', 'Lengkapi Formulir');
+            } else {
+                alert('Silakan masukkan judul dan isi pesan pengumuman terlebih dahulu.');
+            }
+            return;
+        }
+
+        window.dispatchEvent(new CustomEvent('open-announcement-popup', {
+            detail: {
+                id: {{ $announcement->id ?? "'preview_draft'" }},
+                title: title,
+                content: content,
+                type: type,
+                target_role: targetRole,
+                published_at_diff: 'Pratinjau Desain',
+                published_at_formatted: 'Hari ini (Simulasi Pop Up)',
+                updated_at: new Date().toISOString(),
+                author_name: '{{ auth()->user()->name ?? "Administrator" }}'
+            }
+        }));
+    }
+</script>
 @endsection

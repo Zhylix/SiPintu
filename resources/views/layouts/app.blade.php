@@ -482,13 +482,37 @@
 
                                 <div class="max-h-72 overflow-y-auto divide-y divide-slate-100">
                                     @forelse($navAnnouncements as $ann)
-                                        <div class="p-3.5 hover:bg-emerald-50/50 transition-colors">
+                                        @php
+                                            $dotClass = match($ann->type ?? 'info') {
+                                                'warning' => 'bg-amber-500',
+                                                'danger' => 'bg-rose-600 animate-pulse',
+                                                'success' => 'bg-emerald-600',
+                                                default => 'bg-sky-500',
+                                            };
+                                        @endphp
+                                        <div class="p-3.5 hover:bg-slate-50 transition-colors cursor-pointer group"
+                                             @click="openNotif = false; $dispatch('open-announcement-popup', {{ json_encode([
+                                                 'id' => $ann->id,
+                                                 'title' => $ann->title,
+                                                 'content' => $ann->content,
+                                                 'type' => $ann->type ?? 'info',
+                                                 'target_role' => $ann->target_role ?? 'all',
+                                                 'published_at_diff' => $ann->published_at ? $ann->published_at->diffForHumans() : $ann->created_at->diffForHumans(),
+                                                 'published_at_formatted' => $ann->published_at ? $ann->published_at->format('d M Y, H:i') : $ann->created_at->format('d M Y, H:i'),
+                                                 'updated_at' => $ann->updated_at ? $ann->updated_at->toISOString() : '',
+                                                 'author_name' => $ann->author?->name ?? 'Admin Sekolah',
+                                             ]) }})">
                                             <div class="flex items-start gap-2.5">
-                                                <span class="w-2 h-2 rounded-full bg-emerald-600 mt-1.5 shrink-0"></span>
+                                                <span class="w-2 h-2 rounded-full {{ $dotClass }} mt-1.5 shrink-0"></span>
                                                 <div class="space-y-1 min-w-0 flex-1">
-                                                    <h4 class="font-extrabold text-xs text-emerald-950 leading-snug">
-                                                        {{ $ann->title }}
-                                                    </h4>
+                                                    <div class="flex items-center justify-between gap-1">
+                                                        <h4 class="font-extrabold text-xs text-slate-900 group-hover:text-emerald-800 transition-colors leading-snug line-clamp-1">
+                                                            {{ $ann->title }}
+                                                        </h4>
+                                                        <span class="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 shrink-0">
+                                                            {{ $ann->type ?? 'info' }}
+                                                        </span>
+                                                    </div>
                                                     <p class="text-[11px] text-slate-600 line-clamp-2 leading-relaxed">
                                                         {{ $ann->content }}
                                                     </p>
@@ -570,20 +594,71 @@
                                 $content = is_object($ann) ? ($ann->content ?? '') : (is_array($ann) ? ($ann['content'] ?? '') : '');
                                 $pubAt = is_object($ann) ? ($ann->published_at ?? null) : null;
                                 $diffTime = $pubAt instanceof \Carbon\Carbon ? $pubAt->diffForHumans() : 'Baru saja';
+                                $formattedPubAt = $pubAt instanceof \Carbon\Carbon ? $pubAt->format('d M Y, H:i') : null;
+                                $annType = is_object($ann) ? ($ann->type ?? 'info') : 'info';
+                                $annId = is_object($ann) ? ($ann->id ?? 0) : 0;
+                                $annRole = is_object($ann) ? ($ann->target_role ?? 'all') : 'all';
+                                $updatedAtStr = is_object($ann) && $ann->updated_at ? $ann->updated_at->toISOString() : '';
+                                
+                                switch($annType) {
+                                    case 'warning':
+                                        $bannerBg = 'bg-amber-50/90 border-amber-200 text-amber-950';
+                                        $badgeBg = 'bg-amber-100 text-amber-900 border-amber-300';
+                                        $badgeText = 'PERHATIAN / PENTING';
+                                        $btnStyle = 'bg-amber-600 hover:bg-amber-700 text-white shadow-amber-600/20';
+                                        break;
+                                    case 'danger':
+                                        $bannerBg = 'bg-rose-50/90 border-rose-200 text-rose-950';
+                                        $badgeBg = 'bg-rose-100 text-rose-900 border-rose-300';
+                                        $badgeText = 'PENGUMUMAN MENDESAK';
+                                        $btnStyle = 'bg-rose-600 hover:bg-rose-700 text-white shadow-rose-600/20';
+                                        break;
+                                    case 'success':
+                                        $bannerBg = 'bg-emerald-50/90 border-emerald-200 text-emerald-950';
+                                        $badgeBg = 'bg-emerald-100 text-emerald-900 border-emerald-300';
+                                        $badgeText = 'INFORMASI RESMI';
+                                        $btnStyle = 'bg-emerald-700 hover:bg-emerald-800 text-white shadow-emerald-700/20';
+                                        break;
+                                    case 'info':
+                                    default:
+                                        $bannerBg = 'bg-sky-50/90 border-sky-200 text-sky-950';
+                                        $badgeBg = 'bg-sky-100 text-sky-900 border-sky-300';
+                                        $badgeText = 'PENGUMUMAN SEKOLAH';
+                                        $btnStyle = 'bg-sky-600 hover:bg-sky-700 text-white shadow-sky-600/20';
+                                        break;
+                                }
                             @endphp
                             @if(!empty($title))
-                                <div class="p-4 mb-4 rounded-2xl border flex items-start justify-between shadow-xs bg-emerald-50 border-emerald-200 text-emerald-900">
-                                    <div class="flex items-start space-x-3">
+                                <div class="p-4 mb-4 rounded-2xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs {{ $bannerBg }}">
+                                    <div class="flex items-start space-x-3 min-w-0 flex-1">
                                         <img src="{{ $siteLogoUrl }}" class="w-7 h-7 object-contain mt-0.5 shrink-0" alt="Logo">
-                                        <div>
-                                            <div class="font-black text-sm text-emerald-950 flex flex-wrap items-center gap-2">
+                                        <div class="min-w-0 flex-1">
+                                            <div class="font-black text-sm flex flex-wrap items-center gap-2">
                                                 <span>{{ $title }}</span>
-                                                <span class="px-2 py-0.5 rounded text-[9px] font-extrabold uppercase bg-white border border-emerald-300 text-emerald-800 whitespace-nowrap">PENGUMUMAN SEKOLAH</span>
+                                                <span class="px-2 py-0.5 rounded text-[9px] font-extrabold uppercase border whitespace-nowrap {{ $badgeBg }}">
+                                                    {{ $badgeText }}
+                                                </span>
                                             </div>
-                                            <div class="text-xs mt-1 text-slate-700 leading-relaxed font-medium">{{ $content }}</div>
+                                            <div class="text-xs mt-1 text-slate-700 leading-relaxed font-medium line-clamp-2">{{ $content }}</div>
                                             <div class="text-[10px] mt-1.5 text-slate-500 font-semibold">{{ $diffTime }}</div>
                                         </div>
                                     </div>
+                                    <button type="button"
+                                            @click="$dispatch('open-announcement-popup', {{ json_encode([
+                                                'id' => $annId,
+                                                'title' => $title,
+                                                'content' => $content,
+                                                'type' => $annType,
+                                                'target_role' => $annRole,
+                                                'published_at_diff' => $diffTime,
+                                                'published_at_formatted' => $formattedPubAt,
+                                                'updated_at' => $updatedAtStr,
+                                                'author_name' => 'Admin Sekolah',
+                                            ]) }})"
+                                            class="shrink-0 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shadow-xs inline-flex items-center gap-1.5 cursor-pointer {{ $btnStyle }}">
+                                        <span>Buka Pop Up</span>
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                                    </button>
                                 </div>
                             @endif
                         @endforeach
@@ -607,6 +682,9 @@
 
     <!-- Popup Notifikasi -->
     @include('partials.toast-notification')
+
+    <!-- Popup Pengumuman Prioritas UI/UX -->
+    @include('partials.announcement-modal')
 
     <!-- PWA Installation Component -->
     @include('partials.pwa-installer')

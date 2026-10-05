@@ -426,7 +426,24 @@
                                     </a>
                                 @endif
                             </td>
-                            <td class="px-5 py-4 whitespace-nowrap text-right space-x-2">
+                            <td class="px-5 py-4 whitespace-nowrap text-right space-x-1.5">
+                                <button type="button"
+                                        @click="$dispatch('open-announcement-popup', {{ json_encode([
+                                            'id' => $announcement->id,
+                                            'title' => $announcement->title,
+                                            'content' => $announcement->content,
+                                            'type' => $announcement->type,
+                                            'target_role' => $announcement->target_role,
+                                            'published_at_diff' => $announcement->published_at ? $announcement->published_at->diffForHumans() : $announcement->created_at->diffForHumans(),
+                                            'published_at_formatted' => $announcement->published_at ? $announcement->published_at->format('d M Y, H:i') : $announcement->created_at->format('d M Y, H:i'),
+                                            'updated_at' => $announcement->updated_at ? $announcement->updated_at->toISOString() : '',
+                                            'author_name' => $announcement->author?->name ?? 'Admin Sekolah',
+                                        ]) }})"
+                                        class="px-2.5 py-1.5 bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-300 rounded-lg text-xs font-bold inline-flex items-center gap-1 transition-all shadow-2xs cursor-pointer"
+                                        title="Lihat Pratinjau Tampilan Pop Up">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                    <span>Pop Up</span>
+                                </button>
                                 <a href="{{ route('admin.announcements.edit', $announcement) }}" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold inline-block">
                                     Edit
                                 </a>
