@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Jobs\CheckApplicationHealthJob;
 use App\Models\Application;
 use App\Models\BlockedIp;
+use App\Models\ErrorLog;
 use App\Models\OAuthAccessToken;
 use App\Models\SecurityLog;
 use App\Services\AuditLogger;
@@ -65,6 +66,9 @@ class AdminMonitoringController extends Controller
             ->where('created_at', '>=', now()->subDay())
             ->count();
 
+        $unresolvedErrorsCount = ErrorLog::unresolved()->count();
+        $recentErrorLogs = ErrorLog::with('user')->latest('last_seen_at')->take(5)->get();
+
         return view('admin.monitoring.index', compact(
             'dbStatus',
             'redisStatus',
@@ -75,7 +79,9 @@ class AdminMonitoringController extends Controller
             'blockedIps',
             'securityLogs',
             'activeBlockedCount',
-            'bruteForceCount24h'
+            'bruteForceCount24h',
+            'unresolvedErrorsCount',
+            'recentErrorLogs'
         ));
     }
 

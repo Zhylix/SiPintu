@@ -149,6 +149,21 @@
 
                     <div class="pt-3 px-3 pb-1.5 text-[10px] font-extrabold text-emerald-900 uppercase tracking-wider">Integrasi & Keamanan</div>
 
+                    @php
+                        $unresolvedErrorCount = \App\Models\ErrorLog::unresolved()->count();
+                    @endphp
+                    <a href="{{ route('admin.error-logs.index') }}" class="flex items-center justify-between px-3 py-2 text-xs font-bold rounded-xl transition-all {{ request()->routeIs('admin.error-logs.*') ? 'bg-rose-700 text-white shadow-md shadow-rose-700/20' : 'text-slate-700 hover:text-rose-800 hover:bg-rose-50' }}">
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 mr-2.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                            Log Error Server
+                        </div>
+                        @if($unresolvedErrorCount > 0)
+                            <span class="px-1.5 py-0.5 rounded-full text-[9px] font-black bg-rose-600 text-white animate-pulse">
+                                {{ $unresolvedErrorCount }}
+                            </span>
+                        @endif
+                    </a>
+
                     <a href="{{ route('admin.sijuna.index') }}" class="flex items-center px-3 py-2 text-xs font-bold rounded-xl transition-all {{ request()->routeIs('admin.sijuna.*') ? 'bg-slate-700 text-white shadow-md shadow-slate-700/20' : 'text-slate-700 hover:text-slate-800 hover:bg-slate-50' }}">
                         <svg class="w-4 h-4 mr-2.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                         Integrasi API SIJUNA
@@ -332,6 +347,18 @@
 
                         <div class="pt-4 px-3 pb-2 text-[11px] font-extrabold text-emerald-900 uppercase tracking-wider">Integrasi & Keamanan</div>
 
+                        <a href="{{ route('admin.error-logs.index') }}" class="flex items-center justify-between px-3 py-2.5 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('admin.error-logs.*') ? 'bg-rose-700 text-white shadow-md shadow-rose-700/20' : 'text-slate-700 hover:text-rose-800 hover:bg-rose-50' }}">
+                            <div class="flex items-center">
+                                <svg class="w-5 h-5 mr-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                Log Error Server
+                            </div>
+                            @if($unresolvedErrorCount > 0)
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-600 text-white animate-pulse">
+                                    {{ $unresolvedErrorCount }}
+                                </span>
+                            @endif
+                        </a>
+
                         <a href="{{ route('admin.sijuna.index') }}" class="flex items-center px-3 py-2.5 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('admin.sijuna.*') ? 'bg-emerald-700 text-white shadow-md shadow-emerald-700/20' : 'text-slate-700 hover:text-emerald-800 hover:bg-emerald-50' }}">
                             <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                             Data SIJUNA
@@ -447,24 +474,32 @@
                         </span>
 
                         @php
+                            $isAdmin = auth()->user()->isAdmin();
                             $navAnnouncements = \App\Models\Announcement::active()
                                 ->forWeb()
                                 ->forRole(auth()->user()->role)
                                 ->latest()
                                 ->take(5)
                                 ->get();
-                            $hasUnreadNotif = $navAnnouncements->isNotEmpty();
+
+                            $unreadErrorCount = $isAdmin ? auth()->user()->unreadNotifications()->count() : 0;
+                            $unreadErrorNotifications = $isAdmin ? auth()->user()->unreadNotifications()->take(8)->get() : collect();
+                            $hasUnreadNotif = $navAnnouncements->isNotEmpty() || $unreadErrorCount > 0;
                         @endphp
 
                         <!-- In-App Notification Center Dropdown -->
-                        <div class="relative" x-data="{ openNotif: false }">
+                        <div class="relative" x-data="{ openNotif: false, activeTab: '{{ $isAdmin && $unreadErrorCount > 0 ? 'errors' : ($isAdmin ? 'errors' : 'announcements') }}' }">
                             <button type="button" @click="openNotif = !openNotif" 
                                     class="relative p-2 rounded-xl text-slate-600 hover:text-emerald-800 hover:bg-emerald-50 border border-slate-200 transition-colors cursor-pointer"
                                     title="Pusat Notifikasi & Pengumuman">
                                 <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
                                 </svg>
-                                @if($hasUnreadNotif)
+                                @if($isAdmin && $unreadErrorCount > 0)
+                                    <span class="absolute -top-1 -right-1 px-1.5 py-0.2 min-w-[18px] h-[18px] bg-rose-600 text-white text-[9px] font-black rounded-full flex items-center justify-center animate-pulse border-2 border-white shadow-xs">
+                                        {{ $unreadErrorCount > 9 ? '9+' : $unreadErrorCount }}
+                                    </span>
+                                @elseif($hasUnreadNotif)
                                     <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-600 border-2 border-white rounded-full animate-pulse"></span>
                                 @endif
                             </button>
@@ -478,20 +513,104 @@
                                  x-transition:leave="transition ease-in duration-150"
                                  x-transition:leave-start="opacity-100 translate-y-0 scale-100"
                                  x-transition:leave-end="opacity-0 translate-y-2 scale-95"
-                                 class="absolute right-0 mt-2 w-72 sm:w-88 bg-white rounded-2xl border border-slate-200 shadow-xl overflow-hidden z-50 divide-y divide-slate-100"
+                                 class="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-2xl border border-slate-200 shadow-xl overflow-hidden z-50 divide-y divide-slate-100"
                                  x-cloak>
                                 
                                 <div class="px-4 py-3 bg-slate-50 flex items-center justify-between">
                                     <div class="flex items-center space-x-2">
                                         <span class="font-black text-xs text-slate-900">Pusat Notifikasi</span>
-                                        <span class="px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-100 text-emerald-800 border border-emerald-200">
-                                            {{ $navAnnouncements->count() }} Pengumuman
-                                        </span>
+                                        @if($isAdmin && $unreadErrorCount > 0)
+                                            <span class="px-2 py-0.5 rounded-full text-[9px] font-black bg-rose-100 text-rose-800 border border-rose-200">
+                                                {{ $unreadErrorCount }} Error Baru
+                                            </span>
+                                        @endif
                                     </div>
-                                    <span class="text-[10px] text-slate-400 font-medium">SiPintu</span>
+                                    @if($isAdmin && $unreadErrorCount > 0)
+                                        <form action="{{ route('notifications.mark-all-read') }}" method="POST">
+                                            @csrf
+                                            <button type="submit" class="text-[10px] text-slate-500 hover:text-emerald-700 font-bold transition-colors cursor-pointer">
+                                                Tandai Semua Dibaca
+                                            </button>
+                                        </form>
+                                    @else
+                                        <span class="text-[10px] text-slate-400 font-medium">SiPintu</span>
+                                    @endif
                                 </div>
 
-                                <div class="max-h-72 overflow-y-auto divide-y divide-slate-100">
+                                @if($isAdmin)
+                                <!-- Tabs for Admin (Error vs Pengumuman) -->
+                                <div class="flex border-b border-slate-200 bg-white text-xs font-bold">
+                                    <button type="button" @click="activeTab = 'errors'" 
+                                            :class="activeTab === 'errors' ? 'border-b-2 border-rose-600 text-rose-700 font-black' : 'text-slate-500 hover:text-slate-800'"
+                                            class="flex-1 py-2 text-center transition-colors flex items-center justify-center gap-1.5 cursor-pointer">
+                                        <span>Error Server</span>
+                                        @if($unreadErrorCount > 0)
+                                            <span class="px-1.5 py-0.2 rounded-full text-[9px] font-black bg-rose-600 text-white">
+                                                {{ $unreadErrorCount }}
+                                            </span>
+                                        @endif
+                                    </button>
+                                    <button type="button" @click="activeTab = 'announcements'" 
+                                            :class="activeTab === 'announcements' ? 'border-b-2 border-emerald-600 text-emerald-700 font-black' : 'text-slate-500 hover:text-slate-800'"
+                                            class="flex-1 py-2 text-center transition-colors flex items-center justify-center gap-1.5 cursor-pointer">
+                                        <span>Pengumuman</span>
+                                        <span class="px-1.5 py-0.2 rounded-full text-[9px] font-black bg-slate-100 text-slate-600">
+                                            {{ $navAnnouncements->count() }}
+                                        </span>
+                                    </button>
+                                </div>
+                                @endif
+
+                                <!-- Tab 1: System Error Notifications (Admin Only) -->
+                                @if($isAdmin)
+                                <div x-show="activeTab === 'errors'" class="max-h-72 overflow-y-auto divide-y divide-slate-100">
+                                    @forelse($unreadErrorNotifications as $notif)
+                                        <form action="{{ route('notifications.read', $notif->id) }}" method="POST">
+                                            @csrf
+                                            <button type="submit" class="w-full text-left p-3.5 hover:bg-rose-50/50 transition-colors group cursor-pointer block">
+                                                <div class="flex items-start gap-2.5">
+                                                    <span class="w-2 h-2 rounded-full bg-rose-600 animate-pulse mt-1.5 shrink-0"></span>
+                                                    <div class="space-y-1 min-w-0 flex-1">
+                                                        <div class="flex items-center justify-between gap-1">
+                                                            <h4 class="font-extrabold text-xs text-slate-900 group-hover:text-rose-700 transition-colors leading-snug line-clamp-1">
+                                                                {{ $notif->data['title'] ?? 'Error Server' }}
+                                                            </h4>
+                                                            <span class="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-rose-100 text-rose-800 shrink-0 font-mono">
+                                                                {{ $notif->data['status_code'] ?? 500 }}
+                                                            </span>
+                                                        </div>
+                                                        <p class="text-[11px] text-slate-600 line-clamp-2 leading-relaxed">
+                                                            {{ $notif->data['message'] ?? '' }}
+                                                        </p>
+                                                        <div class="flex items-center justify-between text-[10px] text-slate-400 font-medium pt-0.5">
+                                                            <span class="font-mono text-slate-600 font-bold">{{ $notif->data['incident_code'] ?? '' }}</span>
+                                                            <span>{{ $notif->created_at->diffForHumans() }}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </button>
+                                        </form>
+                                    @empty
+                                        <div class="p-6 text-center text-slate-400 space-y-1">
+                                            <div class="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-2">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                            </div>
+                                            <p class="text-xs font-bold text-slate-700">Tidak ada notifikasi error baru</p>
+                                            <p class="text-[10px]">Semua insiden server telah ditinjau atau belum ada kendala.</p>
+                                        </div>
+                                    @endforelse
+
+                                    <div class="p-2.5 bg-slate-50 border-t border-slate-100 text-center">
+                                        <a href="{{ route('admin.error-logs.index') }}" class="text-xs font-bold text-emerald-700 hover:text-emerald-800 flex items-center justify-center gap-1">
+                                            <span>Buka Seluruh Log Error & Insiden</span>
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                        </a>
+                                    </div>
+                                </div>
+                                @endif
+
+                                <!-- Tab 2: School Announcements -->
+                                <div x-show="{{ $isAdmin ? "activeTab === 'announcements'" : 'true' }}" class="max-h-72 overflow-y-auto divide-y divide-slate-100">
                                     @forelse($navAnnouncements as $ann)
                                         @php
                                             $dotClass = match($ann->type ?? 'info') {

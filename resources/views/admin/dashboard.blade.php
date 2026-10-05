@@ -2,7 +2,28 @@
 
 @section('content')
 <div class="space-y-6 sm:space-y-8 min-w-0 max-w-full">
-    <!-- Top Stats Overview Grid -->
+    @if(($unresolvedErrorsCount ?? 0) > 0)
+    <div class="p-4 sm:p-5 rounded-3xl bg-rose-50 border-2 border-rose-200 text-rose-950 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
+        <div class="flex items-center space-x-3.5 min-w-0">
+            <div class="w-10 h-10 rounded-2xl bg-rose-100 border border-rose-300 text-rose-700 flex items-center justify-center shrink-0">
+                <svg class="w-5 h-5 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            </div>
+            <div>
+                <h4 class="text-xs sm:text-sm font-black text-rose-950">
+                    Peringatan: Terdapat {{ $unresolvedErrorsCount }} Insiden Error Server 500 yang Belum Ditangani!
+                </h4>
+                <p class="text-[11px] text-rose-800 font-medium mt-0.5">
+                    Sistem mendeteksi kendala teknis internal pada akses halaman pengguna. Segera periksa log untuk memastikan kelancaran akses.
+                </p>
+            </div>
+        </div>
+        <a href="{{ route('admin.error-logs.index', ['status' => 'unresolved']) }}" 
+           class="px-4 py-2.5 rounded-xl bg-rose-700 hover:bg-rose-800 text-white text-xs font-black transition-all shadow-xs shrink-0 whitespace-nowrap text-center">
+            Periksa Log Error &rarr;
+        </a>
+    </div>
+    @endif
+
     <!-- Top Stats Overview Grid -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-5">
         <!-- Total Users Stat -->

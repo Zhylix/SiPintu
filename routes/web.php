@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\AdminApplicationCategoryController;
 use App\Http\Controllers\Admin\AdminApplicationController;
 use App\Http\Controllers\Admin\AdminAuditLogController;
 use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\AdminErrorLogController;
 use App\Http\Controllers\Admin\AdminJurusanController;
 use App\Http\Controllers\Admin\AdminMonitoringController;
 use App\Http\Controllers\Admin\AdminRoleController;
@@ -14,6 +15,7 @@ use App\Http\Controllers\Admin\AdminSijunaController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Dudi\DudiDashboardController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OAuthController;
 use App\Http\Controllers\Student\StudentDashboardController;
 use App\Http\Controllers\Teacher\TeacherDashboardController;
@@ -207,6 +209,11 @@ Route::middleware('auth')->group(function () {
 
     // Mobile UI Design Preview
     Route::view('/mobile-preview', 'mobile-preview')->name('mobile-preview');
+
+    // In-App Notifications
+    Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
+    Route::delete('/notifications/{id}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
 });
 
 /*
@@ -338,6 +345,17 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::delete('/settings/icon', [AdminSettingController::class, 'destroyIcon'])->name('settings.icon.destroy');
     Route::post('/settings/login-bg', [AdminSettingController::class, 'updateLoginBg'])->name('settings.login-bg.update');
     Route::delete('/settings/login-bg', [AdminSettingController::class, 'destroyLoginBg'])->name('settings.login-bg.destroy');
+
+    // System Error Logs (HTTP 500 & Uncaught Exceptions)
+    Route::get('/error-logs', [AdminErrorLogController::class, 'index'])->name('error-logs.index');
+    Route::get('/error-logs/{errorLog}', [AdminErrorLogController::class, 'show'])->name('error-logs.show');
+    Route::patch('/error-logs/{errorLog}/resolve', [AdminErrorLogController::class, 'resolve'])->name('error-logs.resolve');
+    Route::patch('/error-logs/{errorLog}/ignore', [AdminErrorLogController::class, 'ignore'])->name('error-logs.ignore');
+    Route::patch('/error-logs/{errorLog}/unresolve', [AdminErrorLogController::class, 'unresolve'])->name('error-logs.unresolve');
+    Route::post('/error-logs/batch-resolve', [AdminErrorLogController::class, 'batchResolve'])->name('error-logs.batch-resolve');
+    Route::delete('/error-logs/{errorLog}', [AdminErrorLogController::class, 'destroy'])->name('error-logs.destroy');
+    Route::delete('/error-logs-clear/resolved', [AdminErrorLogController::class, 'clearResolved'])->name('error-logs.clear-resolved');
+    Route::post('/error-logs/trigger-test', [AdminErrorLogController::class, 'triggerTestError'])->name('error-logs.trigger-test');
 });
 
 /*

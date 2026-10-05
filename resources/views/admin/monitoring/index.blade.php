@@ -766,6 +766,124 @@
         </div>
     </div>
 
+    <!-- System Error Logs (HTTP 500 & Unhandled Exceptions) Monitoring Section -->
+    <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-6 shadow-sm">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-5">
+            <div>
+                <h3 class="text-base font-black text-slate-900 flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center shrink-0">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    </div>
+                    <span>Insiden & Log Error Server (HTTP 500)</span>
+                </h3>
+                <p class="text-xs text-slate-500 font-medium mt-1">Pemantauan otomatis exception internal server yang dialami pengguna portal dengan pencatatan stack trace dan notifikasi admin.</p>
+            </div>
+
+            <div class="flex items-center gap-2.5">
+                <form action="{{ route('admin.error-logs.trigger-test') }}" method="POST" onsubmit="return confirm('Jalankan simulasi uji coba error 500?')">
+                    @csrf
+                    <button type="submit" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all border border-slate-300 flex items-center gap-1.5 shadow-2xs cursor-pointer">
+                        <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                        <span>Simulasi Tes 500</span>
+                    </button>
+                </form>
+
+                <a href="{{ route('admin.error-logs.index') }}" class="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-extrabold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer">
+                    <span>Buka Log Error Lengkap</span> &rarr;
+                </a>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="p-4 rounded-2xl border {{ $unresolvedErrorsCount > 0 ? 'bg-rose-50/50 border-rose-200' : 'bg-slate-50 border-slate-200' }}">
+                <div class="flex items-center justify-between">
+                    <span class="text-[10px] font-extrabold uppercase {{ $unresolvedErrorsCount > 0 ? 'text-rose-700' : 'text-slate-500' }} block">Belum Diselesaikan</span>
+                    @if($unresolvedErrorsCount > 0)
+                        <span class="w-2.5 h-2.5 rounded-full bg-rose-600 animate-ping"></span>
+                    @endif
+                </div>
+                <div class="text-2xl font-black {{ $unresolvedErrorsCount > 0 ? 'text-rose-700' : 'text-slate-800' }} mt-1">
+                    {{ $unresolvedErrorsCount }} Insiden
+                </div>
+                <p class="text-[11px] {{ $unresolvedErrorsCount > 0 ? 'text-rose-600 font-bold' : 'text-slate-500' }} mt-0.5">
+                    {{ $unresolvedErrorsCount > 0 ? 'Memerlukan perbaikan administrator' : 'Semua insiden server telah teratasi' }}
+                </p>
+            </div>
+
+            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+                <span class="text-[10px] font-extrabold uppercase text-slate-500 block">Notifikasi Real-time</span>
+                <div class="text-base font-black text-slate-800 mt-1 flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span>Aktif & Terintegrasi</span>
+                </div>
+                <p class="text-[11px] text-slate-500 mt-0.5 font-medium">Database Notification & In-App Bell Center</p>
+            </div>
+
+            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+                <span class="text-[10px] font-extrabold uppercase text-slate-500 block">Perlindungan Anti-Flood</span>
+                <div class="text-base font-black text-slate-800 mt-1 font-mono">
+                    15 Menit Cooldown
+                </div>
+                <p class="text-[11px] text-slate-500 mt-0.5 font-medium">Pengelompokan fingerprint error berulang</p>
+            </div>
+        </div>
+
+        <div class="space-y-3">
+            <h4 class="text-xs font-black uppercase tracking-wider text-slate-800">Insiden Error Terbaru</h4>
+            <div class="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-2xs">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-black uppercase text-[10px]">
+                        <tr>
+                            <th class="px-3.5 py-2.5">Kode Insiden</th>
+                            <th class="px-3.5 py-2.5">Status & Jenis</th>
+                            <th class="px-3.5 py-2.5">URL / Endpoint</th>
+                            <th class="px-3.5 py-2.5">Pengguna</th>
+                            <th class="px-3.5 py-2.5 text-center">Status</th>
+                            <th class="px-3.5 py-2.5 text-right">Waktu</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        @forelse($recentErrorLogs as $rLog)
+                            <tr class="hover:bg-slate-50/70 transition-colors {{ $rLog->status === 'unresolved' ? 'bg-rose-50/20' : '' }}">
+                                <td class="px-3.5 py-2.5 font-mono font-bold text-slate-900">
+                                    <a href="{{ route('admin.error-logs.show', $rLog->id) }}" class="text-slate-900 hover:text-emerald-700 underline decoration-slate-300">
+                                        {{ $rLog->incident_code }}
+                                    </a>
+                                </td>
+                                <td class="px-3.5 py-2.5">
+                                    <span class="font-extrabold text-slate-800 block truncate max-w-xs">{{ $rLog->error_type }}</span>
+                                    <span class="text-[10px] text-slate-500 truncate block max-w-xs">{{ $rLog->message }}</span>
+                                </td>
+                                <td class="px-3.5 py-2.5 font-mono text-slate-600 truncate max-w-xs">
+                                    {{ parse_url($rLog->url, PHP_URL_PATH) ?? $rLog->url }}
+                                </td>
+                                <td class="px-3.5 py-2.5">
+                                    {{ $rLog->user ? $rLog->user->name : 'Tamu / Sistem' }}
+                                </td>
+                                <td class="px-3.5 py-2.5 text-center">
+                                    @php $badge = $rLog->getStatusBadge(); @endphp
+                                    <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase border {{ $badge['class'] }}">
+                                        {{ $badge['label'] }}
+                                    </span>
+                                </td>
+                                <td class="px-3.5 py-2.5 text-right text-slate-400 text-[10px]">
+                                    {{ $rLog->created_at->diffForHumans() }}
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="6" class="px-4 py-8 text-center text-slate-400 text-xs">
+                                    <p class="font-bold text-slate-700">Belum ada error server yang tercatat.</p>
+                                    <p class="text-[11px] text-slate-500">Sistem berjalan dengan aman dan stabil.</p>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
     <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-6 shadow-sm">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-5">
 

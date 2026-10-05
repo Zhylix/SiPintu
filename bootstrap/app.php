@@ -5,6 +5,7 @@ use App\Http\Middleware\CheckBlockedIp;
 use App\Http\Middleware\OAuthBearerMiddleware;
 use App\Http\Middleware\RoleMiddleware;
 use App\Http\Middleware\SecurityHeadersMiddleware;
+use App\Services\ErrorLoggerService;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -45,4 +46,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
+
+        $exceptions->report(function (Throwable $e) {
+            ErrorLoggerService::record($e);
+        });
     })->create();

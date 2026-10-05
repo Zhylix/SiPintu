@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Application;
 use App\Models\AuditLog;
+use App\Models\ErrorLog;
 use App\Models\OAuthAccessToken;
 use App\Models\SyncLog;
 use App\Models\User;
@@ -54,6 +55,9 @@ class AdminDashboardController extends Controller
         $favoriteAppIds = $user ? $user->favoriteApplications()->pluck('applications.id')->toArray() : [];
         $favoriteApps = $applications->whereIn('id', $favoriteAppIds);
 
+        $unresolvedErrorsCount = ErrorLog::unresolved()->count();
+        $recentErrorLogs = ErrorLog::with('user')->latest('last_seen_at')->take(5)->get();
+
         return view('admin.dashboard', compact(
             'user',
             'stats',
@@ -62,7 +66,9 @@ class AdminDashboardController extends Controller
             'registeredApps',
             'applications',
             'favoriteAppIds',
-            'favoriteApps'
+            'favoriteApps',
+            'unresolvedErrorsCount',
+            'recentErrorLogs'
         ));
     }
 
