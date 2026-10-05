@@ -415,7 +415,7 @@ x-on:favorite-updated.window="
                             class="text-rose-600 hover:text-rose-800 font-bold hover:underline transition-colors">
                         Reset Semua Filter
                     </button>
-                    <span class="text-slate-400 font-medium ml-auto">Tekan diluar kolom atau ESC</span>
+                    <span class="text-slate-400 font-medium ml-auto">Tekan di luar kolom atau ESC</span>
                 </div>
             </div>
         </div>
