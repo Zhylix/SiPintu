@@ -225,7 +225,7 @@ x-on:favorite-updated.window="
         favoriteIds = favoriteIds.filter(id => id !== $event.detail.appId);
     }
 "
-@keydown.window="if ($event.key === '/' && !['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)) { $event.preventDefault(); $refs.catalogSearchInput?.focus(); searchDropdownOpen = true; }">
+@keydown.window="if (($event.key === '/' || (($event.ctrlKey || $event.metaKey) && $event.key.toLowerCase() === 'k')) && !['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)) { $event.preventDefault(); $refs.catalogSearchInput?.focus(); searchDropdownOpen = true; }">
     <!-- Android Material You Style Top Bar (Filter Chips & Search with Category Dropdown) -->
     <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 bg-white border border-slate-200/90 rounded-2xl p-3 sm:p-3.5 shadow-xs">
         <!-- Quick Filter Buttons  -->
@@ -251,7 +251,7 @@ x-on:favorite-updated.window="
                 <span class="px-1.5 py-0.5 rounded-md text-[10px] bg-black/15 font-mono" x-text="favoriteIds.length"></span>
             </button>
 
-            <!-- Active Category Pill if filtered from Search Bar Dropdown -->
+            <!-- Active Filter -->
             <template x-if="selectedFilter.startsWith('cat_')">
                 <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black bg-emerald-50 text-emerald-900 border border-emerald-300 shadow-2xs shrink-0">
                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
@@ -263,11 +263,11 @@ x-on:favorite-updated.window="
             </template>
         </div>
 
-        <!-- Integrated Search Bar with Category Dropdown -->
+        <!-- Search Bar & Category Filter-->
         <div class="relative w-full lg:w-96 shrink-0" @click.away="searchDropdownOpen = false">
             <div class="flex items-center bg-slate-50 hover:bg-slate-100/80 focus-within:bg-white border border-slate-200/90 focus-within:border-emerald-600 focus-within:ring-2 focus-within:ring-emerald-600/15 rounded-xl transition-all shadow-2xs">
                 
-                <!-- Category Dropdown Trigger Button inside Search Bar -->
+                <!-- Category Search Bar -->
                 <button type="button"
                         @click="searchDropdownOpen = !searchDropdownOpen"
                         class="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-slate-700 hover:text-emerald-800 border-r border-slate-200/80 hover:bg-slate-100/90 transition-colors shrink-0 rounded-l-xl select-none"
@@ -415,7 +415,7 @@ x-on:favorite-updated.window="
                             class="text-rose-600 hover:text-rose-800 font-bold hover:underline transition-colors">
                         Reset Semua Filter
                     </button>
-                    <span class="text-slate-400 font-medium ml-auto">Tekan ESC untuk menutup</span>
+                    <span class="text-slate-400 font-medium ml-auto">Tekan diluar kolom atau ESC</span>
                 </div>
             </div>
         </div>
