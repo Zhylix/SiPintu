@@ -354,7 +354,7 @@
                     <span>3. Background Login Portal</span>
                 </div>
                 <p class="text-slate-600 leading-relaxed">
-                    Gambar latar belakang dekoratif khusus halaman <code class="px-1 py-0.5 bg-white border border-emerald-300 rounded font-bold text-emerald-800">/login</code> tanpa mengubah logo resmi sekolah.
+                    Gambar latar belakang dekoratif khusus halaman <code class="px-1 py-0.5 bg-white border border-emerald-300 rounded font-bold text-emerald-800">/login</code>
                 </p>
             </div>
         </div>

@@ -7,7 +7,7 @@
         <div>
             <div class="flex items-center gap-2 mb-1">
                 <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-300">
-                    5 Jurusan Resmi
+                    5 Jurusan   
                 </span>
                 <span class="text-xs font-bold text-slate-500">SMKN 1 Bangsri</span>
             </div>
@@ -47,39 +47,54 @@
         @php
             $colorClasses = [
                 'PPLG' => [
-                    'bg' => 'bg-emerald-50/70',
-                    'border' => 'border-emerald-200',
-                    'badge' => 'bg-emerald-100 text-emerald-800 border-emerald-300',
-                    'num' => 'text-emerald-950',
-                    'accent' => 'text-emerald-700',
-                ],
-                'TO' => [
-                    'bg' => 'bg-blue-50/70',
-                    'border' => 'border-blue-200',
-                    'badge' => 'bg-blue-100 text-blue-800 border-blue-300',
-                    'num' => 'text-blue-950',
-                    'accent' => 'text-blue-700',
+                    'bg' => 'bg-orange-50/80',
+                    'border' => 'border-orange-200',
+                    'ring' => 'ring-orange-500',
+                    'badge' => 'bg-orange-100 text-orange-950 border-orange-300',
+                    'num' => 'text-orange-950',
+                    'accent' => 'text-orange-600',
+                    'icon_bg' => 'bg-orange-500 text-white',
+                    'icon_svg' => '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>',
                 ],
                 'AKL' => [
-                    'bg' => 'bg-purple-50/70',
-                    'border' => 'border-purple-200',
-                    'badge' => 'bg-purple-100 text-purple-800 border-purple-300',
-                    'num' => 'text-purple-950',
-                    'accent' => 'text-purple-700',
+                    'bg' => 'bg-yellow-50/80',
+                    'border' => 'border-yellow-200',
+                    'ring' => 'ring-yellow-400',
+                    'badge' => 'bg-yellow-100 text-yellow-950 border-yellow-300',
+                    'num' => 'text-yellow-950',
+                    'accent' => 'text-yellow-700',
+                    'icon_bg' => 'bg-yellow-400 text-yellow-950',
+                    'icon_svg' => '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>',
                 ],
                 'PM' => [
-                    'bg' => 'bg-amber-50/70',
-                    'border' => 'border-amber-200',
-                    'badge' => 'bg-amber-100 text-amber-800 border-amber-300',
-                    'num' => 'text-amber-950',
-                    'accent' => 'text-amber-700',
+                    'bg' => 'bg-rose-50/80',
+                    'border' => 'border-rose-200',
+                    'ring' => 'ring-rose-500',
+                    'badge' => 'bg-rose-100 text-rose-950 border-rose-300',
+                    'num' => 'text-rose-950',
+                    'accent' => 'text-rose-600',
+                    'icon_bg' => 'bg-rose-600 text-white',
+                    'icon_svg' => '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>',
                 ],
                 'MPLB' => [
-                    'bg' => 'bg-cyan-50/70',
-                    'border' => 'border-cyan-200',
-                    'badge' => 'bg-cyan-100 text-cyan-800 border-cyan-300',
-                    'num' => 'text-cyan-950',
-                    'accent' => 'text-cyan-700',
+                    'bg' => 'bg-sky-50/80',
+                    'border' => 'border-sky-200',
+                    'ring' => 'ring-sky-400',
+                    'badge' => 'bg-sky-100 text-sky-950 border-sky-300',
+                    'num' => 'text-sky-950',
+                    'accent' => 'text-sky-600',
+                    'icon_bg' => 'bg-sky-400 text-white',
+                    'icon_svg' => '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>',
+                ],
+                'TO' => [
+                    'bg' => 'bg-slate-50/90',
+                    'border' => 'border-slate-300',
+                    'ring' => 'ring-slate-700',
+                    'badge' => 'bg-white text-slate-900 border-slate-300 shadow-2xs',
+                    'num' => 'text-slate-900',
+                    'accent' => 'text-slate-700',
+                    'icon_bg' => 'bg-slate-800 text-white border border-slate-700',
+                    'icon_svg' => '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>',
                 ],
             ];
         @endphp
@@ -89,21 +104,29 @@
                 $cfg = $colorClasses[$j->kode_jurusan] ?? [
                     'bg' => 'bg-slate-50',
                     'border' => 'border-slate-200',
+                    'ring' => 'ring-slate-400',
                     'badge' => 'bg-slate-100 text-slate-800 border-slate-300',
                     'num' => 'text-slate-900',
                     'accent' => 'text-slate-700',
+                    'icon_bg' => 'bg-slate-600 text-white',
+                    'icon_svg' => '',
                 ];
                 $percent = $totalAlumni > 0 ? round(($j->alumni_count / $totalAlumni) * 100, 1) : 0;
                 $isSelected = ($selectedJurusanKode === $j->kode_jurusan);
             @endphp
             <a href="{{ route('admin.jurusan.index', ['jurusan' => $isSelected ? 'all' : $j->kode_jurusan]) }}" 
                class="p-4 rounded-2xl border transition-all duration-200 relative overflow-hidden group flex flex-col justify-between 
-                      {{ $cfg['bg'] }} {{ $cfg['border'] }} {{ $isSelected ? 'ring-2 ring-emerald-600 shadow-md scale-[1.02]' : 'hover:shadow-md hover:scale-[1.01]' }}">
+                      {{ $cfg['bg'] }} {{ $cfg['border'] }} {{ $isSelected ? 'ring-2 ' . $cfg['ring'] . ' shadow-md scale-[1.02]' : 'hover:shadow-md hover:scale-[1.01]' }}">
                 <div>
-                    <div class="flex items-center justify-between gap-1.5 mb-1.5">
-                        <span class="px-2 py-0.5 rounded-lg text-xs font-black uppercase tracking-wider border {{ $cfg['badge'] }}">
-                            {{ $j->kode_jurusan }}
-                        </span>
+                    <div class="flex items-center justify-between gap-1.5 mb-2">
+                        <div class="flex items-center gap-2">
+                            <div class="w-7 h-7 rounded-xl flex items-center justify-center shrink-0 shadow-2xs {{ $cfg['icon_bg'] }}">
+                                {!! $cfg['icon_svg'] !!}
+                            </div>
+                            <span class="px-2 py-0.5 rounded-lg text-xs font-black uppercase tracking-wider border {{ $cfg['badge'] }}">
+                                {{ $j->kode_jurusan }}
+                            </span>
+                        </div>
                         <span class="text-[11px] font-black {{ $cfg['accent'] }}">{{ $percent }}%</span>
                     </div>
                     <div class="text-xs font-bold text-slate-700 line-clamp-1 leading-tight" title="{{ $j->nama_jurusan }}">
@@ -118,8 +141,9 @@
                         </div>
                         <div class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Alumni Terdata</div>
                     </div>
-                    <span class="text-[10px] font-extrabold text-emerald-700 opacity-0 group-hover:opacity-100 transition-opacity">
-                        {{ $isSelected ? 'Reset' : 'Filter &rarr;' }}
+                    <span class="text-[10px] font-extrabold {{ $cfg['accent'] }} opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                        <span>{{ $isSelected ? 'Reset' : 'Filter' }}</span>
+                        <span>&rarr;</span>
                     </span>
                 </div>
             </a>
@@ -160,13 +184,18 @@
                         @endphp
                         <tr class="hover:bg-slate-50/80 transition-colors {{ $selectedJurusanKode === $jurusan->kode_jurusan ? 'bg-emerald-50/40' : '' }}">
                             <td class="py-4 px-5 whitespace-nowrap">
-                                <span class="px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-wider
-                                    {{ $jurusan->kode_jurusan === 'PPLG' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : '' }}
-                                    {{ $jurusan->kode_jurusan === 'TO' ? 'bg-blue-100 text-blue-800 border border-blue-300' : '' }}
-                                    {{ $jurusan->kode_jurusan === 'AKL' ? 'bg-purple-100 text-purple-800 border border-purple-300' : '' }}
-                                    {{ $jurusan->kode_jurusan === 'PM' ? 'bg-amber-100 text-amber-800 border border-amber-300' : '' }}
-                                    {{ $jurusan->kode_jurusan === 'MPLB' ? 'bg-cyan-100 text-cyan-800 border border-cyan-300' : '' }}">
-                                    {{ $jurusan->kode_jurusan }}
+                                @php
+                                    $t1Cfg = $colorClasses[$jurusan->kode_jurusan] ?? [
+                                        'badge' => 'bg-slate-100 text-slate-800 border-slate-300',
+                                        'icon_bg' => 'bg-slate-600 text-white',
+                                        'icon_svg' => '',
+                                    ];
+                                @endphp
+                                <span class="px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-wider inline-flex items-center gap-2 border {{ $t1Cfg['badge'] }}">
+                                    <span class="w-5 h-5 rounded-md flex items-center justify-center shrink-0 {{ $t1Cfg['icon_bg'] }}">
+                                        {!! $t1Cfg['icon_svg'] !!}
+                                    </span>
+                                    <span>{{ $jurusan->kode_jurusan }}</span>
                                 </span>
                             </td>
                             <td class="py-4 px-4">
@@ -273,11 +302,26 @@
                     Semua ({{ number_format($totalAlumni) }})
                 </a>
                 @foreach($jurusans as $j)
+                    @php
+                        $tabClasses = match($j->kode_jurusan) {
+                            'PPLG' => $selectedJurusanKode === $j->kode_jurusan ? 'bg-orange-600 text-white shadow-xs' : 'bg-orange-50/80 text-orange-950 hover:bg-orange-100 border border-orange-200',
+                            'AKL' => $selectedJurusanKode === $j->kode_jurusan ? 'bg-yellow-500 text-slate-950 shadow-xs' : 'bg-yellow-50/80 text-yellow-950 hover:bg-yellow-100 border border-yellow-300',
+                            'PM' => $selectedJurusanKode === $j->kode_jurusan ? 'bg-rose-600 text-white shadow-xs' : 'bg-rose-50/80 text-rose-950 hover:bg-rose-100 border border-rose-200',
+                            'MPLB' => $selectedJurusanKode === $j->kode_jurusan ? 'bg-sky-500 text-white shadow-xs' : 'bg-sky-50/80 text-sky-950 hover:bg-sky-100 border border-sky-200',
+                            'TO' => $selectedJurusanKode === $j->kode_jurusan ? 'bg-slate-800 text-white shadow-xs' : 'bg-slate-100 text-slate-800 hover:bg-slate-200 border border-slate-300',
+                            default => $selectedJurusanKode === $j->kode_jurusan ? 'bg-emerald-700 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200',
+                        };
+                        $tabIconCfg = $colorClasses[$j->kode_jurusan] ?? null;
+                    @endphp
                     <a href="{{ route('admin.jurusan.index', array_filter(['search' => $search, 'jurusan' => $j->kode_jurusan, 'tahun_masuk' => $selectedTahunMasuk, 'tahun_lulus' => $selectedTahunLulus])) }}"
-                       class="px-3 py-1.5 rounded-xl font-extrabold transition-all shrink-0 flex items-center gap-1.5
-                              {{ $selectedJurusanKode === $j->kode_jurusan ? 'bg-emerald-700 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200' }}">
+                       class="px-3 py-1.5 rounded-xl font-extrabold transition-all shrink-0 flex items-center gap-1.5 border {{ $tabClasses }}">
+                        @if($tabIconCfg)
+                            <span class="w-4 h-4 rounded flex items-center justify-center shrink-0 {{ $selectedJurusanKode === $j->kode_jurusan ? 'text-white' : $tabIconCfg['icon_bg'] }}">
+                                {!! $tabIconCfg['icon_svg'] !!}
+                            </span>
+                        @endif
                         <span>{{ $j->kode_jurusan }}</span>
-                        <span class="px-1.5 py-0.2 rounded-full text-[10px] font-black {{ $selectedJurusanKode === $j->kode_jurusan ? 'bg-emerald-800 text-white' : 'bg-white text-slate-800 border border-slate-200' }}">
+                        <span class="px-1.5 py-0.2 rounded-full text-[10px] font-black {{ $selectedJurusanKode === $j->kode_jurusan ? 'bg-black/20 text-white' : 'bg-white text-slate-800 border border-slate-200' }}">
                             {{ number_format($j->alumni_count) }}
                         </span>
                     </a>
@@ -323,12 +367,17 @@
                             <!-- Jurusan Badge -->
                             <td class="py-3.5 px-4 whitespace-nowrap">
                                 @if($user->jurusan)
-                                    <span class="px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-wider inline-flex items-center gap-1.5
-                                        {{ $user->jurusan->kode_jurusan === 'PPLG' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : '' }}
-                                        {{ $user->jurusan->kode_jurusan === 'TO' ? 'bg-blue-100 text-blue-800 border border-blue-300' : '' }}
-                                        {{ $user->jurusan->kode_jurusan === 'AKL' ? 'bg-purple-100 text-purple-800 border border-purple-300' : '' }}
-                                        {{ $user->jurusan->kode_jurusan === 'PM' ? 'bg-amber-100 text-amber-800 border border-amber-300' : '' }}
-                                        {{ $user->jurusan->kode_jurusan === 'MPLB' ? 'bg-cyan-100 text-cyan-800 border border-cyan-300' : '' }}">
+                                    @php
+                                        $t2Cfg = $colorClasses[$user->jurusan->kode_jurusan] ?? [
+                                            'badge' => 'bg-slate-100 text-slate-800 border-slate-300',
+                                            'icon_bg' => 'bg-slate-600 text-white',
+                                            'icon_svg' => '',
+                                        ];
+                                    @endphp
+                                    <span class="px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-wider inline-flex items-center gap-1.5 border {{ $t2Cfg['badge'] }}">
+                                        <span class="w-4 h-4 rounded flex items-center justify-center shrink-0 {{ $t2Cfg['icon_bg'] }}">
+                                            {!! $t2Cfg['icon_svg'] !!}
+                                        </span>
                                         <span>{{ $user->jurusan->kode_jurusan }}</span>
                                     </span>
                                 @else

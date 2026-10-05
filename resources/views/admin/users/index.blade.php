@@ -115,7 +115,17 @@
                                         <span class="font-extrabold text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 text-[10px]">Kelas {{ $user->classroom }}</span>
                                     @endif
                                     @if($user->jurusan)
-                                        <span class="font-extrabold text-teal-800 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200 text-[10px]">Jurusan {{ $user->jurusan->kode_jurusan }}</span>
+                                        @php
+                                            $uBadgeColor = match($user->jurusan->kode_jurusan) {
+                                                'PPLG' => 'bg-orange-50 text-orange-900 border-orange-200',
+                                                'AKL' => 'bg-yellow-50 text-yellow-950 border-yellow-300',
+                                                'PM' => 'bg-rose-50 text-rose-900 border-rose-200',
+                                                'MPLB' => 'bg-sky-50 text-sky-900 border-sky-200',
+                                                'TO' => 'bg-white text-slate-900 border-slate-300',
+                                                default => 'bg-slate-50 text-slate-800 border-slate-200',
+                                            };
+                                        @endphp
+                                        <span class="font-extrabold px-1.5 py-0.5 rounded border text-[10px] {{ $uBadgeColor }}">Jurusan {{ $user->jurusan->kode_jurusan }}</span>
                                     @endif
                                 </div>
                             @endif
@@ -240,7 +250,17 @@
                                                 • <span class="font-extrabold text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 text-[10px]">Kelas {{ $user->classroom }}</span>
                                             @endif
                                             @if($user->jurusan)
-                                                • <span class="font-extrabold text-teal-800 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200 text-[10px]">Jurusan {{ $user->jurusan->kode_jurusan }}</span>
+                                                @php
+                                                    $uBadgeColor = match($user->jurusan->kode_jurusan) {
+                                                        'PPLG' => 'bg-orange-50 text-orange-900 border-orange-200',
+                                                        'AKL' => 'bg-yellow-50 text-yellow-950 border-yellow-300',
+                                                        'PM' => 'bg-rose-50 text-rose-900 border-rose-200',
+                                                        'MPLB' => 'bg-sky-50 text-sky-900 border-sky-200',
+                                                        'TO' => 'bg-white text-slate-900 border-slate-300',
+                                                        default => 'bg-slate-50 text-slate-800 border-slate-200',
+                                                    };
+                                                @endphp
+                                                • <span class="font-extrabold px-1.5 py-0.5 rounded border text-[10px] {{ $uBadgeColor }}">Jurusan {{ $user->jurusan->kode_jurusan }}</span>
                                             @endif
                                         </div>
                                     </div>
@@ -260,7 +280,17 @@
                                         <span class="text-[10px] font-bold text-emerald-800 font-mono">Kelas: {{ $user->classroom }}</span>
                                     @endif
                                     @if($user->jurusan)
-                                        <span class="text-[10px] font-extrabold text-teal-800 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200 font-mono">Jurusan: {{ $user->jurusan->kode_jurusan }}</span>
+                                        @php
+                                            $uBadgeColor = match($user->jurusan->kode_jurusan) {
+                                                'PPLG' => 'bg-orange-50 text-orange-900 border-orange-200',
+                                                'AKL' => 'bg-yellow-50 text-yellow-950 border-yellow-300',
+                                                'PM' => 'bg-rose-50 text-rose-900 border-rose-200',
+                                                'MPLB' => 'bg-sky-50 text-sky-900 border-sky-200',
+                                                'TO' => 'bg-white text-slate-900 border-slate-300',
+                                                default => 'bg-slate-50 text-slate-800 border-slate-200',
+                                            };
+                                        @endphp
+                                        <span class="text-[10px] font-extrabold px-1.5 py-0.5 rounded border font-mono {{ $uBadgeColor }}">Jurusan: {{ $user->jurusan->kode_jurusan }}</span>
                                     @endif
                                     @if($user->isAlumni())
                                         <div class="flex items-center gap-1 mt-0.5">

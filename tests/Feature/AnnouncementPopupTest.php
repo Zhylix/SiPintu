@@ -102,4 +102,27 @@ class AnnouncementPopupTest extends TestCase
         $response->assertSee('previewFormAnnouncement');
         $response->assertSee('Pratinjau Pop Up');
     }
+
+    public function test_announcement_with_quotes_and_special_characters_renders_safely(): void
+    {
+        $admin = $this->getAdminUser();
+        $student = $this->getStudentUser();
+
+        Announcement::create([
+            'title' => 'Pengumuman "Penting" & Hari Jum\'at: SiPintu <v2.0>',
+            'content' => "Baris 1: Jadwal \"Ujian\"\nBaris 2: Jangan lupa bawa kartu & perlengkapan!",
+            'type' => 'info',
+            'target_role' => 'all',
+            'channel' => 'web',
+            'is_active' => true,
+            'created_by' => $admin->id,
+            'published_at' => now(),
+        ]);
+
+        $response = $this->actingAs($student)->get(route('student.dashboard'));
+
+        $response->assertStatus(200);
+        $response->assertSee('sipintuAnnouncementModal');
+        $response->assertSee('window.__sipintuActiveAnnouncement');
+    }
 }

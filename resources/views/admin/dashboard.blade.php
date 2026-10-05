@@ -73,7 +73,7 @@
             </div>
             <div class="mt-4 pt-3 border-t border-slate-100 text-xs text-slate-600 font-semibold flex items-center justify-between flex-wrap gap-1">
                 <span>Terakhir: {{ $latestSync?->completed_at?->diffForHumans() ?? 'Baru Saja' }}</span>
-                <span class="font-bold text-emerald-950">{{ number_format($stats['students_count']) }} Siswa &bull; {{ number_format($stats['alumni_count'] ?? 0) }} Alumni</span>
+                <span class="font-bold text-emerald-950">{{ number_format($stats['students_count']) }} Siswa • {{ number_format($stats['alumni_count'] ?? 0) }} Alumni</span>
             </div>
         </div>
 

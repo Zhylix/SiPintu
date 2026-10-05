@@ -25,9 +25,7 @@
     }
 @endphp
 
-<div x-data="sipintuAnnouncementModal({
-        initialAnnouncement: {{ $initialData ? json_encode($initialData) : 'null' }}
-     })"
+<div x-data="sipintuAnnouncementModal()"
      x-on:open-announcement-popup.window="openModal($event.detail)"
      x-on:keydown.escape.window="if (isOpen) closeModal()"
      class="relative z-[9990]"
@@ -218,10 +216,12 @@
 
 <script>
     (function () {
-        function sipintuAnnouncementModal(config) {
+        window.__sipintuActiveAnnouncement = @js($initialData);
+
+        function sipintuAnnouncementModal(config = {}) {
             return {
                 isOpen: false,
-                announcement: config.initialAnnouncement || null,
+                announcement: (config && config.initialAnnouncement) ? config.initialAnnouncement : (window.__sipintuActiveAnnouncement || null),
                 dontShowAgain: false,
 
                 get theme() {
