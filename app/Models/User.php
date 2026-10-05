@@ -178,6 +178,44 @@ class User extends Authenticatable
         return ! empty(array_intersect($allowedRoleSlugs, $userRoleSlugs));
     }
 
+    /**
+     * Get Eloquent query for active applications accessible by the user based on their role.
+     */
+    public function getAccessibleApplicationsQuery()
+    {
+        if ($this->isAdmin()) {
+            return Application::with(['category', 'roles'])->where('status', 'active');
+        }
+
+        $allowedRoles = [];
+        if ($this->isAlumni()) {
+            $allowedRoles = ['alumni', 'student', 'siswa'];
+        } elseif ($this->isStudent()) {
+            $allowedRoles = ['student', 'siswa'];
+        } elseif ($this->isTeacher()) {
+            $allowedRoles = ['teacher', 'guru'];
+        } elseif ($this->isDudi()) {
+            $allowedRoles = ['dudi', 'mitra'];
+        } else {
+            $allowedRoles = array_filter([$this->role]);
+        }
+
+        return Application::with(['category', 'roles'])
+            ->where('status', 'active')
+            ->whereHas('roles', function ($query) use ($allowedRoles) {
+                $query->whereIn('roles.name', $allowedRoles)
+                    ->orWhereIn('roles.slug', $allowedRoles);
+            });
+    }
+
+    /**
+     * Get Collection of active applications accessible by the user.
+     */
+    public function getAccessibleApplications()
+    {
+        return $this->getAccessibleApplicationsQuery()->get();
+    }
+
     public function favoriteApplications(): BelongsToMany
     {
         return $this->belongsToMany(Application::class, 'user_favorite_applications')

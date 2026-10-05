@@ -4,21 +4,30 @@ namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
 use App\Models\Application;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class StudentDashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
 
-        $allowedRoles = $user->isAlumni() ? ['alumni', 'student', 'siswa'] : ['student', 'siswa'];
+        $query = $user->getAccessibleApplicationsQuery();
 
-        $applications = Application::where('status', 'active')
-            ->whereHas('roles', function ($query) use ($allowedRoles) {
-                $query->whereIn('name', $allowedRoles);
-            })
-            ->get();
+        if ($request->filled('search')) {
+            $search = trim($request->search);
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('category') && $request->category !== 'all') {
+            $query->where('category_id', $request->category);
+        }
+
+        $applications = $query->get();
 
         $favoriteAppIds = $user->favoriteApplications()->pluck('applications.id')->toArray();
         $favoriteApps = $applications->whereIn('id', $favoriteAppIds);
@@ -26,17 +35,25 @@ class StudentDashboardController extends Controller
         return view('student.dashboard', compact('user', 'applications', 'favoriteAppIds', 'favoriteApps'));
     }
 
-    public function apps()
+    public function apps(Request $request)
     {
         $user = Auth::user();
 
-        $allowedRoles = $user->isAlumni() ? ['alumni', 'student', 'siswa'] : ['student', 'siswa'];
+        $query = $user->getAccessibleApplicationsQuery();
 
-        $applications = Application::where('status', 'active')
-            ->whereHas('roles', function ($query) use ($allowedRoles) {
-                $query->whereIn('name', $allowedRoles);
-            })
-            ->get();
+        if ($request->filled('search')) {
+            $search = trim($request->search);
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('category') && $request->category !== 'all') {
+            $query->where('category_id', $request->category);
+        }
+
+        $applications = $query->get();
 
         $favoriteAppIds = $user->favoriteApplications()->pluck('applications.id')->toArray();
 

@@ -35,10 +35,21 @@ class AdminDashboardController extends Controller
         $latestSync = SyncLog::latest()->first();
 
         // Applications registered in Gateway for admin management view
-        $registeredApps = Application::with(['roles'])->get();
+        $registeredApps = Application::with(['roles', 'category'])->get();
 
         // Active applications for user catalog view
-        $applications = Application::where('status', 'active')->get();
+        $appQuery = Application::with(['roles', 'category'])->where('status', 'active');
+        if (request()->filled('search')) {
+            $search = trim(request('search'));
+            $appQuery->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+        if (request()->filled('category') && request('category') !== 'all') {
+            $appQuery->where('category_id', request('category'));
+        }
+        $applications = $appQuery->get();
 
         $favoriteAppIds = $user ? $user->favoriteApplications()->pluck('applications.id')->toArray() : [];
         $favoriteApps = $applications->whereIn('id', $favoriteAppIds);
@@ -59,7 +70,19 @@ class AdminDashboardController extends Controller
     {
         $user = Auth::user();
 
-        $applications = Application::where('status', 'active')->get();
+        $appQuery = Application::with(['roles', 'category'])->where('status', 'active');
+        if (request()->filled('search')) {
+            $search = trim(request('search'));
+            $appQuery->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+        if (request()->filled('category') && request('category') !== 'all') {
+            $appQuery->where('category_id', request('category'));
+        }
+        $applications = $appQuery->get();
+
         $favoriteAppIds = $user ? $user->favoriteApplications()->pluck('applications.id')->toArray() : [];
 
         return view('admin.apps', compact('user', 'applications', 'favoriteAppIds'));

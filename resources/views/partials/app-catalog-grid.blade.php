@@ -69,24 +69,125 @@
         $res['initials'] = $initials ?: 'AP';
         return $res;
     };
+    $dbCategories = \App\Models\ApplicationCategory::where('is_active', true)->orderBy('display_order')->get();
+    $appCategories = $dbCategories->concat($applications->pluck('category')->filter())->unique('id')->values();
+
+    $categoryOptions = collect([
+        [
+            'id' => 'all',
+            'name' => 'Semua Kategori',
+            'short_name' => 'Semua',
+            'count' => $applications->count(),
+            'icon' => 'grid',
+        ],
+        [
+            'id' => 'favorites',
+            'name' => 'Favorit Saya',
+            'short_name' => 'Favorit',
+            'count' => count($favoriteAppIds),
+            'icon' => 'star',
+        ],
+    ])->concat($appCategories->map(function ($cat) use ($applications) {
+        return [
+            'id' => 'cat_' . $cat->id,
+            'category_id' => (string)$cat->id,
+            'name' => $cat->name,
+            'short_name' => $cat->name,
+            'count' => $applications->where('category_id', $cat->id)->count(),
+            'icon' => 'tag',
+        ];
+    }))->values();
 @endphp
 
 <div class="space-y-6" x-data="{ 
     selectedFilter: 'all', 
-    searchQuery: '',
+    searchQuery: @js(request('search', '')),
+    searchDropdownOpen: false,
     favoriteIds: @js($favoriteAppIds),
-    apps: @js($applications->map(fn($a) => ['id' => $a->id, 'name' => strtolower($a->name)])),
-    get filteredAppsCount() {
+    categories: @js($categoryOptions),
+    apps: @js($applications->map(fn($a) => [
+        'id' => $a->id,
+        'name' => $a->name,
+        'name_lower' => strtolower($a->name ?? ''),
+        'description' => $a->description ?? '',
+        'description_lower' => strtolower($a->description ?? ''),
+        'category_id' => $a->category_id ? (string)$a->category_id : '',
+        'category_name' => $a->category?->name ?? 'Umum',
+        'category_slug' => $a->category?->slug ?? '',
+        'logo_url' => $a->logo_url,
+        'visuals' => $getAppVisuals($a),
+        'launch_url' => route('oauth.authorize', [
+            'client_id' => $a->client_id,
+            'redirect_uri' => $a->redirect_uri,
+            'response_type' => 'code',
+            'scope' => 'openid profile email',
+        ]),
+        'favorite_toggle_url' => route('applications.favorite.toggle', $a),
+    ])->values()),
+    appsMap: {},
+    get currentCategory() {
+        return this.categories.find(c => c.id === this.selectedFilter) || this.categories[0];
+    },
+    get currentCategoryShortName() {
+        const cat = this.currentCategory;
+        return cat ? (cat.short_name || cat.name) : 'Semua';
+    },
+    getCategoryCount(cat) {
+        if (cat.id === 'favorites') {
+            return this.favoriteIds.length;
+        }
+        return cat.count;
+    },
+    get matchingApps() {
         const q = this.searchQuery.trim().toLowerCase();
         return this.apps.filter(app => {
-            const matchesFilter = (this.selectedFilter === 'all' || this.favoriteIds.includes(app.id));
-            const matchesQuery = (!q || app.name.includes(q));
-            return matchesFilter && matchesQuery;
-        }).length;
+            const matchesQuery = !q || (
+                app.name_lower.includes(q) || 
+                app.description_lower.includes(q) || 
+                app.category_name.toLowerCase().includes(q) ||
+                app.category_slug.includes(q)
+            );
+            const matchesCategory = (
+                this.selectedFilter === 'all' || 
+                (this.selectedFilter === 'favorites' && this.favoriteIds.includes(app.id)) ||
+                (this.selectedFilter === 'cat_' + app.category_id)
+            );
+            return matchesCategory && matchesQuery;
+        });
+    },
+    get filteredAppsCount() {
+        return this.matchingApps.length;
+    },
+    isAppVisible(appId) {
+        const app = this.appsMap[appId];
+        if (!app) return false;
+        const q = this.searchQuery.trim().toLowerCase();
+        const matchesQuery = !q || (
+            app.name_lower.includes(q) || 
+            app.description_lower.includes(q) || 
+            app.category_name.toLowerCase().includes(q) ||
+            app.category_slug.includes(q)
+        );
+        const matchesCategory = (
+            this.selectedFilter === 'all' || 
+            (this.selectedFilter === 'favorites' && this.favoriteIds.includes(app.id)) ||
+            (this.selectedFilter === 'cat_' + app.category_id)
+        );
+        return matchesCategory && matchesQuery;
+    },
+    setCategory(categoryId) {
+        this.selectedFilter = categoryId;
+        this.searchDropdownOpen = false;
+    },
+    resetFilters() {
+        this.selectedFilter = 'all';
+        this.searchQuery = '';
+        this.searchDropdownOpen = false;
     },
     init() {
+        this.apps.forEach(a => { this.appsMap[a.id] = a; });
         const storedFilter = localStorage.getItem('sipintu_catalog_filter');
-        if (storedFilter) {
+        if (storedFilter && (storedFilter === 'all' || storedFilter === 'favorites' || storedFilter.startsWith('cat_'))) {
             this.selectedFilter = storedFilter;
         }
         this.$watch('selectedFilter', val => localStorage.setItem('sipintu_catalog_filter', val));
@@ -123,12 +224,13 @@ x-on:favorite-updated.window="
     } else {
         favoriteIds = favoriteIds.filter(id => id !== $event.detail.appId);
     }
-">
-    <!-- Android Material You Style Top Bar (Filter Chips & Search) -->
-    <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 bg-white border border-slate-200/90 rounded-2xl p-3 sm:p-3.5 shadow-xs">
-        <!-- Material Filter Chips -->
+"
+@keydown.window="if ($event.key === '/' && !['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)) { $event.preventDefault(); $refs.catalogSearchInput?.focus(); searchDropdownOpen = true; }">
+    <!-- Android Material You Style Top Bar (Filter Chips & Search with Category Dropdown) -->
+    <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 bg-white border border-slate-200/90 rounded-2xl p-3 sm:p-3.5 shadow-xs">
+        <!-- Material Filter Chips (Semua, Favorit, & Kategori) -->
         <div class="flex items-center space-x-2 overflow-x-auto no-scrollbar py-0.5">
-            <button @click="selectedFilter = 'all'"
+            <button @click="setCategory('all')"
                     :class="selectedFilter === 'all' 
                         ? 'bg-emerald-700 text-white shadow-sm shadow-emerald-700/25 font-black ring-1 ring-emerald-700' 
                         : 'bg-slate-100/90 text-slate-700 hover:text-emerald-800 hover:bg-slate-200/80 font-bold border border-slate-200/70'"
@@ -137,7 +239,7 @@ x-on:favorite-updated.window="
                 <span class="px-1.5 py-0.5 rounded-md text-[10px] bg-black/15 font-mono">{{ $applications->count() }}</span>
             </button>
 
-            <button @click="selectedFilter = 'favorites'"
+            <button @click="setCategory('favorites')"
                     :class="selectedFilter === 'favorites' 
                         ? 'bg-amber-500 text-white shadow-sm shadow-amber-500/25 font-black ring-1 ring-amber-500' 
                         : 'bg-slate-100/90 text-slate-700 hover:text-amber-700 hover:bg-amber-50 font-bold border border-slate-200/70'"
@@ -148,21 +250,177 @@ x-on:favorite-updated.window="
                 <span>Favorit Saya</span>
                 <span class="px-1.5 py-0.5 rounded-md text-[10px] bg-black/15 font-mono" x-text="favoriteIds.length"></span>
             </button>
+
+            @foreach($appCategories as $cat)
+                @php
+                    $countInCat = $applications->where('category_id', $cat->id)->count();
+                @endphp
+                <button @click="setCategory('cat_{{ $cat->id }}')"
+                        :class="selectedFilter === 'cat_{{ $cat->id }}'
+                            ? 'bg-emerald-700 text-white shadow-sm shadow-emerald-700/25 font-black ring-1 ring-emerald-700'
+                            : 'bg-slate-100/90 text-slate-700 hover:text-emerald-800 hover:bg-slate-200/80 font-bold border border-slate-200/70'"
+                        class="px-3.5 py-2 rounded-xl text-xs transition-all whitespace-nowrap flex items-center space-x-2 shrink-0 active:scale-95">
+                    <span>{{ $cat->name }}</span>
+                    <span class="px-1.5 py-0.5 rounded-md text-[10px] bg-black/15 font-mono">{{ $countInCat }}</span>
+                </button>
+            @endforeach
         </div>
 
-        <!-- Material Search Pill -->
-        <div class="relative w-full md:w-72 shrink-0">
-            <input type="text" x-model="searchQuery" placeholder="Cari aplikasi..."
-                   class="w-full pl-9 pr-8 py-2 bg-slate-50 border border-slate-200/90 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/15 transition-all font-semibold">
-            <svg class="w-4 h-4 text-slate-400 absolute left-3 top-2.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-            </svg>
-            <button x-show="searchQuery.length > 0" 
-                    @click="searchQuery = ''"
-                    type="button"
-                    class="absolute right-2.5 top-2 text-slate-400 hover:text-slate-600 p-0.5 rounded-md">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-            </button>
+        <!-- Integrated Search Bar with Category Dropdown -->
+        <div class="relative w-full lg:w-96 shrink-0" @click.away="searchDropdownOpen = false">
+            <div class="flex items-center bg-slate-50 hover:bg-slate-100/80 focus-within:bg-white border border-slate-200/90 focus-within:border-emerald-600 focus-within:ring-2 focus-within:ring-emerald-600/15 rounded-xl transition-all shadow-2xs">
+                
+                <!-- Category Dropdown Trigger Button inside Search Bar -->
+                <button type="button"
+                        @click="searchDropdownOpen = !searchDropdownOpen"
+                        class="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-slate-700 hover:text-emerald-800 border-r border-slate-200/80 hover:bg-slate-100/90 transition-colors shrink-0 rounded-l-xl select-none"
+                        title="Pilih Kategori Aplikasi">
+                    <svg class="w-3.5 h-3.5 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                    </svg>
+                    <span class="max-w-[70px] sm:max-w-[100px] truncate" x-text="currentCategoryShortName">Semua</span>
+                    <svg class="w-3 h-3 text-slate-400 transition-transform duration-200 shrink-0" :class="searchDropdownOpen ? 'rotate-180 text-emerald-600' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+
+                <!-- Search Input Field -->
+                <div class="relative flex-1 min-w-0">
+                    <input type="text" 
+                           x-ref="catalogSearchInput"
+                           x-model="searchQuery" 
+                           @focus="searchDropdownOpen = true"
+                           @click="searchDropdownOpen = true"
+                           @input="searchDropdownOpen = true"
+                           @keydown.escape="if (searchDropdownOpen) { searchDropdownOpen = false; } else if (searchQuery.length > 0) { searchQuery = ''; } else { $refs.catalogSearchInput.blur(); }"
+                           placeholder="Cari aplikasi, kategori, deskripsi... (/)"
+                           class="w-full pl-2.5 pr-14 py-2 bg-transparent text-xs text-slate-800 placeholder-slate-400 focus:outline-none font-semibold">
+                    
+                    <div class="absolute right-2 top-1.5 flex items-center space-x-1">
+                        <span x-show="searchQuery.trim().length > 0" 
+                              x-cloak
+                              class="px-1.5 py-0.5 text-[9px] font-black bg-emerald-100 text-emerald-800 rounded-md border border-emerald-200" 
+                              x-text="filteredAppsCount"></span>
+                        <button x-show="searchQuery.length > 0" 
+                                @click="searchQuery = ''; $refs.catalogSearchInput.focus()"
+                                type="button"
+                                class="text-slate-400 hover:text-slate-700 p-0.5 rounded-md"
+                                title="Hapus pencarian">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Floating Category Dropdown Menu -->
+            <div x-show="searchDropdownOpen"
+                 x-cloak
+                 x-transition:enter="transition ease-out duration-150"
+                 x-transition:enter-start="opacity-0 translate-y-1.5 scale-98"
+                 x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                 x-transition:leave="transition ease-in duration-100"
+                 x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                 x-transition:leave-end="opacity-0 translate-y-1.5 scale-98"
+                 class="absolute left-0 right-0 sm:left-auto sm:right-0 sm:w-[380px] mt-2 bg-white rounded-2xl shadow-2xl border border-slate-200/90 z-40 overflow-hidden divide-y divide-slate-100">
+
+                <!-- Dropdown Header -->
+                <div class="px-3.5 py-2.5 bg-slate-50/90 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
+                        <span class="text-xs font-black text-slate-800">Kategori Aplikasi</span>
+                    </div>
+                    <span class="text-[10px] font-bold text-slate-500" x-text="(categories.length - 2) + ' Kategori Tersedia'"></span>
+                </div>
+
+                <!-- Category List -->
+                <div class="p-2 max-h-56 overflow-y-auto space-y-1 no-scrollbar">
+                    <template x-for="cat in categories" :key="cat.id">
+                        <button type="button"
+                                @click="setCategory(cat.id)"
+                                :class="selectedFilter === cat.id 
+                                    ? 'bg-emerald-50 text-emerald-900 font-black border-emerald-300 ring-1 ring-emerald-500/20' 
+                                    : 'bg-white hover:bg-slate-50 text-slate-700 border-transparent hover:border-slate-200 font-bold'"
+                                class="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs border transition-all text-left group active:scale-98">
+                            <div class="flex items-center gap-2.5 min-w-0">
+                                <template x-if="cat.id === 'all'">
+                                    <svg class="w-3.5 h-3.5 text-slate-500 group-hover:text-emerald-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+                                </template>
+                                <template x-if="cat.id === 'favorites'">
+                                    <svg class="w-3.5 h-3.5 text-amber-500 fill-current shrink-0" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                </template>
+                                <template x-if="cat.id !== 'all' && cat.id !== 'favorites'">
+                                    <span class="w-2 h-2 rounded-full shrink-0"
+                                          :class="selectedFilter === cat.id ? 'bg-emerald-600' : 'bg-slate-300 group-hover:bg-emerald-500'"></span>
+                                </template>
+                                <span class="truncate" x-text="cat.name"></span>
+                            </div>
+                            <div class="flex items-center gap-1.5 shrink-0 ml-2">
+                                <span class="px-1.5 py-0.5 rounded-md text-[10px] font-mono"
+                                      :class="selectedFilter === cat.id ? 'bg-emerald-200/80 text-emerald-900 font-bold' : 'bg-slate-100 text-slate-600'"
+                                      x-text="getCategoryCount(cat)"></span>
+                                <template x-if="selectedFilter === cat.id">
+                                    <svg class="w-3.5 h-3.5 text-emerald-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                </template>
+                            </div>
+                        </button>
+                    </template>
+                </div>
+
+                <!-- Live Matching Apps Preview when user is typing in search query -->
+                <div x-show="searchQuery.trim().length > 0" class="p-2.5 bg-slate-50/70 border-t border-slate-100">
+                    <div class="flex items-center justify-between px-1 mb-1.5">
+                        <span class="text-[10px] font-black uppercase tracking-wider text-slate-500">Pratinjau Hasil Pencarian</span>
+                        <span class="text-[10px] font-bold text-emerald-800" x-text="filteredAppsCount + ' hasil'"></span>
+                    </div>
+                    
+                    <div class="max-h-40 overflow-y-auto space-y-1 no-scrollbar">
+                        <template x-for="app in matchingApps.slice(0, 4)" :key="app.id">
+                            <a :href="app.launch_url"
+                               class="flex items-center justify-between p-2 rounded-xl bg-white hover:bg-emerald-50/80 border border-slate-200/80 hover:border-emerald-300 transition-all group">
+                                <div class="flex items-center gap-2 min-w-0">
+                                    <div class="w-6 h-6 rounded-lg shrink-0 flex items-center justify-center overflow-hidden border border-slate-200 text-white font-mono font-bold text-[9px]"
+                                         :class="app.logo_url ? 'bg-white' : ('bg-gradient-to-br ' + app.visuals.gradient)">
+                                        <template x-if="app.logo_url">
+                                            <img :src="app.logo_url" :alt="app.name" class="w-full h-full object-contain p-0.5">
+                                        </template>
+                                        <template x-if="!app.logo_url">
+                                            <span x-text="app.visuals.initials"></span>
+                                        </template>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <p class="text-xs font-bold text-slate-800 group-hover:text-emerald-800 truncate" x-text="app.name"></p>
+                                        <p class="text-[10px] text-slate-400 truncate" x-text="app.category_name"></p>
+                                    </div>
+                                </div>
+                                <span class="text-[10px] font-bold text-emerald-700 flex items-center gap-0.5 shrink-0 ml-2">
+                                    Buka
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                    </svg>
+                                </span>
+                            </a>
+                        </template>
+                        <template x-if="filteredAppsCount === 0">
+                            <div class="p-2.5 text-center text-xs text-slate-500">
+                                Tidak ada aplikasi yang cocok.
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Footer Bar in Dropdown -->
+                <div class="px-3.5 py-2 bg-slate-50 flex items-center justify-between text-[11px]">
+                    <button type="button"
+                            x-show="selectedFilter !== 'all' || searchQuery.trim().length > 0"
+                            @click="resetFilters()"
+                            class="text-rose-600 hover:text-rose-800 font-bold hover:underline transition-colors">
+                        Reset Semua Filter
+                    </button>
+                    <span class="text-slate-400 font-medium ml-auto">Tekan ESC untuk menutup</span>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -173,7 +431,7 @@ x-on:favorite-updated.window="
                 $visuals = $getAppVisuals($app);
                 $hasCustomLogo = !empty($app->logo_url);
             @endphp
-            <div x-show="(selectedFilter === 'all' || (selectedFilter === 'favorites' && favoriteIds.includes({{ $app->id }}))) && (searchQuery.trim() === '' || @js(strtolower($app->name)).includes(searchQuery.trim().toLowerCase()))"
+            <div x-show="isAppVisible({{ $app->id }})"
                  x-transition:enter="transition ease-out duration-200"
                  x-transition:enter-start="opacity-0 scale-95"
                  x-transition:enter-end="opacity-100 scale-100"
@@ -181,7 +439,7 @@ x-on:favorite-updated.window="
                  
                 <!-- Clickable Android App Tile -->
                 <a href="{{ route('oauth.authorize', ['client_id' => $app->client_id, 'redirect_uri' => $app->redirect_uri, 'response_type' => 'code', 'scope' => 'openid profile email']) }}"
-                   title="{{ $app->name }}{{ $app->description ? ' &bull; ' . $app->description : '' }}"
+                   title="{{ $app->name }}{{ $app->category ? ' (' . $app->category->name . ')' : '' }}{{ $app->description ? ' &bull; ' . $app->description : '' }}"
                    class="group w-full h-full flex flex-col items-center justify-start p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl bg-white border border-slate-200/90 hover:border-emerald-500 shadow-2xs hover:shadow-xl hover:shadow-emerald-900/10 transition-all duration-200 hover:-translate-y-1.5 active:scale-95 text-center cursor-pointer select-none">
                     
                     <!-- Android Squircle App Icon Container -->
@@ -228,9 +486,14 @@ x-on:favorite-updated.window="
 
                     <!-- Android App Label (Centered Below Icon) -->
                     <div class="mt-3 sm:mt-3.5 w-full flex-1 flex flex-col justify-start min-h-[2.5rem]">
-                        <span class="text-xs sm:text-sm font-extrabold text-slate-800 group-hover:text-emerald-700 transition-colors line-clamp-3 leading-snug break-words text-center px-1">
+                        <span class="text-xs sm:text-sm font-extrabold text-slate-800 group-hover:text-emerald-700 transition-colors line-clamp-2 leading-snug break-words text-center px-1">
                             {{ $app->name }}
                         </span>
+                        @if($app->category)
+                            <span class="text-[10px] text-slate-400 group-hover:text-emerald-600 font-semibold truncate mt-0.5">
+                                {{ $app->category->name }}
+                            </span>
+                        @endif
                     </div>
                 </a>
 
@@ -260,33 +523,60 @@ x-on:favorite-updated.window="
         @endforelse
 
         <!-- Search Empty State (No Matches) -->
-        <div x-show="filteredAppsCount === 0 && selectedFilter !== 'favorites' && searchQuery.trim() !== ''"
+        <div x-show="filteredAppsCount === 0 && searchQuery.trim() !== ''"
              x-cloak
-             class="col-span-full bg-white border border-slate-200/90 rounded-3xl p-8 sm:p-10 text-center text-slate-500 flex flex-col items-center justify-center space-y-2 shadow-xs">
-            <div class="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center mb-1">
+             class="col-span-full bg-white border border-slate-200/90 rounded-3xl p-8 sm:p-10 text-center text-slate-500 flex flex-col items-center justify-center space-y-3 shadow-xs">
+            <div class="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center shadow-xs">
                 <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                 </svg>
             </div>
-            <p class="text-sm font-black text-slate-800">Aplikasi Tidak Ditemukan</p>
-            <p class="text-xs text-slate-500 font-medium">Tidak ada aplikasi yang cocok dengan kata kunci &ldquo;<span class="font-bold text-emerald-800" x-text="searchQuery"></span>&rdquo;</p>
-            <button type="button" @click="searchQuery = ''" class="mt-2 px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold transition-all shadow-xs">
-                Bersihkan Pencarian
-            </button>
+            <div class="space-y-1">
+                <p class="text-sm font-black text-slate-800">Aplikasi Tidak Ditemukan</p>
+                <p class="text-xs text-slate-500 font-medium max-w-md">Tidak ada aplikasi yang cocok dengan kata kunci &ldquo;<span class="font-bold text-emerald-800 break-all" x-text="searchQuery"></span>&rdquo;</p>
+            </div>
+            <div class="flex items-center gap-2 pt-1">
+                <button type="button" @click="searchQuery = ''; $refs.catalogSearchInput?.focus()" class="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold transition-all shadow-xs">
+                    Bersihkan Pencarian
+                </button>
+                <button type="button" x-show="selectedFilter !== 'all'" @click="selectedFilter = 'all'; searchQuery = ''" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all border border-slate-200">
+                    Tampilkan Semua
+                </button>
+            </div>
         </div>
 
         <!-- Favorites Empty State -->
-        <div x-show="selectedFilter === 'favorites' && filteredAppsCount === 0"
+        <div x-show="filteredAppsCount === 0 && selectedFilter === 'favorites' && searchQuery.trim() === ''"
              x-cloak
-             class="col-span-full bg-white border border-slate-200/90 rounded-3xl p-8 sm:p-10 text-center text-slate-500 flex flex-col items-center justify-center space-y-2 shadow-xs">
-            <div class="w-14 h-14 rounded-2xl bg-amber-50 text-amber-500 flex items-center justify-center mb-1">
+             class="col-span-full bg-white border border-slate-200/90 rounded-3xl p-8 sm:p-10 text-center text-slate-500 flex flex-col items-center justify-center space-y-3 shadow-xs">
+            <div class="w-14 h-14 rounded-2xl bg-amber-50 text-amber-500 flex items-center justify-center shadow-xs">
                 <svg class="w-7 h-7 fill-current" viewBox="0 0 20 20">
                     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
                 </svg>
             </div>
-            <p class="text-sm font-black text-slate-800">Belum Ada Aplikasi Favorit</p>
-            <p class="text-xs text-slate-500 font-medium">Klik ikon bintang <span class="text-amber-500 font-bold">&#9733;</span> pada kartu aplikasi untuk menyematkannya di sini.</p>
-            <button type="button" @click="selectedFilter = 'all'" class="mt-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all border border-slate-200">
+            <div class="space-y-1">
+                <p class="text-sm font-black text-slate-800">Belum Ada Aplikasi Favorit</p>
+                <p class="text-xs text-slate-500 font-medium">Klik ikon bintang <span class="text-amber-500 font-bold">&#9733;</span> pada kartu aplikasi untuk menyematkannya di sini.</p>
+            </div>
+            <button type="button" @click="selectedFilter = 'all'" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all border border-slate-200">
+                Lihat Semua Aplikasi
+            </button>
+        </div>
+
+        <!-- Category Empty State -->
+        <div x-show="filteredAppsCount === 0 && selectedFilter !== 'all' && selectedFilter !== 'favorites' && searchQuery.trim() === ''"
+             x-cloak
+             class="col-span-full bg-white border border-slate-200/90 rounded-3xl p-8 sm:p-10 text-center text-slate-500 flex flex-col items-center justify-center space-y-3 shadow-xs">
+            <div class="w-14 h-14 rounded-2xl bg-slate-100 text-slate-500 flex items-center justify-center shadow-xs">
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                </svg>
+            </div>
+            <div class="space-y-1">
+                <p class="text-sm font-black text-slate-800">Belum Ada Aplikasi di Kategori Ini</p>
+                <p class="text-xs text-slate-500 font-medium">Tidak ada aplikasi yang tersedia dalam kategori yang Anda pilih.</p>
+            </div>
+            <button type="button" @click="selectedFilter = 'all'" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all border border-slate-200">
                 Lihat Semua Aplikasi
             </button>
         </div>
