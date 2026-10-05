@@ -228,8 +228,8 @@ x-on:favorite-updated.window="
 @keydown.window="if ($event.key === '/' && !['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)) { $event.preventDefault(); $refs.catalogSearchInput?.focus(); searchDropdownOpen = true; }">
     <!-- Android Material You Style Top Bar (Filter Chips & Search with Category Dropdown) -->
     <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 bg-white border border-slate-200/90 rounded-2xl p-3 sm:p-3.5 shadow-xs">
-        <!-- Material Filter Chips (Semua, Favorit, & Kategori) -->
-        <div class="flex items-center space-x-2 overflow-x-auto no-scrollbar py-0.5">
+        <!-- Quick Filter Buttons  -->
+        <div class="flex items-center space-x-2 shrink-0 py-0.5 overflow-x-auto no-scrollbar">
             <button @click="setCategory('all')"
                     :class="selectedFilter === 'all' 
                         ? 'bg-emerald-700 text-white shadow-sm shadow-emerald-700/25 font-black ring-1 ring-emerald-700' 
@@ -251,19 +251,16 @@ x-on:favorite-updated.window="
                 <span class="px-1.5 py-0.5 rounded-md text-[10px] bg-black/15 font-mono" x-text="favoriteIds.length"></span>
             </button>
 
-            @foreach($appCategories as $cat)
-                @php
-                    $countInCat = $applications->where('category_id', $cat->id)->count();
-                @endphp
-                <button @click="setCategory('cat_{{ $cat->id }}')"
-                        :class="selectedFilter === 'cat_{{ $cat->id }}'
-                            ? 'bg-emerald-700 text-white shadow-sm shadow-emerald-700/25 font-black ring-1 ring-emerald-700'
-                            : 'bg-slate-100/90 text-slate-700 hover:text-emerald-800 hover:bg-slate-200/80 font-bold border border-slate-200/70'"
-                        class="px-3.5 py-2 rounded-xl text-xs transition-all whitespace-nowrap flex items-center space-x-2 shrink-0 active:scale-95">
-                    <span>{{ $cat->name }}</span>
-                    <span class="px-1.5 py-0.5 rounded-md text-[10px] bg-black/15 font-mono">{{ $countInCat }}</span>
-                </button>
-            @endforeach
+            <!-- Active Category Pill if filtered from Search Bar Dropdown -->
+            <template x-if="selectedFilter.startsWith('cat_')">
+                <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black bg-emerald-50 text-emerald-900 border border-emerald-300 shadow-2xs shrink-0">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                    <span class="max-w-[130px] truncate" x-text="currentCategoryLabel"></span>
+                    <button type="button" @click="setCategory('all')" class="text-slate-400 hover:text-rose-600 p-0.5 rounded transition-colors" title="Hapus filter kategori">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+            </template>
         </div>
 
         <!-- Integrated Search Bar with Category Dropdown -->
@@ -293,7 +290,7 @@ x-on:favorite-updated.window="
                            @click="searchDropdownOpen = true"
                            @input="searchDropdownOpen = true"
                            @keydown.escape="if (searchDropdownOpen) { searchDropdownOpen = false; } else if (searchQuery.length > 0) { searchQuery = ''; } else { $refs.catalogSearchInput.blur(); }"
-                           placeholder="Cari aplikasi, kategori, deskripsi... (/)"
+                           placeholder="Cari aplikasi (/)"
                            class="w-full pl-2.5 pr-14 py-2 bg-transparent text-xs text-slate-800 placeholder-slate-400 focus:outline-none font-semibold">
                     
                     <div class="absolute right-2 top-1.5 flex items-center space-x-1">

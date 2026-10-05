@@ -144,7 +144,7 @@ class SecurityService
 
         $ip = $ip ?: (request()->ip() ?: '127.0.0.1');
         $identifierKey = strtolower(trim((string) $identifier));
-        $cacheKey = "security:account_locked:".md5($identifierKey.'|'.$ip);
+        $cacheKey = 'security:account_locked:'.md5($identifierKey.'|'.$ip);
 
         return Cache::has($cacheKey);
     }
@@ -160,7 +160,7 @@ class SecurityService
 
         $ip = $ip ?: (request()->ip() ?: '127.0.0.1');
         $identifierKey = strtolower(trim((string) $identifier));
-        $cacheKey = "security:account_locked:".md5($identifierKey.'|'.$ip);
+        $cacheKey = 'security:account_locked:'.md5($identifierKey.'|'.$ip);
 
         $lockedUntil = Cache::get($cacheKey);
         if (! $lockedUntil) {
@@ -190,14 +190,14 @@ class SecurityService
         Cache::put($ipCacheKey, $ipAttempts, now()->addMinutes($windowMinutes));
 
         // 2. Track failures specifically for this target account on this IP within 3 minutes
-        $accountCacheKey = "security:failed_login_account:".md5($identifierKey.'|'.$ip);
+        $accountCacheKey = 'security:failed_login_account:'.md5($identifierKey.'|'.$ip);
         $accountAttempts = (int) Cache::get($accountCacheKey, 0) + 1;
         Cache::put($accountCacheKey, $accountAttempts, now()->addMinutes($windowMinutes));
 
         $isAccountLocked = false;
         if (! empty($identifierKey) && $accountAttempts >= $maxAttempts) {
             $lockExpiry = now()->addMinutes($timeoutMinutes);
-            Cache::put("security:account_locked:".md5($identifierKey.'|'.$ip), $lockExpiry, $lockExpiry);
+            Cache::put('security:account_locked:'.md5($identifierKey.'|'.$ip), $lockExpiry, $lockExpiry);
             Cache::forget($accountCacheKey);
             $isAccountLocked = true;
         }
@@ -249,8 +249,8 @@ class SecurityService
 
             // Clear account failure count and lock state for all identifiers of this user
             foreach ($identifiersToClear as $idKey) {
-                Cache::forget("security:failed_login_account:".md5($idKey.'|'.$ip));
-                Cache::forget("security:account_locked:".md5($idKey.'|'.$ip));
+                Cache::forget('security:failed_login_account:'.md5($idKey.'|'.$ip));
+                Cache::forget('security:account_locked:'.md5($idKey.'|'.$ip));
             }
 
             // Decrement IP failure count on legitimate login so school networks stay healthy

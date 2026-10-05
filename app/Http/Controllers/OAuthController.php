@@ -13,6 +13,7 @@ use App\Services\SecurityService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
@@ -415,7 +416,7 @@ class OAuthController extends Controller
                 ], 400);
             }
 
-            \Illuminate\Support\Facades\Cache::forget('security:failed_login_account:'.md5(strtolower(trim($identity)).'|'.$clientIp));
+            Cache::forget('security:failed_login_account:'.md5(strtolower(trim($identity)).'|'.$clientIp));
 
             if ($user->status !== 'active') {
                 return response()->json([

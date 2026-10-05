@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Application;
+use App\Models\ApplicationCategory;
 use App\Models\Role;
 use App\Services\AuditLogger;
 use Exception;
@@ -18,7 +19,7 @@ class AdminApplicationController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Application::with(['roles']);
+        $query = Application::with(['roles', 'category']);
 
         if ($request->filled('search')) {
             $search = trim($request->search);
@@ -49,10 +50,11 @@ class AdminApplicationController extends Controller
     public function create()
     {
         $roles = Role::all();
+        $categories = ApplicationCategory::where('is_active', true)->orderBy('display_order')->get();
         $generatedClientId = 'app_'.Str::lower(Str::random(12));
         $generatedSecret = 'sec_'.Str::random(32);
 
-        return view('admin.applications.create', compact('roles', 'generatedClientId', 'generatedSecret'));
+        return view('admin.applications.create', compact('roles', 'categories', 'generatedClientId', 'generatedSecret'));
     }
 
     public function show(Application $application): RedirectResponse
@@ -75,6 +77,7 @@ class AdminApplicationController extends Controller
             'logout_uri' => ['nullable', 'string'],
             'scopes' => ['required', 'string'],
             'status' => ['required', Rule::in(['active', 'maintenance', 'inactive'])],
+            'category_id' => ['nullable', 'exists:application_categories,id'],
             'health_check_url' => ['nullable', 'url'],
             'roles' => ['required', 'array'],
             'roles.*' => ['exists:roles,id'],
@@ -106,6 +109,7 @@ class AdminApplicationController extends Controller
             'logout_uri' => $validated['logout_uri'] ?? null,
             'scopes' => $validated['scopes'],
             'status' => $validated['status'],
+            'category_id' => $validated['category_id'] ?? null,
             'health_check_url' => $validated['health_check_url'] ?? null,
             'last_health_status' => ($validated['health_check_url'] ?? null) ? 'online' : null,
         ]);
@@ -127,8 +131,9 @@ class AdminApplicationController extends Controller
     public function edit(Application $application)
     {
         $roles = Role::all();
+        $categories = ApplicationCategory::where('is_active', true)->orderBy('display_order')->get();
 
-        return view('admin.applications.edit', compact('application', 'roles'));
+        return view('admin.applications.edit', compact('application', 'roles', 'categories'));
     }
 
     public function update(Request $request, Application $application): RedirectResponse
@@ -144,6 +149,7 @@ class AdminApplicationController extends Controller
             'logout_uri' => ['nullable', 'string'],
             'scopes' => ['required', 'string'],
             'status' => ['required', Rule::in(['active', 'maintenance', 'inactive'])],
+            'category_id' => ['nullable', 'exists:application_categories,id'],
             'health_check_url' => ['nullable', 'url'],
             'roles' => ['required', 'array'],
             'roles.*' => ['exists:roles,id'],
@@ -177,6 +183,7 @@ class AdminApplicationController extends Controller
             'logout_uri' => $validated['logout_uri'] ?? null,
             'scopes' => $validated['scopes'],
             'status' => $validated['status'],
+            'category_id' => $validated['category_id'] ?? null,
             'health_check_url' => $validated['health_check_url'] ?? null,
         ]);
 

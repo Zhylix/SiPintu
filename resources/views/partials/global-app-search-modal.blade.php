@@ -352,16 +352,16 @@ x-on:favorite-updated.window="
                     <span class="px-1 py-0.2 text-[9px] rounded bg-black/10 font-mono" x-text="favoriteIds.length"></span>
                 </button>
 
-                @foreach($modalCategories as $cat)
-                    <button type="button"
-                            @click="setCategory('cat_{{ $cat->id }}')"
-                            :class="selectedCategory === 'cat_{{ $cat->id }}' 
-                                ? 'bg-emerald-700 text-white font-extrabold shadow-2xs' 
-                                : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200/80 font-bold'"
-                            class="px-3 py-1 rounded-xl text-xs transition-all shrink-0">
-                        {{ $cat->name }}
-                    </button>
-                @endforeach
+                <!-- Active Category Pill if filtered from Dropdown -->
+                <template x-if="selectedCategory.startsWith('cat_')">
+                    <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-black bg-emerald-50 text-emerald-900 border border-emerald-300 shadow-2xs shrink-0">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                        <span class="max-w-[120px] truncate" x-text="currentCategoryLabel"></span>
+                        <button type="button" @click="setCategory('all')" class="text-slate-400 hover:text-rose-600 p-0.5 rounded transition-colors" title="Hapus filter kategori">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                    </div>
+                </template>
             </div>
 
             <!-- Results List / Scroll Area -->

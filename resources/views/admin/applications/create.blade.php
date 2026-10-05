@@ -137,7 +137,19 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Kategori Aplikasi</label>
+                <select name="category_id" class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm font-semibold focus:bg-white focus:border-emerald-600 focus:outline-none transition-all">
+                    <option value="">-- Tanpa Kategori (Umum) --</option>
+                    @foreach($categories as $category)
+                        <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>
+                            {{ $category->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
             <div>
                 <label class="block text-xs font-bold text-slate-700 mb-1.5">Scopes OAuth</label>
                 <input type="text" name="scopes" value="{{ old('scopes', 'openid profile email') }}" required
@@ -147,9 +159,9 @@
             <div>
                 <label class="block text-xs font-bold text-slate-700 mb-1.5">Status Registrasi</label>
                 <select name="status" required class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm font-semibold focus:bg-white focus:border-emerald-600 focus:outline-none transition-all">
-                    <option value="active">Active (Aktif)</option>
-                    <option value="maintenance">Maintenance (Pemeliharaan)</option>
-                    <option value="inactive">Inactive (Non-Aktif)</option>
+                    <option value="active" {{ old('status') === 'active' ? 'selected' : '' }}>Active (Aktif)</option>
+                    <option value="maintenance" {{ old('status') === 'maintenance' ? 'selected' : '' }}>Maintenance (Pemeliharaan)</option>
+                    <option value="inactive" {{ old('status') === 'inactive' ? 'selected' : '' }}>Inactive (Non-Aktif)</option>
                 </select>
             </div>
         </div>

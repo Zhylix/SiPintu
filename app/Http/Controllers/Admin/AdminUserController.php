@@ -7,6 +7,7 @@ use App\Models\Jurusan;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\AuditLogger;
+use App\Services\PasswordSyncService;
 use App\Services\UserImportService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -184,7 +185,7 @@ class AdminUserController extends Controller
         $user->syncRoles([$role]);
 
         if ($passwordChanged) {
-            app(\App\Services\PasswordSyncService::class)->broadcastPasswordChange($user);
+            app(PasswordSyncService::class)->broadcastPasswordChange($user);
         }
 
         AuditLogger::log('admin_update_user', [

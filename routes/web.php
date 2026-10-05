@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AdminAnalyticsController;
 use App\Http\Controllers\Admin\AdminAnnouncementController;
+use App\Http\Controllers\Admin\AdminApplicationCategoryController;
 use App\Http\Controllers\Admin\AdminApplicationController;
 use App\Http\Controllers\Admin\AdminAuditLogController;
 use App\Http\Controllers\Admin\AdminDashboardController;
@@ -288,6 +289,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::post('/applications/{application}/regenerate-secret', [AdminApplicationController::class, 'regenerateSecret'])->name('applications.regenerate-secret');
     Route::post('/applications/{application}/test-health', [AdminApplicationController::class, 'testHealth'])->name('applications.test-health');
     Route::delete('/applications/{application}/logo', [AdminApplicationController::class, 'destroyLogo'])->name('applications.destroy-logo');
+
+    // Application Categories Management (CRUD)
+    Route::resource('categories', AdminApplicationCategoryController::class)->except(['create', 'show', 'edit']);
 
     // Role & Permission Management
     Route::get('/roles', [AdminRoleController::class, 'index'])->name('roles.index');
