@@ -250,17 +250,6 @@ x-on:favorite-updated.window="
                 <span>Favorit Saya</span>
                 <span class="px-1.5 py-0.5 rounded-md text-[10px] bg-black/15 font-mono" x-text="favoriteIds.length"></span>
             </button>
-
-            <!-- Active Filter -->
-            <template x-if="selectedFilter.startsWith('cat_')">
-                <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black bg-emerald-50 text-emerald-900 border border-emerald-300 shadow-2xs shrink-0">
-                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
-                    <span class="max-w-[130px] truncate" x-text="currentCategoryLabel"></span>
-                    <button type="button" @click="setCategory('all')" class="text-slate-400 hover:text-rose-600 p-0.5 rounded transition-colors" title="Hapus filter kategori">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                    </button>
-                </div>
-            </template>
         </div>
 
         <!-- Search Bar & Category Filter-->
