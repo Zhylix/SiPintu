@@ -372,7 +372,7 @@
 
                         <!-- Description -->
                         <p class="text-xs text-slate-600 line-clamp-2 leading-relaxed font-medium">
-                            {{ $app->description ?: 'Aplikasi SiPintu SMKN 1 Bangsri.' }}
+                            {{ $app->description ?: 'SiPintu SMKN 1 Bangsri.' }}
                         </p>
 
                         <!-- Credentials & Endpoints Box -->

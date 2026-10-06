@@ -129,7 +129,7 @@
 
                     <!-- Auth & Install Action Buttons -->
                     <div class="flex items-center space-x-3">
-                        <button type="button" onclick="window.installSiPintuPwa(this)" data-pwa-install-btn class="inline-flex items-center space-x-1.5 px-3.5 py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs font-extrabold rounded-xl shadow-xs transition-all cursor-pointer" title="Pasang Aplikasi di Layar Utama HP / Laptop">
+                        <button type="button" onclick="window.installSiPintuPwa(this)" data-pwa-install-btn class="hidden md:hidden inline-flex items-center space-x-1.5 px-3.5 py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs font-extrabold rounded-xl shadow-xs transition-all cursor-pointer" title="Pasang SiPintu di Layar Utama HP">
                             <svg class="w-4 h-4 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                             <span>Install</span>
                         </button>

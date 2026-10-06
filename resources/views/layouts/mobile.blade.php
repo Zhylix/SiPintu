@@ -118,7 +118,7 @@
 
             <!-- Profile Badge / Actions (Non-wrapping) -->
             <div class="flex items-center space-x-2 shrink-0">
-                <button type="button" onclick="window.installSiPintuPwa(this)" data-pwa-install-btn class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-brand-primary hover:bg-brand-hover active:scale-95 text-white flex items-center gap-1 shadow-xs transition-all cursor-pointer whitespace-nowrap" title="Pasang SiPintu di Layar Utama HP">
+                <button type="button" onclick="window.installSiPintuPwa(this)" data-pwa-install-btn class="hidden px-2.5 py-1 rounded-full text-[10px] font-bold bg-brand-primary hover:bg-brand-hover active:scale-95 text-white flex items-center gap-1 shadow-xs transition-all cursor-pointer whitespace-nowrap" title="Pasang SiPintu di Layar Utama HP">
                     <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                     <span>Install</span>
                 </button>

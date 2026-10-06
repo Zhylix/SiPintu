@@ -4,6 +4,15 @@
                            window.navigator.standalone === true ||
                            document.referrer.includes('android-app://');
 
+        // Deteksi apakah perangkat adalah mobile (smartphone atau tablet)
+        function isMobileDevice() {
+            var ua = navigator.userAgent || navigator.vendor || window.opera || '';
+            var isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|mobile|CriOS/i.test(ua);
+            var isIPadOS = (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+            var isSmallTouch = (('ontouchstart' in window || navigator.maxTouchPoints > 0) && window.innerWidth <= 1024);
+            return isMobileUA || isIPadOS || isSmallTouch;
+        }
+
         function getPrompt() {
             return window.deferredPWAInstallPrompt || window.deferredPwaPrompt || null;
         }
@@ -60,8 +69,14 @@
 
         // Pemicu Klik Pasang Universal
         window.installSiPintuPwa = function (btnElement) {
+            // Cegah pemasangan di Desktop
+            if (!isMobileDevice()) {
+                pwaNotify('info', 'Pemasangan aplikasi SiPintu Mobile hanya tersedia di perangkat smartphone / tablet (HP).', 'SiPintu Mobile');
+                return;
+            }
+
             if (isStandalone) {
-                pwaNotify('info', 'Aplikasi SiPintu sudah terpasang dan aktif di perangkat Anda.', 'SiPintu');
+                pwaNotify('info', 'SiPintu Mobile sudah terpasang dan aktif di perangkat Anda.', 'SiPintu');
                 return;
             }
 
@@ -104,29 +119,37 @@
         };
 
         function updateInstallButtonState() {
+            var isMobile = isMobileDevice();
             var buttons = document.querySelectorAll('[data-pwa-install-btn]');
             buttons.forEach(function (btn) {
-                if (isStandalone) {
+                if (!isMobile || isStandalone) {
                     btn.classList.add('hidden');
+                    btn.style.setProperty('display', 'none', 'important');
                 } else {
                     btn.classList.remove('hidden');
+                    btn.style.removeProperty('display');
                 }
             });
 
-            var profileBadge = document.getElementById('profile-pwa-badge');
-            if (profileBadge) {
+            var profileBadges = document.querySelectorAll('#profile-pwa-badge, [data-pwa-badge]');
+            profileBadges.forEach(function (badge) {
                 if (isStandalone) {
-                    profileBadge.innerText = '✓ Terpasang';
-                    profileBadge.className = 'px-2 py-0.5 text-[10px] font-black rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300';
+                    badge.innerText = '✓ Terpasang';
+                    badge.className = 'px-2 py-0.5 text-[10px] font-black rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300';
                 } else {
-                    profileBadge.innerText = 'Tersedia';
-                    profileBadge.className = 'px-2 py-0.5 text-[10px] font-black rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200';
+                    badge.innerText = 'Tersedia';
+                    badge.className = 'px-2 py-0.5 text-[10px] font-black rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200';
                 }
-            }
+            });
         }
 
-        document.addEventListener('DOMContentLoaded', function () {
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', updateInstallButtonState);
+        } else {
             updateInstallButtonState();
-        });
+        }
+
+        window.addEventListener('resize', updateInstallButtonState);
+        window.addEventListener('orientationchange', updateInstallButtonState);
     })();
 </script>

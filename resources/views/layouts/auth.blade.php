@@ -119,13 +119,13 @@
 
         @yield('content')
 
-        <!-- PWA Install Badge for Login Screen -->
-        <div data-pwa-install-btn class="mt-4 p-3.5 bg-gradient-to-r from-emerald-50 via-white to-teal-50/50 border-2 border-emerald-500/30 rounded-2xl flex items-center justify-between shadow-sm">
+        <!-- PWA Install Badge for Login Screen (Khusus Mobile) -->
+        <div data-pwa-install-btn class="hidden md:hidden mt-4 p-3.5 bg-gradient-to-r from-emerald-50 via-white to-teal-50/50 border-2 border-emerald-500/30 rounded-2xl flex items-center justify-between shadow-sm">
             <div class="flex items-center space-x-3 min-w-0">
                 <img src="{{ $siteIconUrl }}?v={{ $iconVersion }}" alt="SiPintu" class="w-10 h-10 rounded-xl object-contain bg-white p-1 border border-emerald-300 shadow-xs shrink-0">
                 <div class="truncate">
                     <div class="text-xs font-black text-emerald-950 flex items-center gap-1.5">
-                        <span>Aplikasi SiPintu Mobile</span>
+                        <span>SiPintu Mobile</span>
                     </div>
                     <div class="text-[10px] text-slate-600 font-medium truncate">Pasang di Layar Utama HP</div>
                 </div>
