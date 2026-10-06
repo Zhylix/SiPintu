@@ -158,7 +158,7 @@
         </form>
     </div>
 
-    <!-- Batch Action Toolbar (When Items are Selected or Resolve All) -->
+    <!-- Batch Action Toolbar -->
     <div class="flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-100/70 p-3.5 rounded-2xl border border-slate-200">
         <div class="flex items-center gap-2">
             <span class="text-xs font-bold text-slate-700">Aksi Cepat Massal:</span>
@@ -166,7 +166,7 @@
                 @csrf
                 <input type="hidden" name="resolve_all_unresolved" value="1">
                 <button type="submit" class="px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold transition-all shadow-xs cursor-pointer">
-                    Selesaikan Semua Belum Selesai ({{ $stats['unresolved'] }})
+                    Selesaikan Semua ({{ $stats['unresolved'] }})
                 </button>
             </form>
         </div>
@@ -271,9 +271,6 @@
                                         </div>
                                     </div>
                                 @else
-                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600">
-                                        Tamu / Publik
-                                    </span>
                                 @endif
                             </td>
 

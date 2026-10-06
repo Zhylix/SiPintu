@@ -63,9 +63,6 @@
             <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
             Muat Ulang
         </button>
-        <a href="{{ url('/') }}" class="inline-flex items-center justify-center flex-1 py-3 px-4 bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold rounded-xl transition-all text-xs text-center shadow-md shadow-emerald-700/20">
-            Kembali ke Beranda
-        </a>
     </div>
 </div>
 @endsection
