@@ -884,14 +884,40 @@ class AuthController extends Controller
     {
         $user = Auth::user();
 
+        // 1. Double-submit protection:
+        // If current_password does not match DB, but the newly submitted password ALREADY matches DB,
+        // it means a prior concurrent request (e.g. rapid double-click) already successfully updated the password.
+        // Return success immediately to avoid false "Kata sandi saat ini tidak cocok" error.
+        if (
+            $request->filled('password') &&
+            $request->filled('current_password') &&
+            $request->current_password !== $request->password &&
+            ! Hash::check($request->current_password, $user->password) &&
+            Hash::check($request->password, $user->password)
+        ) {
+            $rawPhone = trim((string) $request->phone);
+            $cleanPhone = preg_replace('/[^\d+]/', '', $rawPhone);
+            if (! empty($cleanPhone) && $user->phone !== $cleanPhone) {
+                $user->update(['phone' => $cleanPhone]);
+            }
+
+            return back()
+                ->with('success', 'Kata sandi dan nomor WhatsApp Anda berhasil diperbarui serta langsung disinkronkan ke seluruh aplikasi downstream.')
+                ->with('active_section', 'ganti_password');
+        }
+
         $request->validate([
             'current_password' => ['required', 'current_password'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'password' => ['required', 'string', 'min:8', 'confirmed', 'different:current_password', 'not_in:password'],
             'phone' => ['required', 'string', 'min:9', 'max:25', 'regex:/^(\+?[0-9\s\-()]{9,25})$/'],
         ], [
+            'current_password.required' => 'Kata sandi saat ini wajib diisi.',
             'current_password.current_password' => 'Kata sandi saat ini tidak cocok.',
+            'password.required' => 'Kata sandi baru wajib diisi.',
             'password.confirmed' => 'Konfirmasi kata sandi baru tidak cocok.',
             'password.min' => 'Kata sandi baru minimal 8 karakter.',
+            'password.different' => 'Kata sandi baru tidak boleh sama dengan kata sandi saat ini.',
+            'password.not_in' => 'Kata sandi baru tidak boleh menggunakan kata sandi bawaan (password).',
             'phone.required' => 'Nomor WhatsApp aktif wajib diisi saat mengganti kata sandi.',
             'phone.min' => 'Nomor WhatsApp minimal 9 digit.',
             'phone.regex' => 'Format nomor WhatsApp tidak valid. Masukkan nomor telepon yang valid (contoh: 081234567890 atau +6281234567890).',
@@ -907,16 +933,12 @@ class AuthController extends Controller
             'wa_notify' => true,
         ]);
 
-        // Broadcast updated user data (password & phone) to all active downstream SSO client applications
-        $syncResult = app(UserDataSyncService::class)->broadcastUserUpdate(
-            $user,
-            ['password', 'phone'],
-            force: true
-        );
+        // Downstream sync is automatically handled after response by UserObserver::updated.
+        $activeAppsCount = Application::where('status', 'active')->count();
 
         AuditLogger::log('change_password_and_phone_success', [
             'phone' => $cleanPhone,
-            'synced_apps_count' => $syncResult['synced_apps_count'] ?? 0,
+            'synced_apps_count' => $activeAppsCount,
         ], $user->id);
 
         return back()

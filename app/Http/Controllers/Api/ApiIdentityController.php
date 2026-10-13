@@ -453,7 +453,7 @@ class ApiIdentityController extends Controller
     }
 
     /**
-     * Gateway Proxy API: Retrieve teachers data from SIJUNA (https://sijuna.com/api/guru)
+     * Gateway Proxy API: Retrieve teachers data from SIJUNA
      */
     public function teachers(Request $request, SijunaApiService $sijunaService): JsonResponse
     {
