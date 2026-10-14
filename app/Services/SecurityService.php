@@ -78,6 +78,12 @@ class SecurityService
 
         // 2. Temporary 15-minute timeout for 15 failures in 3 minutes (in cache, no DB blocking)
         if (Cache::has("security:ip_timeout:{$ip}")) {
+            $timeoutExpiry = $this->parseCachedExpiry(Cache::get("security:ip_timeout:{$ip}"));
+            if ($timeoutExpiry && $timeoutExpiry->isPast()) {
+                Cache::forget("security:ip_timeout:{$ip}");
+                return false;
+            }
+
             return ! $this->isWhitelistedIp($ip);
         }
 
@@ -106,8 +112,14 @@ class SecurityService
             return $activeBlock;
         }
 
-        $timeoutExpiry = Cache::get("security:ip_timeout:{$ip}");
+        $timeoutExpiryRaw = Cache::get("security:ip_timeout:{$ip}");
+        $timeoutExpiry = $this->parseCachedExpiry($timeoutExpiryRaw);
         if ($timeoutExpiry) {
+            if ($timeoutExpiry->isPast()) {
+                Cache::forget("security:ip_timeout:{$ip}");
+                return null;
+            }
+
             return new BlockedIp([
                 'ip_address' => $ip,
                 'reason' => 'Time out 15 menit karena terdeteksi 15 kali percobaan login gagal dalam 3 menit.',
@@ -125,8 +137,9 @@ class SecurityService
     public function getIpTimeoutRemainingMinutes(?string $ip = null): int
     {
         $ip = $ip ?: (request()->ip() ?: '127.0.0.1');
-        $timeoutExpiry = Cache::get("security:ip_timeout:{$ip}");
-        if (! $timeoutExpiry) {
+        $timeoutExpiryRaw = Cache::get("security:ip_timeout:{$ip}");
+        $timeoutExpiry = $this->parseCachedExpiry($timeoutExpiryRaw);
+        if (! $timeoutExpiry || $timeoutExpiry->isPast()) {
             return 0;
         }
 
@@ -146,7 +159,16 @@ class SecurityService
         $identifierKey = strtolower(trim((string) $identifier));
         $cacheKey = 'security:account_locked:'.md5($identifierKey.'|'.$ip);
 
-        return Cache::has($cacheKey);
+        if (Cache::has($cacheKey)) {
+            $lockExpiry = $this->parseCachedExpiry(Cache::get($cacheKey));
+            if ($lockExpiry && $lockExpiry->isPast()) {
+                Cache::forget($cacheKey);
+                return false;
+            }
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -162,8 +184,9 @@ class SecurityService
         $identifierKey = strtolower(trim((string) $identifier));
         $cacheKey = 'security:account_locked:'.md5($identifierKey.'|'.$ip);
 
-        $lockedUntil = Cache::get($cacheKey);
-        if (! $lockedUntil) {
+        $lockedUntilRaw = Cache::get($cacheKey);
+        $lockedUntil = $this->parseCachedExpiry($lockedUntilRaw);
+        if (! $lockedUntil || $lockedUntil->isPast()) {
             return 0;
         }
 
@@ -197,7 +220,7 @@ class SecurityService
         $isAccountLocked = false;
         if (! empty($identifierKey) && $accountAttempts >= $maxAttempts) {
             $lockExpiry = now()->addMinutes($timeoutMinutes);
-            Cache::put('security:account_locked:'.md5($identifierKey.'|'.$ip), $lockExpiry, $lockExpiry);
+            Cache::put('security:account_locked:'.md5($identifierKey.'|'.$ip), $lockExpiry->toIso8601String(), $lockExpiry);
             Cache::forget($accountCacheKey);
             $isAccountLocked = true;
         }
@@ -207,7 +230,7 @@ class SecurityService
 
         if ($shouldTimeoutIp) {
             $ipTimeoutExpiry = now()->addMinutes($timeoutMinutes);
-            Cache::put("security:ip_timeout:{$ip}", $ipTimeoutExpiry, $ipTimeoutExpiry);
+            Cache::put("security:ip_timeout:{$ip}", $ipTimeoutExpiry->toIso8601String(), $ipTimeoutExpiry);
             Cache::forget($ipCacheKey);
         }
 
@@ -281,5 +304,52 @@ class SecurityService
     {
         Cache::forget("security:failed_login_count:{$ip}");
         Cache::forget("security:ip_timeout:{$ip}");
+    }
+
+    /**
+     * Safely parse a cached expiry value into a Carbon instance.
+     * Supports ISO strings, Carbon/DateTime instances, Unix timestamps,
+     * and gracefully recovers from __PHP_Incomplete_Class (serialized Carbon objects with restricted classes).
+     */
+    public function parseCachedExpiry(mixed $value): ?\Carbon\CarbonInterface
+    {
+        if (empty($value)) {
+            return null;
+        }
+
+        if ($value instanceof \Carbon\CarbonInterface) {
+            return $value;
+        }
+
+        if ($value instanceof \DateTimeInterface) {
+            return \Illuminate\Support\Carbon::instance($value);
+        }
+
+        if (is_numeric($value)) {
+            return \Illuminate\Support\Carbon::createFromTimestamp((int) $value);
+        }
+
+        if (is_string($value)) {
+            try {
+                return \Illuminate\Support\Carbon::parse($value);
+            } catch (\Throwable) {
+                return null;
+            }
+        }
+
+        if ($value instanceof \__PHP_Incomplete_Class || is_object($value)) {
+            $data = (array) $value;
+            if (! empty($data['date']) && is_string($data['date'])) {
+                try {
+                    $tz = ! empty($data['timezone']) && is_string($data['timezone']) ? $data['timezone'] : null;
+
+                    return \Illuminate\Support\Carbon::parse($data['date'], $tz);
+                } catch (\Throwable) {
+                    return null;
+                }
+            }
+        }
+
+        return null;
     }
 }

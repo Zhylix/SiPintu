@@ -45,7 +45,7 @@ class CheckBlockedIp
             $block = $this->securityService->getActiveBlock($ip);
             $expiryText = $block?->expires_at
                 ? $block->expires_at->diffForHumans()
-                : 'permanen';
+                : ($block?->blocked_by ? 'permanen' : 'beberapa saat');
 
             $message = "Akses IP ({$ip}) sementara mengalami time out ({$expiryText}) karena terdeteksi 15 kali percobaan gagal dalam 3 menit. Silakan coba lagi nanti.";
 
