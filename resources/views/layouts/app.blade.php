@@ -681,29 +681,52 @@
                     @include('partials.security-onboarding-banner')
 
                     @if(session('success'))
-                        <div class="p-4 mb-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 flex items-center justify-between">
+                        <div class="alert-banner p-4 mb-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 flex items-center justify-between shadow-xs">
                             <div class="flex items-center space-x-3">
                                 <svg class="w-5 h-5 text-emerald-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                                 <span class="font-bold text-xs sm:text-sm">{{ session('success') }}</span>
                             </div>
+                            <button type="button" onclick="this.closest('.alert-banner').remove()" class="text-emerald-700 hover:text-emerald-900 p-1 text-base leading-none cursor-pointer" title="Tutup">&times;</button>
                         </div>
                     @endif
 
                     @if(session('error'))
-                        <div class="p-4 mb-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-900 flex items-center justify-between">
+                        <div class="alert-banner p-4 mb-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-900 flex items-center justify-between shadow-xs">
                             <div class="flex items-center space-x-3">
                                 <svg class="w-5 h-5 text-rose-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                 <span class="font-bold text-xs sm:text-sm">{{ session('error') }}</span>
                             </div>
+                            <button type="button" onclick="this.closest('.alert-banner').remove()" class="text-rose-700 hover:text-rose-900 p-1 text-base leading-none cursor-pointer" title="Tutup">&times;</button>
+                        </div>
+                    @endif
+
+                    @if(session('warning'))
+                        <div class="alert-banner p-4 mb-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 flex items-center justify-between shadow-xs">
+                            <div class="flex items-center space-x-3">
+                                <svg class="w-5 h-5 text-amber-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                <span class="font-bold text-xs sm:text-sm">{{ session('warning') }}</span>
+                            </div>
+                            <button type="button" onclick="this.closest('.alert-banner').remove()" class="text-amber-700 hover:text-amber-900 p-1 text-base leading-none cursor-pointer" title="Tutup">&times;</button>
                         </div>
                     @endif
 
                     @if(session('info'))
-                        <div class="p-4 mb-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 flex items-center justify-between">
+                        <div class="alert-banner p-4 mb-4 rounded-2xl bg-sky-50 border border-sky-200 text-sky-900 flex items-center justify-between shadow-xs">
                             <div class="flex items-center space-x-3">
-                                <svg class="w-5 h-5 text-emerald-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                <svg class="w-5 h-5 text-sky-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                 <span class="font-bold text-xs sm:text-sm">{{ session('info') }}</span>
                             </div>
+                            <button type="button" onclick="this.closest('.alert-banner').remove()" class="text-sky-700 hover:text-sky-900 p-1 text-base leading-none cursor-pointer" title="Tutup">&times;</button>
+                        </div>
+                    @endif
+
+                    @if(session('status'))
+                        <div class="alert-banner p-4 mb-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 flex items-center justify-between shadow-xs">
+                            <div class="flex items-center space-x-3">
+                                <svg class="w-5 h-5 text-emerald-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                <span class="font-bold text-xs sm:text-sm">{{ session('status') }}</span>
+                            </div>
+                            <button type="button" onclick="this.closest('.alert-banner').remove()" class="text-emerald-700 hover:text-emerald-900 p-1 text-base leading-none cursor-pointer" title="Tutup">&times;</button>
                         </div>
                     @endif
 

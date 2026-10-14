@@ -24,12 +24,6 @@
         </div>
     </div>
 
-    @if(session('success'))
-        <div class="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl text-xs font-bold shadow-sm">
-            {{ session('success') }}
-        </div>
-    @endif
-
     <!-- Logs Table -->
     <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
         <div class="overflow-x-auto">

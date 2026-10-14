@@ -14,18 +14,6 @@
         </a>
     </div>
 
-    <!-- Alert Success Info -->
-    @if(session('success'))
-        <div class="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl text-xs font-bold flex items-center justify-between shadow-sm">
-            <span>{{ session('success') }}</span>
-        </div>
-    @endif
-
-    @if(session('error'))
-        <div class="p-4 bg-rose-50 border border-rose-200 text-rose-800 rounded-2xl text-xs font-bold flex items-center justify-between shadow-sm">
-            <span>{{ session('error') }}</span>
-        </div>
-    @endif
 
     <!-- WhatsApp Bot Account Status & Live QR Code Widget -->
     <div x-data="{
