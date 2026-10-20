@@ -762,7 +762,7 @@
 
                                 <div class="pt-3 border-t border-slate-200/80 mt-3 flex items-center justify-between">
                                     <span class="text-[10px] text-slate-400 font-mono">Client ID: {{ Str::limit($app->client_id, 10) }}</span>
-                                    <a href="{{ route('demo.login', $app->slug) }}" class="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold rounded-lg transition-all shadow-xs flex items-center space-x-1">
+                                    <a href="{{ route('demo.login', $app->slug) }}" target="_blank" rel="noopener noreferrer" class="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold rounded-lg transition-all shadow-xs flex items-center space-x-1">
                                         <span>Buka SSO</span>
                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                                     </a>

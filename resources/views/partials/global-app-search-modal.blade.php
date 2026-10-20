@@ -176,7 +176,8 @@
     selectCurrent() {
         const list = this.filteredApps;
         if (list.length > 0 && list[this.selectedIndex]) {
-            window.location.href = list[this.selectedIndex].launch_url;
+            window.open(list[this.selectedIndex].launch_url, '_blank', 'noopener,noreferrer');
+            this.open = false;
         }
     },
     scrollToSelected() {
@@ -368,7 +369,7 @@ x-on:favorite-updated.window="
             <div class="flex-1 overflow-y-auto divide-y divide-slate-100 p-2 sm:p-3 min-h-[220px] max-h-[50vh]">
                 <template x-for="(app, index) in filteredApps" :key="app.id">
                     <div :id="'global-search-item-' + index"
-                         @click="window.location.href = app.launch_url"
+                         @click="window.open(app.launch_url, '_blank', 'noopener,noreferrer'); open = false"
                          @mouseenter="selectedIndex = index"
                          :class="selectedIndex === index ? 'bg-emerald-50/80 border-emerald-300 ring-1 ring-emerald-500/20 shadow-xs' : 'bg-white hover:bg-slate-50/70 border-transparent'"
                          class="group flex items-center justify-between p-3 sm:p-3.5 rounded-2xl border transition-all cursor-pointer select-none gap-3 my-1">
@@ -419,6 +420,9 @@ x-on:favorite-updated.window="
 
                             <!-- Open App Link Button -->
                             <a :href="app.launch_url"
+                               target="_blank"
+                               rel="noopener noreferrer"
+                               @click="open = false"
                                class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-700 hover:bg-emerald-800 text-white shadow-xs transition-colors">
                                 <span>Buka</span>
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

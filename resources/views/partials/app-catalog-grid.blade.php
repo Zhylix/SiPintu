@@ -364,6 +364,8 @@ x-on:favorite-updated.window="
                     <div class="max-h-40 overflow-y-auto space-y-1 no-scrollbar">
                         <template x-for="app in matchingApps.slice(0, 4)" :key="app.id">
                             <a :href="app.launch_url"
+                               target="_blank"
+                               rel="noopener noreferrer"
                                class="flex items-center justify-between p-2 rounded-xl bg-white hover:bg-emerald-50/80 border border-slate-200/80 hover:border-emerald-300 transition-all group">
                                 <div class="flex items-center gap-2 min-w-0">
                                     <div class="w-6 h-6 rounded-lg shrink-0 flex items-center justify-center overflow-hidden border border-slate-200 text-white font-mono font-bold text-[9px]"
@@ -425,6 +427,8 @@ x-on:favorite-updated.window="
                  
                 <!-- Clickable Android App Tile -->
                 <a href="{{ route('oauth.authorize', ['client_id' => $app->client_id, 'redirect_uri' => $app->redirect_uri, 'response_type' => 'code', 'scope' => 'openid profile email']) }}"
+                   target="_blank"
+                   rel="noopener noreferrer"
                    title="{{ $app->name }}{{ $app->category ? ' (' . $app->category->name . ')' : '' }}{{ $app->description ? ' &bull; ' . $app->description : '' }}"
                    class="group w-full h-full flex flex-col items-center justify-start p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl bg-white border border-slate-200/90 hover:border-emerald-500 shadow-2xs hover:shadow-xl hover:shadow-emerald-900/10 transition-all duration-200 hover:-translate-y-1.5 active:scale-95 text-center cursor-pointer select-none">
                     
