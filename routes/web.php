@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\AdminRoleController;
 use App\Http\Controllers\Admin\AdminSettingController;
 use App\Http\Controllers\Admin\AdminSijunaController;
 use App\Http\Controllers\Admin\AdminUserController;
+use App\Http\Controllers\Admin\AdminWhatsAppGatewayController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Dudi\DudiDashboardController;
 use App\Http\Controllers\NotificationController;
@@ -345,6 +346,16 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::delete('/settings/icon', [AdminSettingController::class, 'destroyIcon'])->name('settings.icon.destroy');
     Route::post('/settings/login-bg', [AdminSettingController::class, 'updateLoginBg'])->name('settings.login-bg.update');
     Route::delete('/settings/login-bg', [AdminSettingController::class, 'destroyLoginBg'])->name('settings.login-bg.destroy');
+
+    // WhatsApp Gateway Multi-Session Management
+    Route::get('/whatsapp-gateway', [AdminWhatsAppGatewayController::class, 'index'])->name('whatsapp-gateway.index');
+    Route::get('/whatsapp-gateway/logs', [AdminWhatsAppGatewayController::class, 'logs'])->name('whatsapp-gateway.logs');
+    Route::get('/whatsapp-gateway/session/{sessionId}/status', [AdminWhatsAppGatewayController::class, 'sessionStatus'])->name('whatsapp-gateway.session.status');
+    Route::post('/whatsapp-gateway/session/{sessionId}/start', [AdminWhatsAppGatewayController::class, 'startSession'])->name('whatsapp-gateway.session.start');
+    Route::post('/whatsapp-gateway/session/{sessionId}/logout', [AdminWhatsAppGatewayController::class, 'logoutSession'])->name('whatsapp-gateway.session.logout');
+    Route::post('/whatsapp-gateway/session/{sessionId}/toggle-power', [AdminWhatsAppGatewayController::class, 'togglePower'])->name('whatsapp-gateway.session.toggle-power');
+    Route::post('/whatsapp-gateway/app-config/{application}', [AdminWhatsAppGatewayController::class, 'updateAppConfig'])->name('whatsapp-gateway.app-config');
+    Route::post('/whatsapp-gateway/test-message', [AdminWhatsAppGatewayController::class, 'sendTestMessage'])->name('whatsapp-gateway.test-message');
 
     // System Error Logs (HTTP 500 & Uncaught Exceptions)
     Route::get('/error-logs', [AdminErrorLogController::class, 'index'])->name('error-logs.index');

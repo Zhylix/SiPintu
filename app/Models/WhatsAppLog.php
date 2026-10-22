@@ -14,6 +14,9 @@ class WhatsAppLog extends Model
 
     protected $fillable = [
         'announcement_id',
+        'application_id',
+        'session_id',
+        'type',
         'user_id',
         'phone_number',
         'message',
@@ -29,6 +32,11 @@ class WhatsAppLog extends Model
     public function announcement(): BelongsTo
     {
         return $this->belongsTo(Announcement::class);
+    }
+
+    public function application(): BelongsTo
+    {
+        return $this->belongsTo(Application::class);
     }
 
     public function user(): BelongsTo

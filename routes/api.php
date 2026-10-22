@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\ApiIdentityController;
+use App\Http\Controllers\Api\WhatsAppGatewayController;
 use App\Http\Controllers\OAuthController;
 use Illuminate\Support\Facades\Route;
 
@@ -52,6 +53,7 @@ Route::prefix('v1')->middleware('oauth.bearer')->group(function () {
     Route::get('/sijuna/students/{externalId}', [ApiIdentityController::class, 'studentDetail'])->name('api.v1.sijuna.student_detail');
     Route::get('/sijuna/alumni', [ApiIdentityController::class, 'alumniProxy'])->name('api.v1.sijuna.alumni');
     Route::get('/sijuna/alumni/{externalId}', [ApiIdentityController::class, 'alumniDetailProxy'])->name('api.v1.sijuna.alumni_detail');
-    Route::get('/sijuna/teachers', [ApiIdentityController::class, 'teachers'])->name('api.v1.sijuna.teachers');
-    Route::get('/sijuna/teachers/{externalId}', [ApiIdentityController::class, 'teacherDetail'])->name('api.v1.sijuna.teacher_detail');
+    // Multi-Session WhatsApp Gateway for Downstream Applications
+    Route::post('/whatsapp/send', [WhatsAppGatewayController::class, 'send'])->middleware('throttle:120,1')->name('api.v1.whatsapp.send');
+    Route::get('/whatsapp/status', [WhatsAppGatewayController::class, 'status'])->name('api.v1.whatsapp.status');
 });

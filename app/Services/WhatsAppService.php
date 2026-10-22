@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Jobs\SendWhatsAppAnnouncementJob;
 use App\Models\Announcement;
+use App\Models\Application;
 use App\Models\User;
 use App\Models\WhatsAppLog;
 use Illuminate\Support\Facades\Http;
@@ -73,9 +74,9 @@ class WhatsAppService
     }
 
     /**
-     * Send HTTP request to Baileys API Bot.
+     * Send HTTP request to Baileys API Bot (Supports Multi-Session and Fallback).
      */
-    public function sendMessage(string $phone, string $message): array
+    public function sendMessage(string $phone, string $message, ?string $sessionId = null, bool $allowFallback = true): array
     {
         $formattedPhone = $this->formatPhoneNumber($phone);
 
@@ -86,6 +87,55 @@ class WhatsAppService
             ];
         }
 
+        $targetSession = ! empty($sessionId) ? trim($sessionId) : 'default';
+
+        // 1. Try sending via specified session if not 'default'
+        if ($targetSession !== 'default') {
+            try {
+                $response = Http::withHeaders([
+                    'x-api-key' => $this->apiKey,
+                    'Accept' => 'application/json',
+                    'Content-Type' => 'application/json',
+                ])->timeout(15)->post("{$this->botUrl}/session/{$targetSession}/send-message", [
+                    'phone' => $formattedPhone,
+                    'message' => $message,
+                ]);
+
+                if ($response->successful()) {
+                    $data = $response->json();
+                    if (isset($data['status']) && strtolower($data['status']) === 'success') {
+                        return [
+                            'success' => true,
+                            'session_id' => $targetSession,
+                            'fallback_used' => false,
+                            'data' => $data,
+                        ];
+                    }
+                }
+
+                $errorDetail = $response->json()['message'] ?? $response->body();
+                Log::warning("[WhatsAppService] Gagal kirim via session [{$targetSession}]: {$errorDetail}");
+
+                if (! $allowFallback) {
+                    return [
+                        'success' => false,
+                        'session_id' => $targetSession,
+                        'error' => "Pengiriman via sesi [{$targetSession}] gagal: {$errorDetail}",
+                    ];
+                }
+            } catch (\Throwable $e) {
+                Log::warning("[WhatsAppService] Exception kirim via session [{$targetSession}]: ".$e->getMessage());
+                if (! $allowFallback) {
+                    return [
+                        'success' => false,
+                        'session_id' => $targetSession,
+                        'error' => "Koneksi ke sesi [{$targetSession}] gagal: ".$e->getMessage(),
+                    ];
+                }
+            }
+        }
+
+        // 2. Send via default session (Central Bot or Fallback)
         try {
             $response = Http::withHeaders([
                 'x-api-key' => $this->apiKey,
@@ -94,6 +144,7 @@ class WhatsAppService
             ])->timeout(15)->post("{$this->botUrl}/send-message", [
                 'phone' => $formattedPhone,
                 'message' => $message,
+                'session_id' => 'default',
             ]);
 
             if ($response->successful()) {
@@ -101,6 +152,8 @@ class WhatsAppService
                 if (isset($data['status']) && strtolower($data['status']) === 'success') {
                     return [
                         'success' => true,
+                        'session_id' => 'default',
+                        'fallback_used' => ($targetSession !== 'default'),
                         'data' => $data,
                     ];
                 }
@@ -109,6 +162,7 @@ class WhatsAppService
 
                 return [
                     'success' => false,
+                    'session_id' => 'default',
                     'error' => $errorMsg,
                 ];
             }
@@ -118,6 +172,7 @@ class WhatsAppService
 
             return [
                 'success' => false,
+                'session_id' => 'default',
                 'error' => $errorMessage,
             ];
         } catch (\Throwable $e) {
@@ -126,6 +181,7 @@ class WhatsAppService
 
             return [
                 'success' => false,
+                'session_id' => 'default',
                 'error' => $errorMsg,
             ];
         }
@@ -303,5 +359,231 @@ class WhatsAppService
                 'error' => 'Tidak dapat terhubung ke bot untuk mengubah status daya: '.$e->getMessage(),
             ];
         }
+    }
+
+    /**
+     * Get real-time status and QR code of a specific session.
+     */
+    public function getSessionStatus(string $sessionId): array
+    {
+        try {
+            $session = trim($sessionId);
+            $response = Http::timeout(5)->get("{$this->botUrl}/session/{$session}/status");
+
+            if ($response->successful()) {
+                return [
+                    'online' => true,
+                    'data' => $response->json(),
+                ];
+            }
+
+            return [
+                'online' => false,
+                'error' => 'HTTP Error '.$response->status(),
+            ];
+        } catch (\Throwable $e) {
+            return [
+                'online' => false,
+                'error' => 'Koneksi ke Bot Baileys offline: '.$e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Start/wake up a specific session to generate QR Code.
+     */
+    public function startSession(string $sessionId): array
+    {
+        try {
+            $session = trim($sessionId);
+            $response = Http::withHeaders([
+                'x-api-key' => $this->apiKey,
+                'Accept' => 'application/json',
+            ])->timeout(10)->post("{$this->botUrl}/session/{$session}/start");
+
+            if ($response->successful()) {
+                return [
+                    'success' => true,
+                    'data' => $response->json(),
+                ];
+            }
+
+            return [
+                'success' => false,
+                'error' => $response->json()['message'] ?? 'Gagal memulai sesi bot.',
+            ];
+        } catch (\Throwable $e) {
+            return [
+                'success' => false,
+                'error' => 'Gagal terhubung ke bot: '.$e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Logout and reset a specific session.
+     */
+    public function logoutSession(string $sessionId): array
+    {
+        try {
+            $session = trim($sessionId);
+            $response = Http::withHeaders([
+                'x-api-key' => $this->apiKey,
+                'Accept' => 'application/json',
+            ])->timeout(10)->post("{$this->botUrl}/session/{$session}/logout");
+
+            if ($response->successful()) {
+                return [
+                    'success' => true,
+                    'message' => $response->json()['message'] ?? "Sesi [{$session}] berhasil dikeluarkan.",
+                ];
+            }
+
+            return [
+                'success' => false,
+                'error' => $response->json()['message'] ?? 'Gagal melakukan logout sesi bot.',
+            ];
+        } catch (\Throwable $e) {
+            return [
+                'success' => false,
+                'error' => 'Gagal terhubung ke bot: '.$e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Toggle power (hibernate/wake) for a specific session.
+     */
+    public function toggleSessionPower(string $sessionId, ?bool $enabled = null): array
+    {
+        try {
+            $session = trim($sessionId);
+            $payload = [];
+            if ($enabled !== null) {
+                $payload['enabled'] = $enabled;
+            }
+
+            $response = Http::withHeaders([
+                'x-api-key' => $this->apiKey,
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+            ])->timeout(10)->post("{$this->botUrl}/session/{$session}/toggle-power", $payload);
+
+            if ($response->successful()) {
+                return [
+                    'success' => true,
+                    'data' => $response->json(),
+                ];
+            }
+
+            return [
+                'success' => false,
+                'error' => $response->json()['message'] ?? 'Gagal mengubah daya sesi.',
+            ];
+        } catch (\Throwable $e) {
+            return [
+                'success' => false,
+                'error' => 'Gagal terhubung ke bot: '.$e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Delete a session entirely from bot memory & disk.
+     */
+    public function deleteSession(string $sessionId): array
+    {
+        try {
+            $session = trim($sessionId);
+            $response = Http::withHeaders([
+                'x-api-key' => $this->apiKey,
+                'Accept' => 'application/json',
+            ])->timeout(10)->delete("{$this->botUrl}/session/{$session}");
+
+            if ($response->successful()) {
+                return [
+                    'success' => true,
+                    'message' => $response->json()['message'] ?? "Sesi [{$session}] berhasil dihapus.",
+                ];
+            }
+
+            return [
+                'success' => false,
+                'error' => $response->json()['message'] ?? 'Gagal menghapus sesi bot.',
+            ];
+        } catch (\Throwable $e) {
+            return [
+                'success' => false,
+                'error' => 'Gagal terhubung ke bot: '.$e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Get all active sessions from bot.
+     */
+    public function getAllSessions(): array
+    {
+        try {
+            $response = Http::withHeaders([
+                'x-api-key' => $this->apiKey,
+                'Accept' => 'application/json',
+            ])->timeout(5)->get("{$this->botUrl}/sessions");
+
+            if ($response->successful()) {
+                return [
+                    'success' => true,
+                    'data' => $response->json()['sessions'] ?? [],
+                ];
+            }
+
+            return [
+                'success' => false,
+                'error' => 'HTTP Error '.$response->status(),
+            ];
+        } catch (\Throwable $e) {
+            return [
+                'success' => false,
+                'error' => $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Sync and update the application record with live status from bot.
+     */
+    public function syncApplicationWaStatus(Application $application): array
+    {
+        $sessionId = $application->getEffectiveWaSessionId();
+        $statusResult = $this->getSessionStatus($sessionId);
+
+        if ($statusResult['online'] && isset($statusResult['data'])) {
+            $data = $statusResult['data'];
+            $isConnected = ($data['connection'] ?? '') === 'open' && ! empty($data['bot_phone']);
+            $newStatus = $isConnected ? 'connected' : (($data['connection'] ?? '') === 'connecting' ? 'connecting' : 'disconnected');
+            if (isset($data['bot_enabled']) && ! $data['bot_enabled']) {
+                $newStatus = 'disabled';
+            }
+
+            $application->update([
+                'wa_session_id' => $sessionId,
+                'wa_phone_number' => $data['bot_phone'] ?? $application->wa_phone_number,
+                'wa_status' => $newStatus,
+            ]);
+
+            return [
+                'status' => $newStatus,
+                'phone' => $data['bot_phone'] ?? null,
+                'qr_code' => $data['qr_code'] ?? null,
+                'bot_enabled' => $data['bot_enabled'] ?? true,
+            ];
+        }
+
+        return [
+            'status' => 'offline',
+            'phone' => $application->wa_phone_number,
+            'qr_code' => null,
+            'bot_enabled' => false,
+        ];
     }
 }

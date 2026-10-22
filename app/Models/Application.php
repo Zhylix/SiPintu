@@ -34,6 +34,10 @@ class Application extends Model
         'last_connected_ip',
         'connection_status',
         'total_api_requests',
+        'wa_session_id',
+        'wa_phone_number',
+        'wa_status',
+        'wa_auto_fallback',
     ];
 
     protected $hidden = [
@@ -44,6 +48,7 @@ class Application extends Model
         'last_health_check_at' => 'datetime',
         'last_connected_at' => 'datetime',
         'total_api_requests' => 'integer',
+        'wa_auto_fallback' => 'boolean',
     ];
 
     /**
@@ -119,5 +124,22 @@ class Application extends Model
             $query->where('roles.slug', $roleSlug)
                 ->orWhere('roles.name', $roleSlug);
         })->exists();
+    }
+
+    public function whatsAppLogs(): HasMany
+    {
+        return $this->hasMany(WhatsAppLog::class, 'application_id');
+    }
+
+    /**
+     * Get or generate the WhatsApp session identifier for this application.
+     */
+    public function getEffectiveWaSessionId(): string
+    {
+        if (! empty($this->wa_session_id)) {
+            return $this->wa_session_id;
+        }
+
+        return 'app_'.$this->slug;
     }
 }

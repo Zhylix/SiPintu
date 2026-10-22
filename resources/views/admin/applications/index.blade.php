@@ -111,6 +111,13 @@
                     </template>
                 </button>
             </div>
+            <div class="pt-1 flex items-center justify-between flex-wrap gap-2 text-xs">
+                <span class="text-slate-600 font-medium">Aplikasi ini sudah otomatis terdaftar di WhatsApp Gateway.</span>
+                <a href="{{ route('admin.whatsapp-gateway.index') }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg font-bold shadow-xs transition-colors">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                    <span>Tautkan Nomor WhatsApp Sekarang &rarr;</span>
+                </a>
+            </div>
         </div>
     @endif
 
@@ -487,6 +494,11 @@
                                      x-cloak>
                                     
                                     <div class="py-1">
+                                        <a href="{{ route('admin.whatsapp-gateway.index') }}" class="w-full text-left px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 flex items-center space-x-2 transition-colors">
+                                            <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                                            <span>Tautkan Nomor WA Bot</span>
+                                        </a>
+
                                         <form action="{{ route('admin.applications.test-health', $app) }}" method="POST">
                                             @csrf
                                             <button type="submit" class="w-full text-left px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 flex items-center space-x-2 transition-colors">
@@ -734,6 +746,11 @@
                                              class="absolute right-0 top-full mt-1.5 w-44 bg-white rounded-xl shadow-xl border border-slate-200 py-1 z-30 divide-y divide-slate-100 text-left"
                                              x-cloak>
                                             <div class="py-1">
+                                                <a href="{{ route('admin.whatsapp-gateway.index') }}" class="w-full text-left px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 flex items-center space-x-2">
+                                                    <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                                                    <span>Tautkan Nomor WA</span>
+                                                </a>
+
                                                 <form action="{{ route('admin.applications.test-health', $app) }}" method="POST">
                                                     @csrf
                                                     <button type="submit" class="w-full text-left px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 flex items-center space-x-2">

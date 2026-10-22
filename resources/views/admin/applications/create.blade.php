@@ -7,7 +7,7 @@
             <h2 class="text-xl font-black text-emerald-950">Registrasi Aplikasi Eksternal Baru</h2>
             <p class="text-xs text-slate-600 font-medium mt-1">Konfigurasikan OAuth Client ID, Secret, Redirect URI, dan Hak Akses Role</p>
         </div>
-        <a href="{{ route('admin.applications.index') }}" class="text-xs text-emerald-800 hover:underline font-bold">&larr; Batal & Kembali</a>
+        <a href="{{ route('admin.applications.index') }}" class="text-xs text-emerald-800 hover:underline font-bold">&larr;Kembali</a>
     </div>
 
     @if($errors->any())
@@ -88,6 +88,10 @@
                         class="w-full px-4 py-2 rounded-xl bg-white border border-emerald-300 text-emerald-900 font-mono font-bold text-xs focus:outline-none">
                 </div>
             </div>
+            <p class="text-[11px] text-emerald-800 font-medium flex items-center gap-1.5 pt-1">
+                <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                <span><strong>Multi-Session WhatsApp Gateway:</strong> Kredensial ini juga berfungsi sebagai autentikasi API WhatsApp Gateway. Begitu aplikasi disimpan, Anda dapat menautkan nomor WA mandiri di menu <strong>WhatsApp Gateway</strong>.</span>
+            </p>
         </div>
 
         <div>
