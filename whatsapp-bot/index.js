@@ -501,13 +501,13 @@ app.post('/session/:sessionId/start', authenticateApiKey, (req, res) => {
     });
 });
 
-// 5. Toggle Power on Specific Session (POST /session/:sessionId/toggle-power)
-app.post('/session/:sessionId/toggle-power', authenticateApiKey, (req, res) => {
-    const id = normalizeSessionId(req.params.sessionId);
+// Helper for Toggle Power
+function executeTogglePower(rawSessionId, enabledInput, res) {
+    const id = normalizeSessionId(rawSessionId);
     const session = getOrCreateSession(id);
 
-    if (typeof req.body.enabled === 'boolean') {
-        session.isBotEnabled = req.body.enabled;
+    if (typeof enabledInput === 'boolean') {
+        session.isBotEnabled = enabledInput;
     } else {
         session.isBotEnabled = !session.isBotEnabled;
     }
@@ -544,18 +544,11 @@ app.post('/session/:sessionId/toggle-power', authenticateApiKey, (req, res) => {
             ? `Bot WhatsApp sesi [${id}] berhasil diaktifkan (ON).`
             : `Bot WhatsApp sesi [${id}] berhasil ditidurkan (OFF / Hemat RAM).`
     });
-});
+}
 
-// 5.1 Backward compatible toggle-power for default session
-app.post('/toggle-power', authenticateApiKey, (req, res) => {
-    const targetSessionId = req.body.session_id || 'default';
-    req.params.sessionId = targetSessionId;
-    return app._router.handle(req, res);
-});
-
-// 6. Logout Specific Session (POST /session/:sessionId/logout)
-app.post('/session/:sessionId/logout', authenticateApiKey, async (req, res) => {
-    const id = normalizeSessionId(req.params.sessionId);
+// Helper for Session Logout
+async function executeLogoutSession(rawSessionId, res) {
+    const id = normalizeSessionId(rawSessionId);
     const session = getOrCreateSession(id);
     console.log(`[WhatsApp Bot (${id})] Request Logout diterima...`);
     session.isManualLogoutRequested = true;
@@ -596,13 +589,28 @@ app.post('/session/:sessionId/logout', authenticateApiKey, async (req, res) => {
             message: 'Gagal melakukan logout bot: ' + error.message
         });
     }
+}
+
+// 5. Toggle Power on Specific Session (POST /session/:sessionId/toggle-power)
+app.post('/session/:sessionId/toggle-power', authenticateApiKey, (req, res) => {
+    return executeTogglePower(req.params.sessionId, req.body.enabled, res);
+});
+
+// 5.1 Backward compatible toggle-power for default session
+app.post('/toggle-power', authenticateApiKey, (req, res) => {
+    const targetSessionId = req.body?.session_id || 'default';
+    return executeTogglePower(targetSessionId, req.body?.enabled, res);
+});
+
+// 6. Logout Specific Session (POST /session/:sessionId/logout)
+app.post('/session/:sessionId/logout', authenticateApiKey, async (req, res) => {
+    return await executeLogoutSession(req.params.sessionId, res);
 });
 
 // 6.1 Backward compatible logout for default session
-app.post('/logout', authenticateApiKey, (req, res) => {
-    const targetSessionId = req.body.session_id || 'default';
-    req.params.sessionId = targetSessionId;
-    return app._router.handle(req, res);
+app.post('/logout', authenticateApiKey, async (req, res) => {
+    const targetSessionId = req.body?.session_id || 'default';
+    return await executeLogoutSession(targetSessionId, res);
 });
 
 // 7. Delete / Remove Session Entirely (DELETE /session/:sessionId)

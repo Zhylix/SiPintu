@@ -113,7 +113,7 @@ class WhatsAppService
                     }
                 }
 
-                $errorDetail = $response->json()['message'] ?? $response->body();
+                $errorDetail = $response->json('message') ?: ($response->body() ?: 'HTTP error '.$response->status());
                 Log::warning("[WhatsAppService] Gagal kirim via session [{$targetSession}]: {$errorDetail}");
 
                 if (! $allowFallback) {
@@ -306,13 +306,13 @@ class WhatsAppService
             if ($response->successful()) {
                 return [
                     'success' => true,
-                    'message' => $response->json()['message'] ?? 'Sesi bot WhatsApp berhasil dikeluarkan.',
+                    'message' => $response->json('message') ?? 'Sesi bot WhatsApp berhasil dikeluarkan.',
                 ];
             }
 
             return [
                 'success' => false,
-                'error' => $response->json()['message'] ?? 'Gagal melakukan logout bot.',
+                'error' => $response->json('message') ?? ($response->body() ?: 'Gagal melakukan logout bot.'),
             ];
         } catch (\Throwable $e) {
             return [
@@ -345,13 +345,13 @@ class WhatsAppService
                 return [
                     'success' => true,
                     'bot_enabled' => $data['bot_enabled'] ?? true,
-                    'message' => $data['message'] ?? 'Status aktif bot WhatsApp berhasil diperbarui.',
+                    'message' => $response->json('message') ?? 'Status aktif bot WhatsApp berhasil diperbarui.',
                 ];
             }
 
             return [
                 'success' => false,
-                'error' => $response->json()['message'] ?? 'Gagal mengubah status aktif bot WhatsApp.',
+                'error' => $response->json('message') ?? ($response->body() ?: 'Gagal mengubah status aktif bot WhatsApp.'),
             ];
         } catch (\Throwable $e) {
             return [
@@ -410,7 +410,7 @@ class WhatsAppService
 
             return [
                 'success' => false,
-                'error' => $response->json()['message'] ?? 'Gagal memulai sesi bot.',
+                'error' => $response->json('message') ?? ($response->body() ?: 'Gagal memulai sesi bot.'),
             ];
         } catch (\Throwable $e) {
             return [
@@ -435,13 +435,13 @@ class WhatsAppService
             if ($response->successful()) {
                 return [
                     'success' => true,
-                    'message' => $response->json()['message'] ?? "Sesi [{$session}] berhasil dikeluarkan.",
+                    'message' => $response->json('message') ?? "Sesi [{$session}] berhasil dikeluarkan.",
                 ];
             }
 
             return [
                 'success' => false,
-                'error' => $response->json()['message'] ?? 'Gagal melakukan logout sesi bot.',
+                'error' => $response->json('message') ?? ($response->body() ?: 'Gagal melakukan logout sesi bot.'),
             ];
         } catch (\Throwable $e) {
             return [
@@ -478,7 +478,7 @@ class WhatsAppService
 
             return [
                 'success' => false,
-                'error' => $response->json()['message'] ?? 'Gagal mengubah daya sesi.',
+                'error' => $response->json('message') ?? ($response->body() ?: 'Gagal mengubah daya sesi.'),
             ];
         } catch (\Throwable $e) {
             return [
@@ -503,13 +503,13 @@ class WhatsAppService
             if ($response->successful()) {
                 return [
                     'success' => true,
-                    'message' => $response->json()['message'] ?? "Sesi [{$session}] berhasil dihapus.",
+                    'message' => $response->json('message') ?? "Sesi [{$session}] berhasil dihapus.",
                 ];
             }
 
             return [
                 'success' => false,
-                'error' => $response->json()['message'] ?? 'Gagal menghapus sesi bot.',
+                'error' => $response->json('message') ?? ($response->body() ?: 'Gagal menghapus sesi bot.'),
             ];
         } catch (\Throwable $e) {
             return [
@@ -533,7 +533,7 @@ class WhatsAppService
             if ($response->successful()) {
                 return [
                     'success' => true,
-                    'data' => $response->json()['sessions'] ?? [],
+                    'data' => $response->json('sessions') ?? [],
                 ];
             }
 

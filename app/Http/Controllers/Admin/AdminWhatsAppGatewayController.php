@@ -98,6 +98,26 @@ class AdminWhatsAppGatewayController extends Controller
     {
         $status = $whatsAppService->getSessionStatus($sessionId);
 
+        // Auto-sync application status in database if dedicated session connects or updates
+        if (($status['online'] ?? false) && isset($status['data']) && $sessionId !== 'default') {
+            $data = $status['data'];
+            $conn = $data['connection'] ?? '';
+            $phone = $data['bot_phone'] ?? null;
+            $enabled = $data['bot_enabled'] ?? true;
+
+            $newStatus = ($conn === 'open' && ! empty($phone)) ? 'connected' : ($conn === 'connecting' ? 'connecting' : 'disconnected');
+            if (! $enabled) {
+                $newStatus = 'disabled';
+            }
+
+            Application::where('wa_session_id', $sessionId)
+                ->orWhere('slug', preg_replace('/^app_/', '', $sessionId))
+                ->update([
+                    'wa_status' => $newStatus,
+                    'wa_phone_number' => $phone,
+                ]);
+        }
+
         return response()->json($status);
     }
 
@@ -118,13 +138,15 @@ class AdminWhatsAppGatewayController extends Controller
     {
         $result = $whatsAppService->logoutSession($sessionId);
 
-        // Update database if matching application exists
-        Application::where('wa_session_id', $sessionId)
-            ->orWhere('slug', str_replace('app_', '', $sessionId))
-            ->update([
-                'wa_status' => 'disconnected',
-                'wa_phone_number' => null,
-            ]);
+        // Update database if matching application exists (ignore if central bot default session)
+        if ($sessionId !== 'default') {
+            Application::where('wa_session_id', $sessionId)
+                ->orWhere('slug', preg_replace('/^app_/', '', $sessionId))
+                ->update([
+                    'wa_status' => 'disconnected',
+                    'wa_phone_number' => null,
+                ]);
+        }
 
         AuditLog::create([
             'user_id' => Auth::id(),
@@ -175,6 +197,24 @@ class AdminWhatsAppGatewayController extends Controller
 
         $customSession = ! empty($validated['wa_session_id']) ? trim($validated['wa_session_id']) : 'app_'.$application->slug;
 
+        // Prevent hijacking the reserved central bot session ID
+        if (strtolower($customSession) === 'default') {
+            return redirect()->back()->withErrors([
+                'wa_session_id' => 'Session ID "default" dicadangkan khusus untuk Nomor WhatsApp Pusat SiPintu.',
+            ]);
+        }
+
+        // Prevent duplicate session IDs between different downstream applications
+        $existingApp = Application::where('wa_session_id', $customSession)
+            ->where('id', '!=', $application->id)
+            ->first();
+
+        if ($existingApp) {
+            return redirect()->back()->withErrors([
+                'wa_session_id' => "Session ID '{$customSession}' sudah digunakan oleh aplikasi {$existingApp->name}.",
+            ]);
+        }
+
         $application->update([
             'wa_session_id' => $customSession,
             'wa_auto_fallback' => $request->boolean('wa_auto_fallback'),
@@ -206,12 +246,49 @@ class AdminWhatsAppGatewayController extends Controller
             'message' => ['required', 'string'],
         ]);
 
+        $formattedPhone = $whatsAppService->formatPhoneNumber($validated['phone']);
+
+        if (! $formattedPhone) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Format nomor WhatsApp tidak valid. Masukkan nomor yang valid (contoh: 08123456789 atau 628123456789).',
+            ], 422);
+        }
+
         $result = $whatsAppService->sendMessage(
-            phone: $validated['phone'],
+            phone: $formattedPhone,
             message: $validated['message'],
             sessionId: $validated['session_id'],
             allowFallback: false
         );
+
+        $application = Application::where('wa_session_id', $validated['session_id'])
+            ->orWhere('slug', preg_replace('/^app_/', '', $validated['session_id']))
+            ->first();
+
+        // Record test message in WhatsAppLog
+        WhatsAppLog::create([
+            'application_id' => $application?->id,
+            'session_id' => $validated['session_id'],
+            'type' => 'test',
+            'phone_number' => $formattedPhone,
+            'message' => $validated['message'],
+            'status' => $result['success'] ? 'sent' : 'failed',
+            'sent_at' => $result['success'] ? now() : null,
+            'error_message' => $result['success'] ? null : ($result['error'] ?? 'Pengiriman pesan uji coba gagal.'),
+        ]);
+
+        AuditLog::create([
+            'user_id' => Auth::id(),
+            'activity' => "Uji Coba Pengiriman WhatsApp Sesi [{$validated['session_id']}]",
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+            'metadata' => [
+                'session_id' => $validated['session_id'],
+                'phone' => $formattedPhone,
+                'success' => $result['success'],
+            ],
+        ]);
 
         if ($result['success']) {
             return response()->json([
@@ -232,7 +309,7 @@ class AdminWhatsAppGatewayController extends Controller
      */
     public function logs(Request $request): View
     {
-        $query = WhatsAppLog::with('application')->latest();
+        $query = WhatsAppLog::with(['application', 'announcement'])->latest();
 
         if ($request->filled('application_id') && $request->application_id !== 'all') {
             $query->where('application_id', $request->application_id);

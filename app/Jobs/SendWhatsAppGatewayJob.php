@@ -85,9 +85,21 @@ class SendWhatsAppGatewayJob implements ShouldQueue
 
             Log::error("[SendWhatsAppGatewayJob] Gagal mengirim pesan gateway ke {$log->phone_number}: {$errorMessage}");
 
-            if ($this->attempts() < $this->tries) {
-                throw new \RuntimeException($errorMessage);
-            }
+            throw new \RuntimeException($errorMessage);
+        }
+    }
+
+    /**
+     * Handle a job failure.
+     */
+    public function failed(?\Throwable $exception): void
+    {
+        $log = WhatsAppLog::find($this->whatsAppLogId);
+        if ($log) {
+            $log->update([
+                'status' => 'failed',
+                'error_message' => $exception?->getMessage() ?? 'Pengiriman pesan gateway gagal setelah beberapa kali percobaan.',
+            ]);
         }
     }
 }

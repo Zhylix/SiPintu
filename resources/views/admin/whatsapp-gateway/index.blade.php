@@ -228,17 +228,17 @@
                             <td class="py-3.5 px-4 text-right">
                                 <div class="flex items-center justify-end gap-1.5">
                                     <!-- Button Scan QR -->
-                                    <button @click="openQrModal('{{ $sessionId }}', '{{ $app->name }}')" class="p-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-lg transition-colors" title="{{ $isConnected ? 'Lihat / Perbarui Sesi QR' : 'Tautkan Nomor WA (Scan QR)' }}">
+                                    <button @click="openQrModal('{{ $sessionId }}', {{ json_encode($app->name) }})" class="p-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-lg transition-colors" title="{{ $isConnected ? 'Lihat / Perbarui Sesi QR' : 'Tautkan Nomor WA (Scan QR)' }}">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
                                     </button>
 
                                     <!-- Button Test Message -->
-                                    <button @click="openTestModal('{{ $sessionId }}', '{{ $app->name }}')" class="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-colors" title="Uji Coba Kirim Pesan">
+                                    <button @click="openTestModal('{{ $sessionId }}', {{ json_encode($app->name) }})" class="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-colors" title="Uji Coba Kirim Pesan">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
                                     </button>
 
                                     <!-- Button Config -->
-                                    <button @click="openConfigModal({{ json_encode($app) }})" class="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-colors" title="Pengaturan Sesi & Fallback">
+                                    <button @click="openConfigModal({{ json_encode(['id' => $app->id, 'name' => $app->name, 'slug' => $app->slug, 'wa_session_id' => $app->wa_session_id, 'wa_auto_fallback' => (bool) $app->wa_auto_fallback]) }})" class="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-colors" title="Pengaturan Sesi & Fallback">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                                     </button>
 
@@ -351,8 +351,23 @@
             </div>
 
             <div class="flex flex-col items-center justify-center text-center py-2 space-y-4">
+                <!-- If Bot Offline -->
+                <template x-if="modalBotOffline">
+                    <div class="py-8 space-y-3">
+                        <div class="w-16 h-16 rounded-full bg-rose-100 text-rose-700 flex items-center justify-center mx-auto">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                        </div>
+                        <h5 class="text-base font-extrabold text-slate-900">Layanan WhatsApp Bot Offline</h5>
+                        <p class="text-xs text-rose-600 max-w-xs mx-auto" x-text="modalErrorMessage"></p>
+                        <p class="text-[11px] text-slate-400">Pastikan microservice bot Baileys berjalan pada port 3789.</p>
+                        <div class="pt-2">
+                            <button @click="triggerFreshQr()" class="px-4 py-2 bg-slate-800 text-white text-xs font-bold rounded-xl shadow-md">Coba Hubungkan Ulang</button>
+                        </div>
+                    </div>
+                </template>
+
                 <!-- If Connected -->
-                <template x-if="modalSessionConnected">
+                <template x-if="!modalBotOffline && modalSessionConnected">
                     <div class="py-8 space-y-3">
                         <div class="w-16 h-16 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto">
                             <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
@@ -366,7 +381,7 @@
                 </template>
 
                 <!-- If Has QR Code -->
-                <template x-if="!modalSessionConnected && modalQrImage">
+                <template x-if="!modalBotOffline && !modalSessionConnected && modalQrImage">
                     <div class="space-y-4 w-full">
                         <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 inline-block shadow-inner">
                             <img :src="modalQrImage" class="w-64 h-64 object-contain mx-auto rounded-lg" alt="WhatsApp QR Code">
@@ -381,7 +396,7 @@
                 </template>
 
                 <!-- If Loading / Generating QR -->
-                <template x-if="!modalSessionConnected && !modalQrImage">
+                <template x-if="!modalBotOffline && !modalSessionConnected && !modalQrImage">
                     <div class="py-12 space-y-3">
                         <div class="w-12 h-12 border-3 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
                         <p class="text-xs font-extrabold text-slate-700">Sedang menyiapkan QR Code sesi...</p>
@@ -493,6 +508,8 @@ function whatsappGatewayApp() {
         modalSessionConnected: false,
         modalSessionPhone: '',
         modalQrImage: '',
+        modalBotOffline: false,
+        modalErrorMessage: '',
         qrPollingInterval: null,
 
         // Test modal state
@@ -518,6 +535,8 @@ function whatsappGatewayApp() {
             this.modalSessionConnected = false;
             this.modalSessionPhone = '';
             this.modalQrImage = '';
+            this.modalBotOffline = false;
+            this.modalErrorMessage = '';
             this.qrModalOpen = true;
 
             // Trigger session start on bot
@@ -535,17 +554,21 @@ function whatsappGatewayApp() {
             // Set polling interval
             if (this.qrPollingInterval) clearInterval(this.qrPollingInterval);
             this.qrPollingInterval = setInterval(() => {
-                if (this.qrModalOpen && !this.modalSessionConnected) {
+                if (this.qrModalOpen && !this.modalSessionConnected && !this.modalBotOffline) {
                     this.pollQrStatus();
                 }
             }, 2000);
         },
 
         closeQrModal() {
+            const wasConnected = this.modalSessionConnected;
             this.qrModalOpen = false;
             if (this.qrPollingInterval) {
                 clearInterval(this.qrPollingInterval);
                 this.qrPollingInterval = null;
+            }
+            if (wasConnected) {
+                window.location.reload();
             }
         },
 
@@ -553,6 +576,12 @@ function whatsappGatewayApp() {
             fetch(`/admin/whatsapp-gateway/session/${encodeURIComponent(this.currentSessionId)}/status`)
                 .then(res => res.json())
                 .then(res => {
+                    if (res.online === false) {
+                        this.modalBotOffline = true;
+                        this.modalErrorMessage = res.error || 'Layanan WhatsApp Bot sedang offline.';
+                        return;
+                    }
+                    this.modalBotOffline = false;
                     if (res.online && res.data) {
                         const data = res.data;
                         if (data.connection === 'open' && data.bot_phone) {
@@ -565,10 +594,14 @@ function whatsappGatewayApp() {
                         }
                     }
                 })
-                .catch(() => {});
+                .catch(() => {
+                    this.modalBotOffline = true;
+                    this.modalErrorMessage = 'Tidak dapat menghubungi service WhatsApp Gateway.';
+                });
         },
 
         triggerFreshQr() {
+            this.modalBotOffline = false;
             this.modalQrImage = '';
             fetch(`/admin/whatsapp-gateway/session/${encodeURIComponent(this.currentSessionId)}/start`, {
                 method: 'POST',
@@ -577,6 +610,8 @@ function whatsappGatewayApp() {
                     'Accept': 'application/json'
                 }
             }).then(() => {
+                this.pollQrStatus();
+            }).catch(() => {
                 this.pollQrStatus();
             });
         },

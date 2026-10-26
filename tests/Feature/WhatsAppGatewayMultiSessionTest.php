@@ -221,4 +221,88 @@ class WhatsAppGatewayMultiSessionTest extends TestCase
         $response->assertSee('Multi-Session WhatsApp Gateway');
         $response->assertSee('SIJUNA Presensi');
     }
+
+    public function test_admin_session_status_syncs_application_to_database(): void
+    {
+        Http::fake([
+            'http://127.0.0.1:3789/session/app_sijuna/status' => Http::response([
+                'status' => 'success',
+                'connection' => 'open',
+                'bot_phone' => '6289988776655',
+                'bot_enabled' => true,
+            ], 200),
+        ]);
+
+        $adminUser = User::factory()->create(['role' => 'admin', 'status' => 'active']);
+
+        $response = $this->actingAs($adminUser)->get('/admin/whatsapp-gateway/session/app_sijuna/status');
+
+        $response->assertStatus(200)
+            ->assertJsonPath('data.bot_phone', '6289988776655');
+
+        $this->assertEquals('connected', $this->testApp->fresh()->wa_status);
+        $this->assertEquals('6289988776655', $this->testApp->fresh()->wa_phone_number);
+    }
+
+    public function test_admin_cannot_set_wa_session_id_to_default_or_duplicate(): void
+    {
+        $adminUser = User::factory()->create(['role' => 'admin', 'status' => 'active']);
+
+        $otherApp = Application::create([
+            'name' => 'Tracer Study',
+            'slug' => 'tracer',
+            'client_id' => 'client_tracer',
+            'client_secret' => 'secret_tracer',
+            'base_url' => 'https://tracer.example.com',
+            'redirect_uri' => 'https://tracer.example.com/callback',
+            'wa_session_id' => 'app_tracer',
+            'status' => 'active',
+        ]);
+
+        // Attempt setting session ID to 'default'
+        $response = $this->actingAs($adminUser)->post("/admin/whatsapp-gateway/app-config/{$this->testApp->id}", [
+            'wa_session_id' => 'default',
+        ]);
+        $response->assertSessionHasErrors('wa_session_id');
+
+        // Attempt setting duplicate session ID
+        $response2 = $this->actingAs($adminUser)->post("/admin/whatsapp-gateway/app-config/{$this->testApp->id}", [
+            'wa_session_id' => 'app_tracer',
+        ]);
+        $response2->assertSessionHasErrors('wa_session_id');
+    }
+
+    public function test_admin_send_test_message_creates_whatsapp_and_audit_logs(): void
+    {
+        Http::fake([
+            'http://127.0.0.1:3789/session/app_sijuna/send-message' => Http::response([
+                'status' => 'success',
+                'message' => 'Pesan terkirim',
+            ], 200),
+        ]);
+
+        $adminUser = User::factory()->create(['role' => 'admin', 'status' => 'active']);
+
+        $response = $this->actingAs($adminUser)->postJson('/admin/whatsapp-gateway/test-message', [
+            'session_id' => 'app_sijuna',
+            'phone' => '081234567890',
+            'message' => 'Pesan pengujian admin',
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJson(['status' => 'success']);
+
+        $this->assertDatabaseHas('whatsapp_logs', [
+            'application_id' => $this->testApp->id,
+            'session_id' => 'app_sijuna',
+            'type' => 'test',
+            'phone_number' => '6281234567890',
+            'status' => 'sent',
+        ]);
+
+        $this->assertDatabaseHas('audit_logs', [
+            'user_id' => $adminUser->id,
+            'activity' => 'Uji Coba Pengiriman WhatsApp Sesi [app_sijuna]',
+        ]);
+    }
 }
