@@ -148,6 +148,7 @@ return [
         'max_ip_attempts' => (int) env('SECURITY_MAX_IP_ATTEMPTS', 15),
         'block_minutes' => (int) env('SECURITY_TIMEOUT_MINUTES', 15),
         'ip_whitelist' => env('SECURITY_IP_WHITELIST', ''),
+        'account_suspension_enabled' => env('SECURITY_ACCOUNT_SUSPENSION_ENABLED', true),
     ],
 
 ];

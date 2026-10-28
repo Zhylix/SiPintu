@@ -591,6 +591,21 @@
             </div>
 
             <div class="flex items-center gap-2.5 flex-wrap shrink-0">
+                <form action="{{ route('admin.monitoring.toggle-account-suspension') }}" method="POST" class="inline" onsubmit="return confirm('{{ $accountSuspensionEnabled ? 'Nonaktifkan fitur penangguhan akun otomatis? Pengguna yang salah password tidak akan ditangguhkan/time out.' : 'Aktifkan kembali fitur penangguhan akun otomatis saat salah password?' }}');">
+                    @csrf
+                    @if($accountSuspensionEnabled)
+                        <button type="submit" class="px-3.5 py-2.5 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-900 text-xs font-black rounded-xl transition-all shadow-2xs inline-flex items-center gap-2 cursor-pointer" title="Klik untuk menonaktifkan penangguhan akun otomatis">
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                            <span>Tangguhkan Akun: <strong class="text-emerald-700">Aktif</strong> (Klik Nonaktifkan)</span>
+                        </button>
+                    @else
+                        <button type="submit" class="px-3.5 py-2.5 bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 text-xs font-black rounded-xl transition-all shadow-2xs inline-flex items-center gap-2 cursor-pointer" title="Klik untuk mengaktifkan kembali penangguhan akun otomatis">
+                            <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                            <span>Tangguhkan Akun: <strong class="text-amber-800">Non-Aktif</strong> (Klik Aktifkan)</span>
+                        </button>
+                    @endif
+                </form>
+
                 <button type="button" @click="openBlockIpModal = true" class="px-4 py-2.5 bg-rose-50 hover:bg-rose-100 border border-rose-300 text-rose-900 text-xs font-black rounded-xl transition-all shadow-2xs inline-flex items-center gap-1.5 cursor-pointer">
                     <svg class="w-4 h-4 text-rose-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
                     <span>Tambah Blokir IP Manual</span>
@@ -598,34 +613,85 @@
             </div>
         </div>
 
-        <!-- 3 Quick Security Badges -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200">
-                <span class="text-[10px] font-extrabold uppercase text-slate-500 block">IP Terblokir Aktif Saat Ini</span>
-                <div class="text-xl font-black {{ $activeBlockedCount > 0 ? 'text-rose-700' : 'text-emerald-700' }} mt-1">
-                    {{ $activeBlockedCount }} Alamat IP
+        <!-- 4 Quick Security Badges -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col justify-between">
+                <div>
+                    <span class="text-[10px] font-extrabold uppercase text-slate-500 block">IP Terblokir Aktif</span>
+                    <div class="text-xl font-black {{ $activeBlockedCount > 0 ? 'text-rose-700' : 'text-emerald-700' }} mt-1">
+                        {{ $activeBlockedCount }} Alamat IP
+                    </div>
+                    <p class="text-[11px] text-slate-500 mt-0.5 font-medium">
+                        {{ $activeBlockedCount > 0 ? 'Sedang dibatasi aksesnya oleh gateway' : 'Semua IP normal & tidak ada blokir aktif' }}
+                    </p>
                 </div>
-                <p class="text-[11px] text-slate-500 mt-0.5 font-medium">
-                    {{ $activeBlockedCount > 0 ? 'Sedang dibatasi aksesnya oleh sistem gateway' : 'Semua IP normal & tidak ada blokir aktif' }}
-                </p>
             </div>
 
-            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200">
-                <span class="text-[10px] font-extrabold uppercase text-slate-500 block">Deteksi Brute Force (24 Jam)</span>
-                <div class="text-xl font-black text-amber-700 mt-1">
-                    {{ $bruteForceCount24h }} Kali Terdeteksi
+            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col justify-between">
+                <div>
+                    <span class="text-[10px] font-extrabold uppercase text-slate-500 block">Deteksi Brute Force (24 Jam)</span>
+                    <div class="text-xl font-black text-amber-700 mt-1">
+                        {{ $bruteForceCount24h }} Kali Terdeteksi
+                    </div>
+                    <p class="text-[11px] text-slate-500 mt-0.5 font-medium">Serangan login beruntun yang berhasil ditangkal</p>
                 </div>
-                <p class="text-[11px] text-slate-500 mt-0.5 font-medium">Serangan login beruntun yang berhasil ditangkal</p>
             </div>
 
-            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200">
-                <span class="text-[10px] font-extrabold uppercase text-slate-500 block">Batas Percobaan Gagal</span>
-                <div class="text-xl font-black text-slate-800 mt-1 font-mono">
-                    5 Percobaan / 15 Menit
+            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col justify-between">
+                <div>
+                    <span class="text-[10px] font-extrabold uppercase text-slate-500 block">Batas Percobaan Gagal</span>
+                    <div class="text-xl font-black text-slate-800 mt-1 font-mono">
+                        15 Percobaan / 3 Mnt
+                    </div>
+                    <p class="text-[11px] text-slate-500 mt-0.5 font-medium">Otomatis reset setelah berhasil login</p>
                 </div>
-                <p class="text-[11px] text-slate-500 mt-0.5 font-medium">Otomatis reset setelah login berhasil</p>
+            </div>
+
+            <div class="p-4 rounded-2xl {{ $accountSuspensionEnabled ? 'bg-emerald-50/70 border border-emerald-200' : 'bg-amber-50/80 border border-amber-300' }} flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between gap-1">
+                        <span class="text-[10px] font-extrabold uppercase {{ $accountSuspensionEnabled ? 'text-emerald-700' : 'text-amber-800' }} block">Fitur Tangguhkan Akun</span>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-black uppercase {{ $accountSuspensionEnabled ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-amber-100 text-amber-900 border border-amber-300' }}">
+                            {{ $accountSuspensionEnabled ? 'Aktif' : 'Non-Aktif' }}
+                        </span>
+                    </div>
+                    <div class="text-sm font-black {{ $accountSuspensionEnabled ? 'text-emerald-950' : 'text-amber-950' }} mt-1">
+                        {{ $accountSuspensionEnabled ? 'Penangguhan Akun Aktif' : 'Penangguhan Akun Dimatikan' }}
+                    </div>
+                    <p class="text-[11px] {{ $accountSuspensionEnabled ? 'text-emerald-800' : 'text-amber-900' }} mt-0.5 font-medium leading-tight">
+                        {{ $accountSuspensionEnabled ? 'Akun time out 15 mnt jika salah password 15x.' : 'Akun bebas mencoba login & tidak akan ditangguhkan/time out.' }}
+                    </p>
+                </div>
+                <div class="mt-2.5 pt-2 border-t {{ $accountSuspensionEnabled ? 'border-emerald-200/80' : 'border-amber-200' }}">
+                    <form action="{{ route('admin.monitoring.toggle-account-suspension') }}" method="POST" onsubmit="return confirm('{{ $accountSuspensionEnabled ? 'Nonaktifkan fitur penangguhan akun otomatis? Pengguna yang salah password tidak akan ditangguhkan/time out.' : 'Aktifkan kembali fitur penangguhan akun otomatis saat salah password?' }}');">
+                        @csrf
+                        <button type="submit" class="w-full text-center text-[11px] font-black py-1.5 px-2 rounded-lg transition-all cursor-pointer {{ $accountSuspensionEnabled ? 'bg-emerald-100 hover:bg-emerald-200 text-emerald-900 border border-emerald-300' : 'bg-emerald-700 hover:bg-emerald-800 text-white shadow-2xs' }}">
+                            {{ $accountSuspensionEnabled ? 'Matikan Penangguhan' : 'Aktifkan Kembali' }}
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
+
+        @if(!$accountSuspensionEnabled)
+            <div class="p-4 bg-amber-50 border border-amber-300 text-amber-950 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center shrink-0 border border-amber-300">
+                        <svg class="w-5 h-5 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    </div>
+                    <div>
+                        <div class="text-xs font-black text-amber-900 uppercase tracking-wide">Fitur Penangguhan Akun Sedang Dinonaktifkan oleh Admin</div>
+                        <p class="text-xs text-amber-800 font-medium mt-0.5">Siswa, guru, dan admin yang berkali-kali salah memasukkan kata sandi tidak akan ditangguhkan atau mengalami time out pada akun mereka.</p>
+                    </div>
+                </div>
+                <form action="{{ route('admin.monitoring.toggle-account-suspension') }}" method="POST" class="shrink-0 w-full sm:w-auto">
+                    @csrf
+                    <button type="submit" class="w-full sm:w-auto px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-black shadow-sm transition-all cursor-pointer">
+                        Aktifkan Kembali &rarr;
+                    </button>
+                </form>
+            </div>
+        @endif
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
             <!-- Table IP Terblokir (Cols 7) -->

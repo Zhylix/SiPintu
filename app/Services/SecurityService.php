@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\BlockedIp;
 use App\Models\SecurityLog;
+use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Support\Facades\Cache;
 
@@ -147,11 +148,19 @@ class SecurityService
     }
 
     /**
+     * Determine whether the automatic account suspension (lockout on failed login) feature is active.
+     */
+    public function isAccountSuspensionEnabled(): bool
+    {
+        return Setting::isAccountSuspensionEnabled();
+    }
+
+    /**
      * Check if a specific user account is temporarily locked on an IP.
      */
     public function isAccountLocked(?string $identifier, ?string $ip = null): bool
     {
-        if (empty($identifier)) {
+        if (! $this->isAccountSuspensionEnabled() || empty($identifier)) {
             return false;
         }
 
@@ -176,7 +185,7 @@ class SecurityService
      */
     public function getAccountLockRemainingMinutes(?string $identifier, ?string $ip = null): int
     {
-        if (empty($identifier)) {
+        if (! $this->isAccountSuspensionEnabled() || empty($identifier)) {
             return 0;
         }
 
@@ -218,7 +227,7 @@ class SecurityService
         Cache::put($accountCacheKey, $accountAttempts, now()->addMinutes($windowMinutes));
 
         $isAccountLocked = false;
-        if (! empty($identifierKey) && $accountAttempts >= $maxAttempts) {
+        if ($this->isAccountSuspensionEnabled() && ! empty($identifierKey) && $accountAttempts >= $maxAttempts) {
             $lockExpiry = now()->addMinutes($timeoutMinutes);
             Cache::put('security:account_locked:'.md5($identifierKey.'|'.$ip), $lockExpiry->toIso8601String(), $lockExpiry);
             Cache::forget($accountCacheKey);

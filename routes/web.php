@@ -325,6 +325,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::delete('/monitoring/backup/{filename}', [AdminMonitoringController::class, 'deleteBackup'])->name('monitoring.backup.delete');
     Route::post('/monitoring/blocked-ips', [AdminMonitoringController::class, 'storeBlockedIp'])->name('monitoring.blocked-ips.store');
     Route::delete('/monitoring/blocked-ips/{blockedIp}', [AdminMonitoringController::class, 'unblockIp'])->name('monitoring.blocked-ips.destroy');
+    Route::post('/monitoring/toggle-account-suspension', [AdminMonitoringController::class, 'toggleAccountSuspension'])->name('monitoring.toggle-account-suspension');
 
     // Analytics & Usage Reports
     Route::get('/analytics', [AdminAnalyticsController::class, 'index'])->name('analytics.index');

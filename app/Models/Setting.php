@@ -120,4 +120,18 @@ class Setting extends Model
     {
         return (string) (static::get('pwa_icon_version') ?? '1');
     }
+
+    /**
+     * Check if automatic account suspension/lockout upon multiple failed logins is enabled.
+     * Defaults to true if not explicitly set.
+     */
+    public static function isAccountSuspensionEnabled(): bool
+    {
+        $val = static::get('security_account_suspension_enabled');
+        if ($val === null) {
+            return (bool) config('auth.security.account_suspension_enabled', true);
+        }
+
+        return filter_var($val, FILTER_VALIDATE_BOOLEAN);
+    }
 }

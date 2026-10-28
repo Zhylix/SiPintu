@@ -4,12 +4,14 @@ namespace Tests\Feature;
 
 use App\Http\Middleware\CheckBlockedIp;
 use App\Models\BlockedIp;
+use App\Models\Setting;
 use App\Models\User;
 use App\Services\SecurityService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 class SecurityServiceAndBlockedIpTest extends TestCase
@@ -106,4 +108,63 @@ class SecurityServiceAndBlockedIpTest extends TestCase
         $this->assertNull($this->securityService->getActiveBlock($testIp));
         $this->assertEquals(0, $this->securityService->getIpTimeoutRemainingMinutes($testIp));
     }
+
+    public function test_account_suspension_can_be_disabled_and_prevents_account_lockout(): void
+    {
+        $testIp = '203.0.113.88';
+        $targetUser = 'student_test_'.rand(100, 999);
+
+        // 1. By default, account suspension is enabled
+        $this->assertTrue(Setting::isAccountSuspensionEnabled());
+        $this->assertTrue($this->securityService->isAccountSuspensionEnabled());
+
+        // 2. Disable account suspension via Setting
+        Setting::set('security_account_suspension_enabled', '0');
+        $this->assertFalse(Setting::isAccountSuspensionEnabled());
+        $this->assertFalse($this->securityService->isAccountSuspensionEnabled());
+
+        // 3. Trigger 20 failed login attempts for this target account
+        for ($i = 0; $i < 20; $i++) {
+            $this->securityService->recordFailedLogin($testIp, $targetUser);
+        }
+
+        // Account must NOT be locked
+        $this->assertFalse($this->securityService->isAccountLocked($targetUser, $testIp));
+        $this->assertEquals(0, $this->securityService->getAccountLockRemainingMinutes($targetUser, $testIp));
+
+        // 4. Re-enable account suspension
+        Setting::set('security_account_suspension_enabled', '1');
+        $this->assertTrue($this->securityService->isAccountSuspensionEnabled());
+    }
+
+    public function test_admin_can_toggle_account_suspension_via_route(): void
+    {
+        $admin = User::factory()->create([
+            'role' => 'admin',
+            'status' => 'active',
+            'password' => Hash::make('password'),
+        ]);
+
+        Setting::set('security_account_suspension_enabled', '1');
+        $this->assertTrue(Setting::isAccountSuspensionEnabled());
+
+        // Toggle OFF
+        $response = $this->actingAs($admin)
+            ->post(route('admin.monitoring.toggle-account-suspension'));
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+        $this->assertFalse(Setting::isAccountSuspensionEnabled());
+
+        // Toggle back ON
+        $response2 = $this->actingAs($admin)
+            ->post(route('admin.monitoring.toggle-account-suspension'));
+
+        $response2->assertRedirect();
+        $response2->assertSessionHas('success');
+        $this->assertTrue(Setting::isAccountSuspensionEnabled());
+
+        $admin->delete();
+    }
 }
+

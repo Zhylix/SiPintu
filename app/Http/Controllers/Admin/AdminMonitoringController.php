@@ -9,6 +9,7 @@ use App\Models\BlockedIp;
 use App\Models\ErrorLog;
 use App\Models\OAuthAccessToken;
 use App\Models\SecurityLog;
+use App\Models\Setting;
 use App\Services\AuditLogger;
 use App\Services\DatabaseBackupService;
 use App\Services\GatewayHealthValidationService;
@@ -68,6 +69,7 @@ class AdminMonitoringController extends Controller
 
         $unresolvedErrorsCount = ErrorLog::unresolved()->count();
         $recentErrorLogs = ErrorLog::with('user')->latest('last_seen_at')->take(5)->get();
+        $accountSuspensionEnabled = Setting::isAccountSuspensionEnabled();
 
         return view('admin.monitoring.index', compact(
             'dbStatus',
@@ -81,7 +83,8 @@ class AdminMonitoringController extends Controller
             'activeBlockedCount',
             'bruteForceCount24h',
             'unresolvedErrorsCount',
-            'recentErrorLogs'
+            'recentErrorLogs',
+            'accountSuspensionEnabled'
         ));
     }
 
@@ -297,5 +300,26 @@ class AdminMonitoringController extends Controller
         ], auth()->id());
 
         return back()->with('success', "IP Address {$validated['ip_address']} berhasil dimasukkan ke daftar blokir.");
+    }
+
+    /**
+     * Aktifkan atau nonaktifkan fitur tangguhkan akun (lockout) otomatis saat salah password.
+     */
+    public function toggleAccountSuspension(Request $request)
+    {
+        $current = Setting::isAccountSuspensionEnabled();
+        $new = ! $current;
+        Setting::set('security_account_suspension_enabled', $new ? '1' : '0');
+
+        AuditLogger::log('toggle_account_suspension', [
+            'enabled' => $new,
+            'status' => $new ? 'enabled' : 'disabled',
+            'admin_id' => auth()->id(),
+            'admin_name' => auth()->user()?->name,
+        ], auth()->id());
+
+        $statusText = $new ? 'diaktifkan kembali' : 'berhasil dinonaktifkan';
+
+        return back()->with('success', "Fitur penangguhan (timeout) akun otomatis {$statusText}.");
     }
 }
