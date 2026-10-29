@@ -3,7 +3,7 @@ module.exports = {
     {
       name: 'sipintu-whatsapp-bot',
       script: 'index.js',
-      cwd: './',
+      cwd: __dirname,
       instances: 1,
       exec_mode: 'fork',
       autorestart: true,

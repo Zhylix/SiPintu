@@ -85,6 +85,17 @@ process.on('unhandledRejection', (reason, promise) => {
     console.error('[WhatsApp Bot Error] Unhandled Rejection:', reason?.message || reason);
 });
 
+if (process.stdout && process.stdout.on) {
+    process.stdout.on('error', (err) => {
+        if (err.code === 'EPIPE') return;
+    });
+}
+if (process.stderr && process.stderr.on) {
+    process.stderr.on('error', (err) => {
+        if (err.code === 'EPIPE') return;
+    });
+}
+
 // Check update Baileys from npm registry
 async function checkBaileysNpmUpdate() {
     try {
@@ -267,7 +278,11 @@ async function connectSession(rawId) {
                 console.log('==================================================');
                 console.log(`[QR CODE] SCAN QR CODE DI BAWAH UNTUK SESI [${id}]:`);
                 console.log('==================================================');
-                qrcodeTerminal.generate(qr, { small: true });
+                try {
+                    qrcodeTerminal.generate(qr, { small: true });
+                } catch (qrErr) {
+                    console.log(`[WhatsApp Bot (${id})] QR Terminal render skipped / error: ${qrErr.message}`);
+                }
                 console.log('==================================================\n');
             }
 
