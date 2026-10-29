@@ -606,6 +606,57 @@ async function executeLogoutSession(rawSessionId, res) {
     }
 }
 
+// Helper for Disconnecting WhatsApp Number from a Session
+async function executeDisconnectSession(rawSessionId, res) {
+    const id = normalizeSessionId(rawSessionId);
+    const session = getOrCreateSession(id);
+    console.log(`[WhatsApp Bot (${id})] Request Disconnect Nomor WhatsApp diterima...`);
+    session.isManualLogoutRequested = true;
+
+    try {
+        if (session.watchdogTimer) clearTimeout(session.watchdogTimer);
+        if (session.reconnectTimer) clearTimeout(session.reconnectTimer);
+
+        if (session.sock) {
+            try {
+                await session.sock.logout();
+            } catch (e) {
+                console.log(`[WhatsApp Bot (${id})] Info during sock.logout:`, e.message);
+            }
+            try {
+                session.sock.ev.removeAllListeners();
+                session.sock.end();
+            } catch (e) {}
+        }
+
+        session.sock = null;
+        session.connectionState = 'close';
+        session.isConnecting = false;
+        session.lastQr = null;
+        session.lastQrImage = null;
+        const disconnectedPhone = session.phone;
+        session.phone = null;
+        session.user = null;
+
+        cleanSessionAuth(id);
+
+        return res.json({
+            status: 'success',
+            session_id: id,
+            phone: disconnectedPhone,
+            message: disconnectedPhone
+                ? `Nomor WhatsApp (+${disconnectedPhone}) pada sesi [${id}] berhasil diputuskan.`
+                : `Nomor WhatsApp pada sesi [${id}] berhasil diputuskan.`
+        });
+    } catch (error) {
+        console.error(`[WhatsApp Bot (${id})] Error during disconnect:`, error);
+        return res.status(500).json({
+            status: 'error',
+            message: 'Gagal memutuskan nomor WhatsApp bot: ' + error.message
+        });
+    }
+}
+
 // 5. Toggle Power on Specific Session (POST /session/:sessionId/toggle-power)
 app.post('/session/:sessionId/toggle-power', authenticateApiKey, (req, res) => {
     return executeTogglePower(req.params.sessionId, req.body.enabled, res);
@@ -626,6 +677,17 @@ app.post('/session/:sessionId/logout', authenticateApiKey, async (req, res) => {
 app.post('/logout', authenticateApiKey, async (req, res) => {
     const targetSessionId = req.body?.session_id || 'default';
     return await executeLogoutSession(targetSessionId, res);
+});
+
+// 6.2 Disconnect Specific Session (POST /session/:sessionId/disconnect)
+app.post('/session/:sessionId/disconnect', authenticateApiKey, async (req, res) => {
+    return await executeDisconnectSession(req.params.sessionId, res);
+});
+
+// 6.3 Backward compatible disconnect for default session (POST /disconnect)
+app.post('/disconnect', authenticateApiKey, async (req, res) => {
+    const targetSessionId = req.body?.session_id || 'default';
+    return await executeDisconnectSession(targetSessionId, res);
 });
 
 // 7. Delete / Remove Session Entirely (DELETE /session/:sessionId)

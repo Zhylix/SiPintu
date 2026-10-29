@@ -132,6 +132,42 @@ class AdminWhatsAppGatewayController extends Controller
     }
 
     /**
+     * Disconnect WhatsApp number for a specific session.
+     */
+    public function disconnectSession(string $sessionId, Request $request, WhatsAppService $whatsAppService): JsonResponse
+    {
+        $result = $whatsAppService->disconnectSession($sessionId);
+
+        // Update database if matching application exists (ignore if central bot default session)
+        if ($sessionId !== 'default') {
+            Application::where('wa_session_id', $sessionId)
+                ->orWhere('slug', preg_replace('/^app_/', '', $sessionId))
+                ->update([
+                    'wa_status' => 'disconnected',
+                    'wa_phone_number' => null,
+                ]);
+        }
+
+        AuditLog::create([
+            'user_id' => Auth::id(),
+            'activity' => "Disconnect Nomor WhatsApp Gateway: [{$sessionId}]",
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+            'metadata' => [
+                'session_id' => $sessionId,
+                'result' => $result,
+            ],
+        ]);
+
+        return response()->json([
+            'status' => ($result['success'] ?? false) ? 'success' : 'error',
+            'message' => $result['message'] ?? ($result['error'] ?? "Nomor WhatsApp sesi [{$sessionId}] berhasil diputuskan."),
+            'success' => $result['success'] ?? false,
+            'data' => $result['data'] ?? null,
+        ]);
+    }
+
+    /**
      * Logout and reset a specific session.
      */
     public function logoutSession(string $sessionId, Request $request, WhatsAppService $whatsAppService): JsonResponse
@@ -158,7 +194,12 @@ class AdminWhatsAppGatewayController extends Controller
             ],
         ]);
 
-        return response()->json($result);
+        return response()->json([
+            'status' => ($result['success'] ?? false) ? 'success' : 'error',
+            'message' => $result['message'] ?? ($result['error'] ?? "Sesi [{$sessionId}] berhasil dikeluarkan."),
+            'success' => $result['success'] ?? false,
+            'data' => $result['data'] ?? null,
+        ]);
     }
 
     /**

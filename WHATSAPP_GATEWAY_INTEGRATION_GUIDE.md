@@ -165,3 +165,17 @@ curl -X POST https://sipintu.sekolah.sch.id/api/v1/whatsapp/send \
    * Buka aplikasi WhatsApp &rarr; **Perangkat Tertaut (Linked Devices)**.
    * Pilih **Tautkan Perangkat** dan scan QR Code yang muncul di layar.
 5. Sesi akan otomatis terhubung (*online*) dan nomor HP aplikasi tersebut langsung tercatat aktif.
+
+---
+
+## 🔌 6. Cara Admin Memutuskan (Disconnect) Nomor WhatsApp
+
+Jika admin ingin mengganti nomor WhatsApp atau melepas nomor dari sesi:
+1. **Nomor WhatsApp Pusat**:
+   * Klik tombol **Disconnect** berwarna merah di kartu *Nomor WhatsApp Pusat SiPintu*.
+2. **Nomor Downstream Application**:
+   * Pada tabel sesi aplikasi, klik tombol ikon **Disconnect** (berwarna merah) di kolom *Aksi*.
+3. **Melalui Modal QR Code**:
+   * Jika modal QR dibuka pada sesi yang sudah terhubung, klik tombol **Putus / Disconnect Nomor**.
+4. Setelah konfirmasi, sesi WhatsApp akan otomatis di-*logout* dan dilepas (*unlinked*), folder autentikasi dibersihkan, dan status di database diperbarui menjadi `disconnected`.
+

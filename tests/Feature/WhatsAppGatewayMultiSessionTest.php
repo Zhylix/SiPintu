@@ -305,4 +305,75 @@ class WhatsAppGatewayMultiSessionTest extends TestCase
             'activity' => 'Uji Coba Pengiriman WhatsApp Sesi [app_sijuna]',
         ]);
     }
+
+    public function test_admin_can_disconnect_downstream_session_number(): void
+    {
+        $this->testApp->update([
+            'wa_status' => 'connected',
+            'wa_phone_number' => '6281234567890',
+        ]);
+
+        Http::fake([
+            'http://127.0.0.1:3789/session/app_sijuna/disconnect' => Http::response([
+                'status' => 'success',
+                'session_id' => 'app_sijuna',
+                'phone' => '6281234567890',
+                'message' => 'Nomor WhatsApp (+6281234567890) pada sesi [app_sijuna] berhasil diputuskan.',
+            ], 200),
+        ]);
+
+        $adminUser = User::factory()->create(['role' => 'admin', 'status' => 'active']);
+
+        $response = $this->actingAs($adminUser)->postJson('/admin/whatsapp-gateway/session/app_sijuna/disconnect');
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'status' => 'success',
+                'success' => true,
+            ]);
+
+        $this->assertEquals('disconnected', $this->testApp->fresh()->wa_status);
+        $this->assertNull($this->testApp->fresh()->wa_phone_number);
+
+        $this->assertDatabaseHas('audit_logs', [
+            'user_id' => $adminUser->id,
+            'activity' => 'Disconnect Nomor WhatsApp Gateway: [app_sijuna]',
+        ]);
+    }
+
+    public function test_admin_can_disconnect_default_session_number(): void
+    {
+        Http::fake([
+            'http://127.0.0.1:3789/session/default/disconnect' => Http::response([
+                'status' => 'success',
+                'session_id' => 'default',
+                'phone' => '6289999999999',
+                'message' => 'Nomor WhatsApp (+6289999999999) pada sesi [default] berhasil diputuskan.',
+            ], 200),
+        ]);
+
+        $adminUser = User::factory()->create(['role' => 'admin', 'status' => 'active']);
+
+        $response = $this->actingAs($adminUser)->postJson('/admin/whatsapp-gateway/session/default/disconnect');
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'status' => 'success',
+                'success' => true,
+            ]);
+
+        $this->assertDatabaseHas('audit_logs', [
+            'user_id' => $adminUser->id,
+            'activity' => 'Disconnect Nomor WhatsApp Gateway: [default]',
+        ]);
+    }
+
+    public function test_non_admin_cannot_disconnect_session(): void
+    {
+        $nonAdmin = User::factory()->create(['role' => 'user', 'status' => 'active']);
+
+        $response = $this->actingAs($nonAdmin)->postJson('/admin/whatsapp-gateway/session/app_sijuna/disconnect');
+
+        $response->assertStatus(403);
+    }
 }

@@ -353,6 +353,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::get('/whatsapp-gateway/logs', [AdminWhatsAppGatewayController::class, 'logs'])->name('whatsapp-gateway.logs');
     Route::get('/whatsapp-gateway/session/{sessionId}/status', [AdminWhatsAppGatewayController::class, 'sessionStatus'])->name('whatsapp-gateway.session.status');
     Route::post('/whatsapp-gateway/session/{sessionId}/start', [AdminWhatsAppGatewayController::class, 'startSession'])->name('whatsapp-gateway.session.start');
+    Route::post('/whatsapp-gateway/session/{sessionId}/disconnect', [AdminWhatsAppGatewayController::class, 'disconnectSession'])->name('whatsapp-gateway.session.disconnect');
     Route::post('/whatsapp-gateway/session/{sessionId}/logout', [AdminWhatsAppGatewayController::class, 'logoutSession'])->name('whatsapp-gateway.session.logout');
     Route::post('/whatsapp-gateway/session/{sessionId}/toggle-power', [AdminWhatsAppGatewayController::class, 'togglePower'])->name('whatsapp-gateway.session.toggle-power');
     Route::post('/whatsapp-gateway/app-config/{application}', [AdminWhatsAppGatewayController::class, 'updateAppConfig'])->name('whatsapp-gateway.app-config');

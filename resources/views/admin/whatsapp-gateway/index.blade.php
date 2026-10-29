@@ -112,9 +112,10 @@
                         <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
                         Scan QR Pusat
                     </button>
-                    @if(($centralBotStatus['data']['connection'] ?? '') === 'open')
-                        <button @click="logoutSession('default')" class="px-3 py-2 bg-white/10 hover:bg-rose-600/80 text-white text-xs font-bold rounded-xl transition-colors" title="Ganti Nomor / Logout">
-                            Logout
+                    @if(($centralBotStatus['data']['connection'] ?? '') === 'open' || !empty($centralBotStatus['data']['bot_phone']))
+                        <button @click="disconnectSession('default', 'Nomor Pusat SiPintu')" class="px-3.5 py-2 bg-rose-500/20 hover:bg-rose-600 text-white border border-rose-400/30 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 shadow-sm" title="Putus / Disconnect Nomor WhatsApp Pusat">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
+                            Disconnect
                         </button>
                     @endif
                 </div>
@@ -153,6 +154,7 @@
                         @php
                             $sessionId = $app->getEffectiveWaSessionId();
                             $isConnected = $app->live_connection === 'open';
+                            $hasPhoneNumber = !empty($app->live_phone) || !empty($app->wa_phone_number);
                         @endphp
                         <tr class="hover:bg-slate-50/60 transition-colors">
                             <td class="py-3.5 px-4">
@@ -242,10 +244,10 @@
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                                     </button>
 
-                                    <!-- Button Logout -->
-                                    @if($isConnected)
-                                        <button @click="logoutSession('{{ $sessionId }}')" class="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-lg transition-colors" title="Putus / Logout Sesi Ini">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                                    <!-- Button Disconnect Nomor WhatsApp -->
+                                    @if($isConnected || $hasPhoneNumber)
+                                        <button @click="disconnectSession('{{ $sessionId }}', {{ json_encode($app->name) }})" class="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-lg transition-colors" title="Disconnect / Putus Nomor WhatsApp">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
                                         </button>
                                     @endif
                                 </div>
@@ -368,14 +370,23 @@
 
                 <!-- If Connected -->
                 <template x-if="!modalBotOffline && modalSessionConnected">
-                    <div class="py-8 space-y-3">
+                    <div class="py-8 space-y-4">
                         <div class="w-16 h-16 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto">
                             <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                         </div>
-                        <h5 class="text-base font-extrabold text-slate-900">Sesi WhatsApp Berhasil Terhubung!</h5>
-                        <p class="text-xs text-slate-600">Nomor Terhubung: <strong class="text-emerald-700 font-mono text-sm" x-text="'+' + modalSessionPhone"></strong></p>
-                        <div class="pt-2">
-                            <button @click="closeQrModal()" class="px-5 py-2.5 bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-md">Tutup Jendela</button>
+                        <div>
+                            <h5 class="text-base font-extrabold text-slate-900">Sesi WhatsApp Berhasil Terhubung!</h5>
+                            <p class="text-xs text-slate-600 mt-1">Nomor Terhubung: <strong class="text-emerald-700 font-mono text-sm" x-text="'+' + modalSessionPhone"></strong></p>
+                        </div>
+                        <div class="pt-2 flex items-center justify-center gap-2">
+                            <button @click="closeQrModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-colors">
+                                Tutup Jendela
+                            </button>
+                            <button @click="disconnectSessionFromModal()" :disabled="isDisconnecting" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl shadow-md transition-colors flex items-center gap-1.5">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
+                                <span x-show="!isDisconnecting">Putus / Disconnect Nomor</span>
+                                <span x-show="isDisconnecting">Memutuskan...</span>
+                            </button>
                         </div>
                     </div>
                 </template>
@@ -498,6 +509,7 @@
 function whatsappGatewayApp() {
     return {
         isRefreshing: false,
+        isDisconnecting: false,
         qrModalOpen: false,
         testModalOpen: false,
         configModalOpen: false,
@@ -616,12 +628,14 @@ function whatsappGatewayApp() {
             });
         },
 
-        logoutSession(sessionId) {
-            if (!confirm(`Apakah Anda yakin ingin mengeluarkan (logout) sesi [${sessionId}]? Anda perlu scan QR ulang untuk menghubungkan kembali.`)) {
+        disconnectSession(sessionId, sessionName = '') {
+            const label = sessionName ? `${sessionName} (${sessionId})` : sessionId;
+            if (!confirm(`Apakah Anda yakin ingin memutuskan (disconnect) nomor WhatsApp untuk sesi [${label}]?\n\nSetelah diputus, nomor ini tidak akan lagi digunakan untuk mengirim pesan sampai Anda menautkannya kembali via scan QR.`)) {
                 return;
             }
 
-            fetch(`/admin/whatsapp-gateway/session/${encodeURIComponent(sessionId)}/logout`, {
+            this.isDisconnecting = true;
+            fetch(`/admin/whatsapp-gateway/session/${encodeURIComponent(sessionId)}/disconnect`, {
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': '{{ csrf_token() }}',
@@ -630,12 +644,49 @@ function whatsappGatewayApp() {
             })
             .then(res => res.json())
             .then(data => {
-                alert(data.message || 'Sesi berhasil dikeluarkan.');
+                alert(data.message || 'Nomor WhatsApp berhasil diputuskan.');
                 window.location.reload();
             })
             .catch(() => {
-                alert('Gagal mengeluarkan sesi.');
+                alert('Gagal memutuskan nomor WhatsApp sesi ini.');
+            })
+            .finally(() => {
+                this.isDisconnecting = false;
             });
+        },
+
+        disconnectSessionFromModal() {
+            if (!this.currentSessionId) return;
+            const label = this.currentSessionName ? `${this.currentSessionName} (${this.currentSessionId})` : this.currentSessionId;
+            if (!confirm(`Apakah Anda yakin ingin memutuskan (disconnect) nomor WhatsApp untuk sesi [${label}]?`)) {
+                return;
+            }
+
+            this.isDisconnecting = true;
+            fetch(`/admin/whatsapp-gateway/session/${encodeURIComponent(this.currentSessionId)}/disconnect`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                alert(data.message || 'Nomor WhatsApp berhasil diputuskan.');
+                this.modalSessionConnected = false;
+                this.modalSessionPhone = '';
+                this.triggerFreshQr();
+            })
+            .catch(() => {
+                alert('Gagal memutuskan nomor WhatsApp sesi ini.');
+            })
+            .finally(() => {
+                this.isDisconnecting = false;
+            });
+        },
+
+        logoutSession(sessionId, sessionName = '') {
+            return this.disconnectSession(sessionId, sessionName);
         },
 
         openTestModal(sessionId, sessionName) {

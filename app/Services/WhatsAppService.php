@@ -421,6 +421,52 @@ class WhatsAppService
     }
 
     /**
+     * Disconnect WhatsApp number for a specific session.
+     */
+    public function disconnectSession(string $sessionId): array
+    {
+        try {
+            $session = trim($sessionId);
+            $response = Http::withHeaders([
+                'x-api-key' => $this->apiKey,
+                'Accept' => 'application/json',
+            ])->timeout(10)->post("{$this->botUrl}/session/{$session}/disconnect");
+
+            if ($response->successful()) {
+                return [
+                    'success' => true,
+                    'message' => $response->json('message') ?? "Nomor WhatsApp sesi [{$session}] berhasil diputuskan.",
+                    'data' => $response->json(),
+                ];
+            }
+
+            // Fallback to logout endpoint if disconnect not recognized
+            $fallback = Http::withHeaders([
+                'x-api-key' => $this->apiKey,
+                'Accept' => 'application/json',
+            ])->timeout(10)->post("{$this->botUrl}/session/{$session}/logout");
+
+            if ($fallback->successful()) {
+                return [
+                    'success' => true,
+                    'message' => $fallback->json('message') ?? "Nomor WhatsApp sesi [{$session}] berhasil diputuskan.",
+                    'data' => $fallback->json(),
+                ];
+            }
+
+            return [
+                'success' => false,
+                'error' => $response->json('message') ?? ($response->body() ?: 'Gagal memutuskan nomor WhatsApp sesi bot.'),
+            ];
+        } catch (\Throwable $e) {
+            return [
+                'success' => false,
+                'error' => 'Gagal terhubung ke bot: '.$e->getMessage(),
+            ];
+        }
+    }
+
+    /**
      * Logout and reset a specific session.
      */
     public function logoutSession(string $sessionId): array
@@ -436,6 +482,7 @@ class WhatsAppService
                 return [
                     'success' => true,
                     'message' => $response->json('message') ?? "Sesi [{$session}] berhasil dikeluarkan.",
+                    'data' => $response->json(),
                 ];
             }
 
