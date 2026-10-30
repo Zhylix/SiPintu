@@ -262,3 +262,203 @@ Jika HP bot downstream Anda sewaktu-waktu:
 * Terputus koneksinya
 
 SiPintu secara cerdas akan **otomatis mengalihkan pesan tersebut untuk dikirim via Nomor WhatsApp Pusat SiPintu**, sehingga pesan penting (seperti OTP atau presensi) **dijamin tetap sampai ke penerima tanpa gagal**.
+
+---
+
+## 🚨 Kenapa Notifikasi Otomatis Downstream Tidak Terkirim? (Troubleshooting Cepat)
+
+Jika aplikasi downstream Anda sudah memiliki fitur notifikasi WhatsApp otomatis tetapi pesannya **tidak pernah sampai ke nomor user/orang tua**, periksa 5 penyebab utama berikut:
+
+### ⚠️ Penyebab 1: Menggunakan Mode Antrean (`sync: false`) Tapi Queue Worker SiPintu Belum Berjalan
+* **Gejala:** Downstream menerima respon `202 Accepted` ("queued"), log di downstream tampak berhasil, namun pesan tidak pernah terkirim ke WhatsApp.
+* **Penyebab:** SiPintu secara default memasukkan pesan ke tabel `jobs` (antrean database). Jika di server SiPintu perintah worker tidak dijalankan, pesan tertahan selamanya di antrean!
+* **Solusi Cepat:**
+  1. Ubah parameter `sync` menjadi `true` di downstream:
+     ```php
+     WhatsAppBot::send(phone: $phone, message: $msg, sync: true);
+     ```
+     Dengan `sync: true`, pesan langsung dikirim detik itu juga (200 OK) tanpa menunggu queue worker.
+  2. Atau, jika ingin tetap antrean asinkron, jalankan worker di server SiPintu:
+     ```bash
+     php artisan queue:work --tries=3
+     ```
+
+### ⚠️ Penyebab 2: Daemon Service Baileys Bot Node.js Belum Dijalankan
+* **Gejala:** Downstream menerima respon HTTP `502 Bad Gateway` atau cURL error `Connection refused to http://127.0.0.1:3789`.
+* **Penyebab:** Mesin pengirim WhatsApp di SiPintu (`whatsapp-bot/index.js`) belum menyala.
+* **Solusi:** Di server SiPintu, jalankan service bot:
+  ```bash
+  cd /path/ke/SiPintu/whatsapp-bot
+  npm start
+  # atau gunakan PM2 agar otomatis hidup kembali jika crash/reboot:
+  pm2 start ecosystem.config.cjs
+  ```
+
+### ⚠️ Penyebab 3: Nomor WhatsApp Belum Ditautkan (Belum Scan QR)
+* **Gejala:** Respon error `Bot offline` atau `Nomor bot belum terhubung`.
+* **Solusi:** 
+  1. Buka dashboard SiPintu &rarr; Menu **WhatsApp Gateway** (`/admin/whatsapp-gateway`).
+  2. Cari aplikasi downstream Anda & klik ikon **Scan QR**.
+  3. Buka WhatsApp di HP Anda &rarr; **Perangkat Tertaut** &rarr; **Tautkan Perangkat** &rarr; Scan QR Code.
+  4. Pastikan status berubah menjadi **🟢 Terhubung**.
+  *(Tips: Pastikan opsi "Auto Fallback to Central Bot" dicentang agar jika nomor Anda offline, bot pusat SiPintu otomatis mem-backup pengiriman).*
+
+### ⚠️ Penyebab 4: Format Nomor Telepon Salah / Kosong di Database Downstream
+* **Gejala:** Respon HTTP `422 Unprocessable Entity` ("Format nomor telepon tidak valid").
+* **Penyebab:** Nomor di database siswa/ortu downstream mengandung tanda strip (`0812-3456-789`), spasi (`0812 3456`), atau kosong/null.
+* **Solusi:** SiPintu menerima format nomor Indonesia seperti `08123456789` atau `628123456789`. Pastikan downstream memformat nomor sebelum mengirim:
+  ```php
+  $cleanPhone = preg_replace('/[^0-9]/', '', $phone);
+  ```
+
+### ⚠️ Penyebab 5: Trigger Event di Downstream Belum Memanggil Helper WhatsApp
+* **Gejala:** Tidak ada log apa pun di SiPintu (tabel `whatsapp_logs` kosong).
+* **Penyebab:** Fitur notifikasi otomatis di downstream hanya berupa tampilan UI/setting, namun fungsi pemanggilan API SiPintu belum disematkan pada fungsi controller/observer absensi.
+* **Solusi:** Tautkan pemanggilan `WhatsAppBot::send(...)` langsung ke Event atau Observer absensi (lihat panduan langkah demi langkah di bawah).
+
+---
+
+## ⚡ Panduan Detail: Cara Memasang Notifikasi Otomatis pada Aplikasi Downstream
+
+Berikut adalah panduan langkah demi langkah untuk memasang notifikasi otomatis pada skenario nyata:
+
+### Skenario: Notifikasi Absensi/Presensi Siswa Otomatis ke WhatsApp Orang Tua (Contoh: SIJUNA)
+
+#### Opsi 1: Pasang Langsung di Controller Absensi (Paling Mudah)
+Buka controller downstream tempat data presensi disimpan (misal: `AttendanceController.php` atau `PresensiController.php`):
+
+```php
+namespace App\Http\Controllers;
+
+use App\Models\Attendance;
+use App\Models\Student;
+use App\Services\WhatsAppBot;
+use Illuminate\Http\Request;
+
+class PresensiController extends Controller
+{
+    public function store(Request $request)
+    {
+        // 1. Simpan data presensi siswa
+        $attendance = Attendance::create([
+            'student_id' => $request->student_id,
+            'status'     => $request->status, // misal: 'hadir', 'terlambat'
+            'time_in'    => now()->format('H:i:s'),
+            'date'       => today(),
+        ]);
+
+        $student = Student::with('parent')->find($request->student_id);
+
+        // 2. Kirim notifikasi otomatis jika nomor orang tua / wali tersedia
+        $parentPhone = $student->parent_phone ?? $student->parent?->whatsapp_number;
+
+        if ($parentPhone) {
+            $namaSiswa = $student->name;
+            $statusStr = ucfirst($attendance->status);
+            $jam = now()->translatedFormat('H:i') . ' WIB';
+            $tanggal = now()->translatedFormat('d F Y');
+
+            $pesan = "📢 *NOTIFIKASI PRESENSI SISWA*\n\n"
+                   . "Yth. Orang Tua/Wali dari *{$namaSiswa}*,\n\n"
+                   . "Diberitahukan bahwa ananda telah tercatat presensi:\n"
+                   . "• Tanggal : {$tanggal}\n"
+                   . "• Jam     : {$jam}\n"
+                   . "• Status  : *{$statusStr}*\n\n"
+                   . "Pesan ini dikirim otomatis oleh sistem SIJUNA.";
+
+            // Kirim secara langsung (sync = true direkomendasikan untuk notifikasi real-time)
+            WhatsAppBot::send(
+                phone: $parentPhone,
+                message: $pesan,
+                sync: true
+            );
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Presensi berhasil dicatat dan notifikasi WhatsApp telah dikirim.',
+        ]);
+    }
+}
+```
+
+#### Opsi 2: Menggunakan Eloquent Model Observer (Arsitektur Terbaik & Rapi)
+Jika aplikasi downstream ingin setiap kali data presensi baru dibuat otomatis mengirim WhatsApp tanpa mengotori controller:
+
+1. Buat observer di downstream:
+   ```bash
+   php artisan make:observer AttendanceObserver --model=Attendance
+   ```
+2. Isi file `app/Observers/AttendanceObserver.php`:
+   ```php
+   namespace App\Observers;
+
+   use App\Models\Attendance;
+   use App\Services\WhatsAppBot;
+   use Illuminate\Support\Facades\Log;
+
+   class AttendanceObserver
+   {
+       public function created(Attendance $attendance): void
+       {
+           $student = $attendance->student;
+           $parentPhone = $student?->parent_phone;
+
+           if (! $parentPhone) {
+               return;
+           }
+
+           $pesan = "📢 *NOTIFIKASI PRESENSI*\n\n"
+                  . "Halo Bapak/Ibu, ananda *{$student->name}* tercatat *{$attendance->status}* pada pukul " . now()->format('H:i') . " WIB.";
+
+           // Kirim dengan sync: true
+           $res = WhatsAppBot::send($parentPhone, $pesan, sync: true);
+
+           if (! $res['success']) {
+               Log::warning("[Presensi] Gagal kirim WA notifikasi ke {$parentPhone}: " . ($res['error'] ?? 'Unknown error'));
+           }
+       }
+   }
+   ```
+3. Daftarkan di `app/Providers/EventServiceProvider.php` downstream:
+   ```php
+   use App\Models\Attendance;
+   use App\Observers\AttendanceObserver;
+
+   public function boot(): void
+   {
+       Attendance::observe(AttendanceObserver::class);
+   }
+   ```
+
+---
+
+## 🧪 Uji Coba Cepat (Diagnostik Mandiri via Terminal / cURL)
+
+Sebelum menyalahkan aplikasi downstream, jalankan 2 tes cURL berikut dari terminal downstream atau Postman untuk memastikan SiPintu siap:
+
+### 1. Tes Cek Status Sesi Bot Downstream
+```bash
+curl -X GET "http://localhost:8000/api/v1/whatsapp/status" \
+  -H "X-Client-ID: <client_id_aplikasi_anda>" \
+  -H "X-Client-Secret: <client_secret_aplikasi_anda>" \
+  -H "Accept: application/json"
+```
+**Hasil yang diharapkan:**
+`"is_connected": true` dan `"gateway_status": "ready"`.
+
+### 2. Tes Kirim Pesan Langsung (Sync: true)
+```bash
+curl -X POST "http://localhost:8000/api/v1/whatsapp/send" \
+  -H "X-Client-ID: <client_id_aplikasi_anda>" \
+  -H "X-Client-Secret: <client_secret_aplikasi_anda>" \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json" \
+  -d '{
+    "phone": "08123456789",
+    "message": "Halo! Ini adalah pesan uji coba integrasi WhatsApp Bot.",
+    "sync": true
+  }'
+```
+**Hasil yang diharapkan:**
+Respon HTTP `200 OK` dengan `"status": "success"` dan pesan langsung masuk ke HP tujuan dalam 1-3 detik.

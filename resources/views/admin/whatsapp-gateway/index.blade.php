@@ -361,7 +361,11 @@
                         </div>
                         <h5 class="text-base font-extrabold text-slate-900">Layanan WhatsApp Bot Offline</h5>
                         <p class="text-xs text-rose-600 max-w-xs mx-auto" x-text="modalErrorMessage"></p>
-                        <p class="text-[11px] text-slate-400">Pastikan microservice bot Baileys berjalan pada port 3789.</p>
+                        @php
+                            $configuredBotUrl = config('services.whatsapp.bot_url', 'http://127.0.0.1:3789');
+                            $configuredBotPort = parse_url($configuredBotUrl, PHP_URL_PORT) ?: 3789;
+                        @endphp
+                        <p class="text-[11px] text-slate-400">Pastikan microservice bot Baileys berjalan pada port <strong class="text-slate-600 font-mono">{{ $configuredBotPort }}</strong> (<code class="text-emerald-700 font-mono">{{ $configuredBotUrl }}</code>).</p>
                         <div class="pt-2">
                             <button @click="triggerFreshQr()" class="px-4 py-2 bg-slate-800 text-white text-xs font-bold rounded-xl shadow-md">Coba Hubungkan Ulang</button>
                         </div>

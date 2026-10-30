@@ -179,3 +179,17 @@ Jika admin ingin mengganti nomor WhatsApp atau melepas nomor dari sesi:
    * Jika modal QR dibuka pada sesi yang sudah terhubung, klik tombol **Putus / Disconnect Nomor**.
 4. Setelah konfirmasi, sesi WhatsApp akan otomatis di-*logout* dan dilepas (*unlinked*), folder autentikasi dibersihkan, dan status di database diperbarui menjadi `disconnected`.
 
+---
+
+## 🛠️ 7. Troubleshooting: Mengapa Notifikasi Otomatis Downstream Tidak Terkirim?
+
+| Gejala Masalah | Kemungkinan Penyebab | Cara Mengatasi |
+| :--- | :--- | :--- |
+| **Respon `202 Accepted` ("queued") tapi pesan tidak pernah masuk ke HP user** | Pesan tertahan di antrean database karena `queue:work` belum jalan di server SiPintu. | 1. Di downstream, tambahkan `"sync": true` pada request agar pesan langsung dikirim seketika tanpa antrean.<br>2. Atau jalankan worker di SiPintu: `php artisan queue:work`. |
+| **Error `502 Bad Gateway` atau `Connection refused 127.0.0.1:3789`** | Service Node.js Baileys Bot belum dinyalakan di server SiPintu. | Jalankan service bot di server SiPintu: `cd whatsapp-bot && npm start` (atau gunakan PM2: `pm2 start ecosystem.config.cjs`). |
+| **Error `Bot offline` atau `Nomor bot belum terhubung`** | Nomor WhatsApp bot belum di-scan QR atau koneksi HP terputus. | Buka menu **WhatsApp Gateway** (`/admin/whatsapp-gateway`) di SiPintu & scan QR code dengan nomor WA yang ingin dijadikan bot. |
+| **Error `422 Unprocessable Entity` ("Format nomor telepon tidak valid")** | Nomor telepon di database downstream kosong atau mengandung karakter ilegal (spasi, strip, huruf). | Bersihkan nomor sebelum dikirim: gunakan format `08123456789` atau `628123456789` (hanya digit angka). |
+| **Error `401 Unauthorized`** | Nilai `X-Client-ID` atau `X-Client-Secret` salah/belum disetel di `.env` downstream. | Cocokkan kredensial di file `.env` downstream dengan data di menu **Admin &rarr; Pendaftaran Aplikasi** SiPintu. |
+| **Tidak ada respon / log sama sekali di SiPintu** | Trigger notifikasi di downstream belum dipanggil pada logic/event presensi. | Pasang pemanggilan API di Controller Presensi atau Model Observer (lihat [PANDUAN_PEMASANGAN_BOT_DOWNSTREAM.md](file:///home/zephyr/Documents/SiPintu/SiPintu/PANDUAN_PEMASANGAN_BOT_DOWNSTREAM.md)). |
+
+
