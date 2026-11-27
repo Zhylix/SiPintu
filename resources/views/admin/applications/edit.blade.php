@@ -140,6 +140,19 @@
                     class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm font-semibold focus:bg-white focus:border-emerald-600 focus:outline-none transition-all">
             </div>
 
+            <div class="sm:col-span-2 p-4 rounded-2xl bg-amber-50/70 border border-amber-200/80">
+                <label class="flex items-start gap-3 cursor-pointer">
+                    <input type="checkbox" name="allow_password_sync" value="1" {{ old('allow_password_sync', $application->allow_password_sync) ? 'checked' : '' }}
+                        class="w-4 h-4 mt-0.5 rounded border-amber-300 text-emerald-600 focus:ring-emerald-500">
+                    <div>
+                        <span class="text-xs font-bold text-slate-800 block">Izinkan Sinkronisasi Hash Password (Hybrid Login)</span>
+                        <span class="text-[11px] text-slate-600 block mt-0.5">
+                            Jika dicentang, aplikasi downstream ini akan menerima hash password bcrypt pengguna saat pertukaran token dan webhook update. <strong>Hanya aktifkan untuk aplikasi internal terpercaya</strong> yang membutuhkan login mandiri offline tanpa SSO langsung.
+                        </span>
+                    </div>
+                </label>
+            </div>
+
             <div>
                 <label class="block text-xs font-bold text-slate-700 mb-1.5">Status Registrasi</label>
                 <select name="status" required class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm font-semibold focus:bg-white focus:border-emerald-600 focus:outline-none transition-all">

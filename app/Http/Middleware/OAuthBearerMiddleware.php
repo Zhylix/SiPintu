@@ -53,7 +53,7 @@ class OAuthBearerMiddleware
                 ->first();
 
             if ($application) {
-                $secretValid = ($clientSecret === $application->client_secret);
+                $secretValid = is_string($application->client_secret) && is_string($clientSecret) && hash_equals($application->client_secret, $clientSecret);
                 if (! $secretValid && is_string($application->client_secret) && ! empty($application->client_secret) && (str_starts_with($application->client_secret, '$2y$') || str_starts_with($application->client_secret, '$2a$'))) {
                     try {
                         $secretValid = Hash::check($clientSecret, $application->client_secret);

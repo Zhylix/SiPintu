@@ -324,13 +324,14 @@ class DatabaseBackupService
     }
 
     /**
-     * Hapus file backup yang lebih tua dari $retentionDays hari.
+     * Hapus file backup yang lebih tua dari $retentionDays hari (default: 7 hari / 1 minggu).
      */
     public function cleanOldBackups(int $retentionDays = 7): int
     {
         $backupDir = self::getBackupDirectory();
         $files = File::files($backupDir);
-        $thresholdTimestamp = now()->subDays($retentionDays)->timestamp;
+        $thresholdDate = now()->subDays($retentionDays);
+        $thresholdTimestamp = $thresholdDate->timestamp;
         $deletedCount = 0;
 
         foreach ($files as $file) {
@@ -339,9 +340,23 @@ class DatabaseBackupService
                 continue;
             }
 
-            if ($file->getMTime() < $thresholdTimestamp) {
+            // Coba ambil tanggal dari nama file sipintu_backup_YYYY-MM-DD_...
+            $isExpired = false;
+            if (preg_match('/^sipintu_backup_(\d{4}-\d{2}-\d{2})(_\d+)?\.sql(\.gz)?$/', $filename, $matches)) {
+                try {
+                    $fileDate = Carbon::parse($matches[1]);
+                    $isExpired = $fileDate->lt($thresholdDate->startOfDay());
+                } catch (\Throwable) {
+                    $isExpired = $file->getMTime() < $thresholdTimestamp;
+                }
+            } else {
+                $isExpired = $file->getMTime() < $thresholdTimestamp;
+            }
+
+            if ($isExpired) {
                 if (@unlink($file->getPathname())) {
                     $deletedCount++;
+                    Log::info("[DatabaseBackupService] Menghapus backup kedaluwarsa (> {$retentionDays} hari / 1 minggu): {$filename}");
                 }
             }
         }

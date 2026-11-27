@@ -530,12 +530,22 @@ Setiap request ke endpoint REST API SiPintu wajib menyertakan header:
 
 ### Daftar Endpoint REST API Tersedia
 
-| Method | Endpoint | Deskripsi | Parameter Query (Opsional) |
+| Method | Endpoint | Deskripsi | Parameter Query / Body (Opsional) |
 | :--- | :--- | :--- | :--- |
 | `GET` | `/api/v1/ping` | Heartbeat & cek latency gateway | `?client_id=app_...` |
-| `POST` | `/api/v1/validate-client` | Verifikasi validitas client credentials | Body JSON: `client_id`, `client_secret` |
-| `GET` | `/api/v1/sijuna/students` | Daftar data Siswa SIJUNA lengkap | `?nis=...`, `?search=...`, `?limit=...` |
-| `GET` | `/api/v1/sijuna/teachers` | Daftar data Guru SIJUNA | `?nip=...`, `?search=...` |
+| `GET` | `/api/v1/health` | Alias health check gateway | - |
+| `POST` | `/api/v1/validate-client` | Verifikasi validitas client credentials | Body JSON / Header: `client_id`, `client_secret` |
+| `GET` | `/api/v1/gateway/status` | Status diagnostik gateway & audit koneksi | Header Bearer Token atau `X-Client-ID` & `X-Client-Secret` |
+| `GET` | `/api/v1/sijuna/students` | Daftar data Siswa SIJUNA (Mendukung paginasi & filter) | `?nis=...`, `?search=...`, `?classroom=...`, `?per_page=...`, `?page=...` |
+| `GET` | `/api/v1/sijuna/students/{externalId}` | Detail spesifik 1 Siswa | Path param NIS / External ID |
+| `GET` | `/api/v1/sijuna/teachers` | Daftar data Guru SIJUNA (Mendukung paginasi & filter) | `?nip=...`, `?search=...`, `?per_page=...`, `?page=...` |
+| `GET` | `/api/v1/sijuna/teachers/{externalId}` | Detail spesifik 1 Guru | Path param NIP / External ID / Email |
+| `GET` | `/api/v1/dudi` (atau `/api/v1/sijuna/dudi`) | Daftar data Akun Mitra DUDI | `?dudi_code=...`, `?search=...`, `?per_page=...`, `?page=...` |
+| `GET` | `/api/v1/dudi/{identifier}` | Detail spesifik 1 Akun Mitra DUDI | Path param Kode DUDI / Username / Email / ID |
+| `POST` | `/api/v1/auth/verify-credentials` | Verifikasi kredensial login user (Siswa/Guru/DUDI/Admin) | Body: `identity` (NIS/NIP/Kode DUDI/Email), `password` |
+| `GET` | `/api/v1/user` | Profil identitas user terotentikasi | Header `Authorization: Bearer <token>` |
+| `GET` | `/api/v1/user/profile` | Profil lengkap user terotentikasi + hak akses | Header `Authorization: Bearer <token>` |c
+| `POST` | `/oauth/token` | Exchange OAuth Code / Password Grant ke Access Token | Body: `grant_type`, `client_id`, `client_secret`, `code` |
 
 ---
 

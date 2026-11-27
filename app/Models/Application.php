@@ -26,6 +26,7 @@ class Application extends Model
         'redirect_uri',
         'logout_uri',
         'scopes',
+        'allow_password_sync',
         'status',
         'health_check_url',
         'last_health_status',
@@ -49,6 +50,7 @@ class Application extends Model
         'last_connected_at' => 'datetime',
         'total_api_requests' => 'integer',
         'wa_auto_fallback' => 'boolean',
+        'allow_password_sync' => 'boolean',
     ];
 
     /**

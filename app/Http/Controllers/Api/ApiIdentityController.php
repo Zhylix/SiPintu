@@ -11,7 +11,6 @@ use App\Services\AuditLogger;
 use App\Services\GatewayHealthValidationService;
 use App\Services\PasswordSyncService;
 use App\Services\SecurityService;
-use App\Services\SijunaApiService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -71,7 +70,7 @@ class ApiIdentityController extends Controller
     /**
      * Return detailed profile data including role details, timestamps, and enriched SIJUNA data
      */
-    public function profile(Request $request, SijunaApiService $sijunaService, PasswordSyncService $passwordSyncService): JsonResponse
+    public function profile(Request $request, PasswordSyncService $passwordSyncService): JsonResponse
     {
         $user = $request->attributes->get('oauth_user');
         $app = $request->attributes->get('oauth_application');
@@ -83,16 +82,19 @@ class ApiIdentityController extends Controller
             ], 404);
         }
 
-        $sijunaData = null;
-        if ($user->external_id || $user->email) {
-            if ($user->isTeacher()) {
-                $sijunaData = $sijunaService->getTeacherByExternalId($user->external_id ?: $user->email);
-            } elseif ($user->isAlumni()) {
-                $sijunaData = $sijunaService->getAlumniByExternalId($user->external_id ?: $user->username ?: $user->email);
-            } elseif ($user->isStudent()) {
-                $sijunaData = $sijunaService->getStudentByExternalId($user->external_id ?: $user->username ?: $user->email);
-            }
-        }
+        // SIJUNA profile data is derived from local database attributes synced from SIJUNA.
+        // Live calls to SIJUNA are strictly avoided outside periodic/admin synchronization.
+        $sijunaData = [
+            'id' => $user->external_id ?: (string) $user->id,
+            'external_id' => $user->external_id,
+            'nis' => $user->nis ?? ($user->isStudent() ? $user->username : null),
+            'nip' => $user->nip ?? ($user->isTeacher() ? $user->username : null),
+            'nama' => $user->name,
+            'name' => $user->name,
+            'email' => $user->email,
+            'classroom' => $user->classroom,
+            'status' => $user->status,
+        ];
 
         return response()->json(array_merge([
             'id' => (string) $user->id,
@@ -204,39 +206,104 @@ class ApiIdentityController extends Controller
         ], $passwordSyncService->getPasswordPayload($user)));
     }
 
+    protected function formatStudentOutput(User $user): array
+    {
+        return [
+            'id' => (string) $user->id,
+            'external_id' => $user->external_id,
+            'nis' => $user->username ?: $user->external_id,
+            'nama' => $user->name,
+            'name' => $user->name,
+            'email' => $user->email,
+            'phone' => $user->phone,
+            'avatar_url' => $user->avatar_url,
+            'avatar' => $user->avatar_url,
+            'role' => $user->role,
+            'status' => $user->status,
+            'classroom' => $user->classroom,
+            'tahun_masuk' => $user->tahun_masuk,
+            'tahun_lulus' => $user->tahun_lulus,
+            'created_at' => $user->created_at?->toIso8601String(),
+            'updated_at' => $user->updated_at?->toIso8601String(),
+        ];
+    }
+
+    protected function formatTeacherOutput(User $user): array
+    {
+        return [
+            'id' => (string) $user->id,
+            'external_id' => $user->external_id,
+            'nip' => $user->username ?: $user->external_id,
+            'nama' => $user->name,
+            'name' => $user->name,
+            'email' => $user->email,
+            'phone' => $user->phone,
+            'role' => $user->role,
+            'status' => $user->status,
+            'created_at' => $user->created_at?->toIso8601String(),
+            'updated_at' => $user->updated_at?->toIso8601String(),
+        ];
+    }
+
+    protected function formatDudiOutput(User $user): array
+    {
+        return [
+            'id' => (string) $user->id,
+            'external_id' => $user->external_id,
+            'dudi_code' => $user->dudi_code ?? ($user->username ?: $user->external_id),
+            'kode_dudi' => $user->dudi_code ?? ($user->username ?: $user->external_id),
+            'username' => $user->username,
+            'nama_perusahaan' => $user->name,
+            'name' => $user->name,
+            'email' => $user->email,
+            'phone' => $user->phone,
+            'avatar_url' => $user->avatar_url,
+            'avatar' => $user->avatar_url,
+            'role' => $user->role,
+            'status' => $user->status,
+            'created_at' => $user->created_at?->toIso8601String(),
+            'updated_at' => $user->updated_at?->toIso8601String(),
+        ];
+    }
+
+    protected function formatAlumniOutput(User $user): array
+    {
+        return [
+            'id' => (string) $user->id,
+            'external_id' => $user->external_id,
+            'nis' => $user->username ?: $user->external_id,
+            'nama' => $user->name,
+            'name' => $user->name,
+            'email' => $user->email,
+            'phone' => $user->phone,
+            'avatar_url' => $user->avatar_url,
+            'avatar' => $user->avatar_url,
+            'role' => $user->role,
+            'status' => $user->status,
+            'classroom' => $user->classroom,
+            'tahun_masuk' => $user->tahun_masuk,
+            'tahun_lulus' => $user->tahun_lulus,
+            'created_at' => $user->created_at?->toIso8601String(),
+            'updated_at' => $user->updated_at?->toIso8601String(),
+        ];
+    }
+
     /**
-     * Gateway Proxy API: Retrieve students data from SIJUNA (with Redis caching and local DB fallback)
+     * Gateway Proxy API: Retrieve students data from SiPintu local database (synced from SIJUNA)
      */
-    public function students(Request $request, SijunaApiService $sijunaService): JsonResponse
+    public function students(Request $request): JsonResponse
     {
         $nis = $request->query('nis');
 
         if ($nis) {
-            $student = $sijunaService->getStudentByExternalId($nis);
+            $localUser = User::where('role', 'student')
+                ->where(function ($q) use ($nis) {
+                    $q->where('username', $nis)
+                        ->orWhere('external_id', $nis);
+                })
+                ->first();
 
-            if (! $student) {
-                $localUser = User::where('username', $nis)
-                    ->orWhere('external_id', $nis)
-                    ->first();
-
-                if ($localUser) {
-                    $student = [
-                        'id' => (string) $localUser->id,
-                        'external_id' => $localUser->external_id,
-                        'nis' => $localUser->username ?: $localUser->external_id,
-                        'nama' => $localUser->name,
-                        'name' => $localUser->name,
-                        'email' => $localUser->email,
-                        'phone' => $localUser->phone,
-                        'avatar_url' => $localUser->avatar_url,
-                        'avatar' => $localUser->avatar_url,
-                        'role' => $localUser->role,
-                        'status' => $localUser->status,
-                    ];
-                }
-            }
-
-            if (! $student) {
+            if (! $localUser) {
                 return response()->json([
                     'status' => 'error',
                     'message' => "Data siswa dengan NIS {$nis} tidak ditemukan.",
@@ -245,130 +312,100 @@ class ApiIdentityController extends Controller
 
             return response()->json([
                 'status' => 'success',
-                'source' => 'Gateway Proxy (SIJUNA Service + Cache + DB Fallback)',
-                'data' => $student,
+                'source' => 'SiPintu Database (Synced from SIJUNA)',
+                'data' => $this->formatStudentOutput($localUser),
             ]);
         }
 
-        $students = $sijunaService->getStudents();
+        $query = User::where('role', 'student')->orderBy('id', 'desc');
 
-        // Prioritize active students with valid classrooms first, then sort by id descending
-        usort($students, function ($a, $b) {
-            $classA = ! empty($a['classroom'] ?? $a['kelas'] ?? $a['classroom_name'] ?? $a['class'] ?? null);
-            $classB = ! empty($b['classroom'] ?? $b['kelas'] ?? $b['classroom_name'] ?? $b['class'] ?? null);
+        $search = trim((string) $request->query('search', ''));
+        if (! empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('username', 'like', "%{$search}%")
+                    ->orWhere('external_id', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('classroom', 'like', "%{$search}%");
+            });
+        }
 
-            if ($classA !== $classB) {
-                return $classA ? -1 : 1;
-            }
+        $classroom = trim((string) $request->query('classroom', ''));
+        if (! empty($classroom)) {
+            $query->where('classroom', 'like', "%{$classroom}%");
+        }
 
-            return ($b['id'] ?? 0) <=> ($a['id'] ?? 0);
-        });
+        if ($request->has('page') || $request->has('per_page') || $request->has('limit')) {
+            $perPage = min(max((int) ($request->query('per_page') ?: $request->query('limit', 20)), 1), 500);
+            $paginated = $query->paginate($perPage);
 
-        $enrichedStudents = array_map(function ($s) {
-            $createdYear = ! empty($s['created_at']) ? (int) Carbon::parse($s['created_at'])->format('Y') : null;
-            $updatedYear = ! empty($s['updated_at']) ? (int) Carbon::parse($s['updated_at'])->format('Y') : null;
-            $s['tahun_masuk'] = $createdYear;
-            $s['tahun_lulus'] = $updatedYear;
+            return response()->json([
+                'status' => 'success',
+                'source' => 'SiPintu Database (Synced from SIJUNA)',
+                'meta' => [
+                    'current_page' => $paginated->currentPage(),
+                    'last_page' => $paginated->lastPage(),
+                    'per_page' => $paginated->perPage(),
+                    'total' => $paginated->total(),
+                ],
+                'data' => $paginated->map(fn ($s) => $this->formatStudentOutput($s))->values(),
+            ]);
+        }
 
-            return $s;
-        }, $students);
+        $students = $query->get()
+            ->map(fn ($s) => $this->formatStudentOutput($s))
+            ->values();
 
         return response()->json([
             'status' => 'success',
-            'source' => 'Gateway Proxy (SIJUNA Service + Redis Cache)',
-            'count' => count($enrichedStudents),
-            'data' => $enrichedStudents,
+            'source' => 'SiPintu Database (Synced from SIJUNA)',
+            'count' => $students->count(),
+            'data' => $students,
         ]);
     }
 
     /**
-     * Gateway Proxy API: Retrieve specific student data from SIJUNA by External ID or NIS
+     * Gateway Proxy API: Retrieve specific student data from SiPintu local database
      */
-    public function studentDetail(Request $request, string $externalId, SijunaApiService $sijunaService): JsonResponse
+    public function studentDetail(Request $request, string $externalId): JsonResponse
     {
-        $student = $sijunaService->getStudentByExternalId($externalId);
+        $localUser = User::where('role', 'student')
+            ->where(function ($q) use ($externalId) {
+                $q->where('username', $externalId)
+                    ->orWhere('external_id', $externalId);
+            })
+            ->first();
 
-        if (! $student) {
-            $localUser = User::where('username', $externalId)
-                ->orWhere('external_id', $externalId)
-                ->first();
-
-            if ($localUser) {
-                $student = [
-                    'id' => (string) $localUser->id,
-                    'external_id' => $localUser->external_id,
-                    'nis' => $localUser->username ?: $localUser->external_id,
-                    'nama' => $localUser->name,
-                    'name' => $localUser->name,
-                    'email' => $localUser->email,
-                    'phone' => $localUser->phone,
-                    'avatar_url' => $localUser->avatar_url,
-                    'avatar' => $localUser->avatar_url,
-                    'role' => $localUser->role,
-                    'status' => $localUser->status,
-                    'classroom' => $localUser->classroom,
-                    'created_at' => $localUser->created_at?->toIso8601String(),
-                    'updated_at' => $localUser->updated_at?->toIso8601String(),
-                ];
-            }
-        }
-
-        if (! $student) {
+        if (! $localUser) {
             return response()->json([
                 'status' => 'error',
                 'message' => "Data siswa dengan ID/NIS {$externalId} tidak ditemukan.",
             ], 404);
         }
 
-        $student['tahun_masuk'] = ! empty($student['created_at']) ? (int) Carbon::parse($student['created_at'])->format('Y') : null;
-        $student['tahun_lulus'] = ! empty($student['updated_at']) ? (int) Carbon::parse($student['updated_at'])->format('Y') : null;
-
         return response()->json([
             'status' => 'success',
-            'source' => 'Gateway Proxy (SIJUNA Service + Redis Cache + DB Fallback)',
-            'data' => $student,
+            'source' => 'SiPintu Database (Synced from SIJUNA)',
+            'data' => $this->formatStudentOutput($localUser),
         ]);
     }
 
     /**
-     * Gateway Proxy API: Retrieve alumni data from SIJUNA (https://sijuna.com/api/external/alumni)
+     * Gateway Proxy API: Retrieve alumni data from SiPintu local database (synced from SIJUNA)
      */
-    public function alumniProxy(Request $request, SijunaApiService $sijunaService): JsonResponse
+    public function alumniProxy(Request $request): JsonResponse
     {
         $nis = $request->query('nis');
 
         if ($nis) {
-            $alumni = $sijunaService->getAlumniByExternalId($nis);
+            $localUser = User::where('role', 'alumni')
+                ->where(function ($q) use ($nis) {
+                    $q->where('username', $nis)
+                        ->orWhere('external_id', $nis);
+                })
+                ->first();
 
-            if (! $alumni) {
-                $localUser = User::where('role', 'alumni')
-                    ->where(function ($q) use ($nis) {
-                        $q->where('username', $nis)
-                            ->orWhere('external_id', $nis);
-                    })
-                    ->first();
-
-                if ($localUser) {
-                    $alumni = [
-                        'id' => (string) $localUser->id,
-                        'external_id' => $localUser->external_id,
-                        'nis' => $localUser->username ?: $localUser->external_id,
-                        'nama' => $localUser->name,
-                        'name' => $localUser->name,
-                        'email' => $localUser->email,
-                        'phone' => $localUser->phone,
-                        'avatar_url' => $localUser->avatar_url,
-                        'avatar' => $localUser->avatar_url,
-                        'role' => $localUser->role,
-                        'status' => $localUser->status,
-                        'classroom' => $localUser->classroom,
-                        'tahun_masuk' => $localUser->tahun_masuk,
-                        'tahun_lulus' => $localUser->tahun_lulus,
-                    ];
-                }
-            }
-
-            if (! $alumni) {
+            if (! $localUser) {
                 return response()->json([
                     'status' => 'error',
                     'message' => "Data alumni dengan NIS {$nis} tidak ditemukan.",
@@ -377,68 +414,38 @@ class ApiIdentityController extends Controller
 
             return response()->json([
                 'status' => 'success',
-                'source' => 'Gateway Proxy (SIJUNA Alumni Service + Cache + DB Fallback)',
-                'data' => $alumni,
+                'source' => 'SiPintu Database (Synced from SIJUNA)',
+                'data' => $this->formatAlumniOutput($localUser),
             ]);
         }
 
-        $alumniList = $sijunaService->getAlumni();
-
-        $enrichedAlumni = array_map(function ($a) {
-            $createdYear = ! empty($a['created_at']) ? (int) Carbon::parse($a['created_at'])->format('Y') : null;
-            $updatedYear = ! empty($a['updated_at']) ? (int) Carbon::parse($a['updated_at'])->format('Y') : null;
-            $a['tahun_masuk'] = $createdYear;
-            $a['tahun_lulus'] = $updatedYear;
-
-            return $a;
-        }, $alumniList);
+        $alumniList = User::where('role', 'alumni')
+            ->orderBy('id', 'desc')
+            ->get()
+            ->map(fn ($a) => $this->formatAlumniOutput($a))
+            ->values();
 
         return response()->json([
             'status' => 'success',
-            'source' => 'Gateway Proxy (SIJUNA Alumni Service + Redis Cache)',
-            'count' => count($enrichedAlumni),
-            'data' => $enrichedAlumni,
+            'source' => 'SiPintu Database (Synced from SIJUNA)',
+            'count' => $alumniList->count(),
+            'data' => $alumniList,
         ]);
     }
 
     /**
-     * Gateway Proxy API: Retrieve specific alumni data from SIJUNA by External ID or NIS
+     * Gateway Proxy API: Retrieve specific alumni data from SiPintu local database
      */
-    public function alumniDetailProxy(Request $request, string $externalId, SijunaApiService $sijunaService): JsonResponse
+    public function alumniDetailProxy(Request $request, string $externalId): JsonResponse
     {
-        $alumni = $sijunaService->getAlumniByExternalId($externalId);
+        $localUser = User::where('role', 'alumni')
+            ->where(function ($q) use ($externalId) {
+                $q->where('username', $externalId)
+                    ->orWhere('external_id', $externalId);
+            })
+            ->first();
 
-        if (! $alumni) {
-            $localUser = User::where('role', 'alumni')
-                ->where(function ($q) use ($externalId) {
-                    $q->where('username', $externalId)
-                        ->orWhere('external_id', $externalId);
-                })
-                ->first();
-
-            if ($localUser) {
-                $alumni = [
-                    'id' => (string) $localUser->id,
-                    'external_id' => $localUser->external_id,
-                    'nis' => $localUser->username ?: $localUser->external_id,
-                    'nama' => $localUser->name,
-                    'name' => $localUser->name,
-                    'email' => $localUser->email,
-                    'phone' => $localUser->phone,
-                    'avatar_url' => $localUser->avatar_url,
-                    'avatar' => $localUser->avatar_url,
-                    'role' => $localUser->role,
-                    'status' => $localUser->status,
-                    'classroom' => $localUser->classroom,
-                    'tahun_masuk' => $localUser->tahun_masuk,
-                    'tahun_lulus' => $localUser->tahun_lulus,
-                    'created_at' => $localUser->created_at?->toIso8601String(),
-                    'updated_at' => $localUser->updated_at?->toIso8601String(),
-                ];
-            }
-        }
-
-        if (! $alumni) {
+        if (! $localUser) {
             return response()->json([
                 'status' => 'error',
                 'message' => "Data alumni dengan External ID / NIS {$externalId} tidak ditemukan.",
@@ -447,42 +454,28 @@ class ApiIdentityController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'source' => 'Gateway Proxy (SIJUNA Alumni Service + Redis Cache + DB Fallback)',
-            'data' => $alumni,
+            'source' => 'SiPintu Database (Synced from SIJUNA)',
+            'data' => $this->formatAlumniOutput($localUser),
         ]);
     }
 
     /**
-     * Gateway Proxy API: Retrieve teachers data from SIJUNA
+     * Gateway Proxy API: Retrieve teachers data from SiPintu local database (synced from SIJUNA)
      */
-    public function teachers(Request $request, SijunaApiService $sijunaService): JsonResponse
+    public function teachers(Request $request): JsonResponse
     {
         $nip = $request->query('nip') ?: $request->query('email');
 
         if ($nip) {
-            $teacher = $sijunaService->getTeacherByExternalId($nip);
+            $localUser = User::where('role', 'teacher')
+                ->where(function ($q) use ($nip) {
+                    $q->where('email', $nip)
+                        ->orWhere('username', $nip)
+                        ->orWhere('external_id', $nip);
+                })
+                ->first();
 
-            if (! $teacher) {
-                $localUser = User::where('email', $nip)
-                    ->orWhere('username', $nip)
-                    ->orWhere('external_id', $nip)
-                    ->first();
-
-                if ($localUser && $localUser->isTeacher()) {
-                    $teacher = [
-                        'id' => (string) $localUser->id,
-                        'external_id' => $localUser->external_id,
-                        'nip' => $localUser->username ?: $localUser->external_id,
-                        'nama' => $localUser->name,
-                        'name' => $localUser->name,
-                        'email' => $localUser->email,
-                        'role' => $localUser->role,
-                        'status' => $localUser->status,
-                    ];
-                }
-            }
-
-            if (! $teacher) {
+            if (! $localUser) {
                 return response()->json([
                     'status' => 'error',
                     'message' => "Data guru dengan Identifier/NIP/Email {$nip} tidak ditemukan.",
@@ -491,52 +484,66 @@ class ApiIdentityController extends Controller
 
             return response()->json([
                 'status' => 'success',
-                'source' => 'Gateway Proxy (SIJUNA Service + Cache + DB Fallback)',
-                'data' => $teacher,
+                'source' => 'SiPintu Database (Synced from SIJUNA)',
+                'data' => $this->formatTeacherOutput($localUser),
             ]);
         }
 
-        $teachers = $sijunaService->getTeachers();
+        $query = User::where('role', 'teacher')->orderBy('id', 'desc');
+
+        $search = trim((string) $request->query('search', ''));
+        if (! empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('username', 'like', "%{$search}%")
+                    ->orWhere('external_id', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->has('page') || $request->has('per_page') || $request->has('limit')) {
+            $perPage = min(max((int) ($request->query('per_page') ?: $request->query('limit', 20)), 1), 500);
+            $paginated = $query->paginate($perPage);
+
+            return response()->json([
+                'status' => 'success',
+                'source' => 'SiPintu Database (Synced from SIJUNA)',
+                'meta' => [
+                    'current_page' => $paginated->currentPage(),
+                    'last_page' => $paginated->lastPage(),
+                    'per_page' => $paginated->perPage(),
+                    'total' => $paginated->total(),
+                ],
+                'data' => $paginated->map(fn ($t) => $this->formatTeacherOutput($t))->values(),
+            ]);
+        }
+
+        $teachers = $query->get()
+            ->map(fn ($t) => $this->formatTeacherOutput($t))
+            ->values();
 
         return response()->json([
             'status' => 'success',
-            'source' => 'Gateway Proxy (SIJUNA Service + Redis Cache)',
-            'count' => count($teachers),
+            'source' => 'SiPintu Database (Synced from SIJUNA)',
+            'count' => $teachers->count(),
             'data' => $teachers,
         ]);
     }
 
     /**
-     * Gateway Proxy API: Retrieve specific teacher data from SIJUNA by External ID / NIP / Email
+     * Gateway Proxy API: Retrieve specific teacher data from SiPintu local database
      */
-    public function teacherDetail(Request $request, string $externalId, SijunaApiService $sijunaService): JsonResponse
+    public function teacherDetail(Request $request, string $externalId): JsonResponse
     {
-        $teacher = $sijunaService->getTeacherByExternalId($externalId);
+        $localUser = User::where('role', 'teacher')
+            ->where(function ($q) use ($externalId) {
+                $q->where('email', $externalId)
+                    ->orWhere('username', $externalId)
+                    ->orWhere('external_id', $externalId);
+            })
+            ->first();
 
-        if (! $teacher) {
-            $localUser = User::where('email', $externalId)
-                ->orWhere('username', $externalId)
-                ->orWhere('external_id', $externalId)
-                ->first();
-
-            if ($localUser && $localUser->isTeacher()) {
-                $teacher = [
-                    'id' => (string) $localUser->id,
-                    'external_id' => $localUser->external_id,
-                    'nip' => $localUser->username ?: $localUser->external_id,
-                    'nama' => $localUser->name,
-                    'name' => $localUser->name,
-                    'email' => $localUser->email,
-                    'phone' => $localUser->phone,
-                    'avatar_url' => $localUser->avatar_url,
-                    'avatar' => $localUser->avatar_url,
-                    'role' => $localUser->role,
-                    'status' => $localUser->status,
-                ];
-            }
-        }
-
-        if (! $teacher) {
+        if (! $localUser) {
             return response()->json([
                 'status' => 'error',
                 'message' => "Data guru dengan ID/NIP/Email {$externalId} tidak ditemukan.",
@@ -545,8 +552,105 @@ class ApiIdentityController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'source' => 'Gateway Proxy (SIJUNA Service + Redis Cache + DB Fallback)',
-            'data' => $teacher,
+            'source' => 'SiPintu Database (Synced from SIJUNA)',
+            'data' => $this->formatTeacherOutput($localUser),
+        ]);
+    }
+
+    /**
+     * Gateway Proxy API: Retrieve DUDI partner accounts from SiPintu local database
+     */
+    public function dudis(Request $request): JsonResponse
+    {
+        $dudiCode = $request->query('dudi_code') ?: $request->query('kode_dudi') ?: $request->query('email');
+
+        if ($dudiCode) {
+            $localUser = User::whereIn('role', ['dudi', 'mitra'])
+                ->where(function ($q) use ($dudiCode) {
+                    $q->where('email', $dudiCode)
+                        ->orWhere('username', $dudiCode)
+                        ->orWhere('external_id', $dudiCode);
+                })
+                ->first();
+
+            if (! $localUser) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => "Data DUDI dengan Identifier/Kode/Email {$dudiCode} tidak ditemukan.",
+                ], 404);
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'source' => 'SiPintu Database',
+                'data' => $this->formatDudiOutput($localUser),
+            ]);
+        }
+
+        $query = User::whereIn('role', ['dudi', 'mitra'])->orderBy('id', 'desc');
+
+        $search = trim((string) $request->query('search', ''));
+        if (! empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('username', 'like', "%{$search}%")
+                    ->orWhere('external_id', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->has('page') || $request->has('per_page') || $request->has('limit')) {
+            $perPage = min(max((int) ($request->query('per_page') ?: $request->query('limit', 20)), 1), 500);
+            $paginated = $query->paginate($perPage);
+
+            return response()->json([
+                'status' => 'success',
+                'source' => 'SiPintu Database',
+                'meta' => [
+                    'current_page' => $paginated->currentPage(),
+                    'last_page' => $paginated->lastPage(),
+                    'per_page' => $paginated->perPage(),
+                    'total' => $paginated->total(),
+                ],
+                'data' => $paginated->map(fn ($d) => $this->formatDudiOutput($d))->values(),
+            ]);
+        }
+
+        $dudis = $query->get()->map(fn ($d) => $this->formatDudiOutput($d))->values();
+
+        return response()->json([
+            'status' => 'success',
+            'source' => 'SiPintu Database',
+            'count' => $dudis->count(),
+            'data' => $dudis,
+        ]);
+    }
+
+    /**
+     * Gateway Proxy API: Retrieve specific DUDI partner account from SiPintu local database
+     */
+    public function dudiDetail(Request $request, string $identifier): JsonResponse
+    {
+        $localUser = User::whereIn('role', ['dudi', 'mitra'])
+            ->where(function ($q) use ($identifier) {
+                $q->where('email', $identifier)
+                    ->orWhere('username', $identifier)
+                    ->orWhere('external_id', $identifier)
+                    ->orWhere('id', $identifier);
+            })
+            ->first();
+
+        if (! $localUser) {
+            return response()->json([
+                'status' => 'error',
+                'message' => "Data DUDI dengan ID/Kode/Email {$identifier} tidak ditemukan.",
+            ], 404);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'source' => 'SiPintu Database',
+            'data' => $this->formatDudiOutput($localUser),
         ]);
     }
 

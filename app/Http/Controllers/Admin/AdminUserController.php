@@ -9,10 +9,12 @@ use App\Models\User;
 use App\Services\AuditLogger;
 use App\Services\PasswordSyncService;
 use App\Services\UserImportService;
+use App\Services\WhatsAppService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class AdminUserController extends Controller
@@ -152,6 +154,7 @@ class AdminUserController extends Controller
             'phone' => ['nullable', 'string', 'max:30'],
             'status' => ['required', Rule::in(['active', 'inactive', 'suspended'])],
             'password' => ['nullable', 'string', 'min:8'],
+            'must_change_password' => ['nullable', 'boolean'],
         ], [
             'email.unique' => 'Email ini sudah terdaftar.',
             'username.unique' => 'Username ini sudah digunakan.',
@@ -176,6 +179,10 @@ class AdminUserController extends Controller
         if (! empty($validated['password'])) {
             $updateData['password'] = Hash::make($validated['password']);
             $passwordChanged = true;
+        }
+
+        if ($request->has('must_change_password')) {
+            $updateData['must_change_password'] = $request->boolean('must_change_password');
         }
 
         $user->update($updateData);
@@ -235,6 +242,99 @@ class AdminUserController extends Controller
         $phoneDisplay = $newPhone ?: '(kosong/dihapus)';
 
         return back()->with('success', "Nomor WhatsApp untuk {$user->name} berhasil diperbarui menjadi {$phoneDisplay}.");
+    }
+
+    /**
+     * Reset user password by Administrator (Quick Reset, Custom, or Randomly Generated).
+     */
+    public function resetPassword(Request $request, User $user): RedirectResponse
+    {
+        $validated = $request->validate([
+            'reset_type' => ['required', 'string', 'in:default,custom,random'],
+            'password' => ['nullable', 'required_if:reset_type,custom', 'string', 'min:8'],
+            'must_change_password' => ['nullable', 'boolean'],
+            'send_whatsapp' => ['nullable', 'boolean'],
+        ], [
+            'password.required_if' => 'Kata sandi kustom wajib diisi.',
+            'password.min' => 'Kata sandi kustom minimal 8 karakter.',
+        ]);
+
+        $resetType = $validated['reset_type'];
+
+        // Determine password
+        if ($resetType === 'custom') {
+            $newPassword = $validated['password'];
+        } elseif ($resetType === 'random') {
+            // Generates memorable yet secure password, e.g. Pintu#5921
+            $newPassword = 'Pintu#' . random_int(1000, 9999);
+        } else {
+            // Default system password
+            $newPassword = 'password';
+        }
+
+        $mustChange = $request->boolean('must_change_password', true);
+
+        $user->update([
+            'password' => Hash::make($newPassword),
+            'must_change_password' => $mustChange,
+        ]);
+
+        // Broadcast to downstream SSO client applications
+        app(PasswordSyncService::class)->broadcastPasswordChange($user);
+
+        // Audit log
+        AuditLogger::log('admin_reset_user_password', [
+            'target_user_id' => $user->id,
+            'target_user_name' => $user->name,
+            'target_user_role' => $user->role,
+            'target_identifier' => $user->external_id ?: ($user->username ?: $user->email),
+            'reset_type' => $resetType,
+            'must_change_password' => $mustChange,
+            'performed_by' => auth()->id(),
+        ], $user->id);
+
+        // Optional WhatsApp notification if user has registered phone
+        $waSent = false;
+        $waError = null;
+        if ($request->boolean('send_whatsapp') && ! empty($user->phone)) {
+            $whatsAppService = app(WhatsAppService::class);
+            $cleanPhone = $whatsAppService->formatPhoneNumber($user->phone);
+
+            if ($cleanPhone) {
+                $identifier = $user->external_id ?: ($user->username ?: $user->email);
+                $msg = "*PEMBERITAHUAN RESET KATA SANDI SIPINTU*\n\n".
+                    "Halo, *{$user->name}*.\n\n".
+                    "Kata sandi akun SiPintu Anda telah berhasil direset oleh Administrator sekolah.\n\n".
+                    "*Identifier Akun:* {$identifier}\n".
+                    "*Kata Sandi Baru:* `{$newPassword}`\n\n";
+
+                if ($mustChange) {
+                    $msg .= "[PENTING] Demi keamanan akun, Anda akan diminta untuk mengganti kata sandi ini menjadi kata sandi pribadi saat pertama kali login.\n\n";
+                }
+
+                $msg .= "Silakan login melalui: " . config('app.url') . "/login\n\n".
+                    "_SiPintu Identity Gateway - SMKN 1 Bangsri_";
+
+                $res = $whatsAppService->sendMessage($cleanPhone, $msg);
+                $waSent = ($res['success'] ?? false);
+                if (! $waSent) {
+                    $waError = $res['error'] ?? 'Layanan WhatsApp bot tidak merespons.';
+                }
+            } else {
+                $waError = 'Nomor WhatsApp tidak valid.';
+            }
+        }
+
+        return back()->with('reset_password_success', [
+            'user_id' => $user->id,
+            'user_name' => $user->name,
+            'role' => $user->role,
+            'identifier' => $user->external_id ?: ($user->username ?: $user->email),
+            'password' => $newPassword,
+            'must_change' => $mustChange,
+            'wa_sent' => $waSent,
+            'wa_error' => $waError,
+        ]);
     }
 
     /**

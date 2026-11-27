@@ -175,9 +175,9 @@ class OAuthController extends Controller
             return response()->json(['error' => 'invalid_client', 'error_description' => 'Client ID not found.'], 401);
         }
 
-        // Verify Client Secret safely (supports plaintext and bcrypt)
-        $secretValid = ($clientSecret === $application->client_secret)
-            || (is_string($application->client_secret) && str_starts_with($application->client_secret, '$2y$') && Hash::check($clientSecret, $application->client_secret));
+        // Verify Client Secret safely (supports plaintext constant-time comparison and bcrypt)
+        $secretValid = (is_string($application->client_secret) && is_string($clientSecret) && hash_equals($application->client_secret, $clientSecret))
+            || (is_string($application->client_secret) && (str_starts_with($application->client_secret, '$2y$') || str_starts_with($application->client_secret, '$2a$')) && Hash::check((string) $clientSecret, $application->client_secret));
         if (! $secretValid) {
             AuditLogger::log('token_exchange_invalid_secret', [
                 'client_id' => $clientId,
@@ -298,6 +298,10 @@ class OAuthController extends Controller
                 'user_id' => $user->id,
             ], $user->id);
 
+            $passwordPayload = $application->allow_password_sync
+                ? app(PasswordSyncService::class)->getPasswordPayload($user)
+                : [];
+
             return response()->json(array_merge([
                 'access_token' => $accessTokenStr,
                 'token_type' => 'Bearer',
@@ -305,7 +309,7 @@ class OAuthController extends Controller
                 'refresh_token' => $refreshTokenStr,
                 'id_token' => $idToken,
                 'scope' => $authCode->scopes ?: 'openid profile email',
-            ], app(PasswordSyncService::class)->getPasswordPayload($user)));
+            ], $passwordPayload));
         }
 
         if ($grantType === 'refresh_token') {
@@ -604,7 +608,7 @@ class OAuthController extends Controller
     {
         // 1. Security: HMAC SHA-256 Signature Verification
         $signature = $request->header('X-SiPintu-Signature');
-        $clientSecret = config('services.sipintu.client_secret') ?: env('SIPINTU_CLIENT_SECRET');
+        $clientSecret = config('services.sipintu.client_secret');
 
         if (! $clientSecret) {
             return response()->json([

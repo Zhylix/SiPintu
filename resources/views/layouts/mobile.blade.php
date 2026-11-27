@@ -18,44 +18,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Plus Jakarta Sans', 'sans-serif'],
-                    },
-                    colors: {
-                        // Desktop & Mobile Unified Branding Color (Emerald Solid Colors)
-                        brand: {
-                            primary: '#047857',      // Primary (#047857) - Same as Desktop Gateway
-                            hover: '#065F46',        // Primary Hover
-                            active: '#064E3B',       // Primary Active
-                            soft: '#ECFDF5',         // Primary Soft Background
-                            border: '#A7F3D0',       // Primary Soft Border
-                            dark: '#022C22',         // Primary Dark Header Text
-                        },
-                        // Solid Support Colors
-                        surface: '#FFFFFF',
-                        canvas: '#F8FAFC',
-                        border: '#E5E7EB',
-                        textPrimary: '#111827',
-                        textSecondary: '#6B7280',
-                        statusSuccess: '#22C55E',
-                        statusWarning: '#F59E0B',
-                        statusError: '#EF4444',
-                        statusInfo: '#047857',
-                    },
-                    borderRadius: {
-                        'xl': '12px',
-                        '2xl': '16px',
-                    }
-                }
-            }
-        }
-    </script>
+    <!-- Compiled Tailwind CSS & Vite Assets -->
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>

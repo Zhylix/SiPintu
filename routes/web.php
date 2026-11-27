@@ -286,6 +286,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::get('/users/template', [AdminUserController::class, 'downloadTemplate'])->name('users.template');
     Route::post('/users/import', [AdminUserController::class, 'import'])->name('users.import');
     Route::patch('/users/{user}/update-phone', [AdminUserController::class, 'updatePhone'])->name('users.update-phone');
+    Route::post('/users/{user}/reset-password', [AdminUserController::class, 'resetPassword'])->name('users.reset-password');
     Route::resource('users', AdminUserController::class);
 
     // Pengelompokan Alumni per Jurusan (PPL, TO, AKL, PM, MPLB)

@@ -33,12 +33,7 @@ class SyncAdminEnvCommand extends Command
         $this->info('===============================================================');
         $this->newLine();
 
-        $config = config('auth.admin', [
-            'name' => env('ADMIN_NAME', 'Administrator SiPintu'),
-            'username' => env('ADMIN_USERNAME', 'admin'),
-            'email' => env('ADMIN_EMAIL', 'admin@smkn1bangsri.sch.id'),
-            'password' => env('ADMIN_PASSWORD', 'password'),
-        ]);
+        $config = config('auth.admin', []);
 
         $name = $config['name'] ?? 'Administrator SiPintu';
         $username = $config['username'] ?? 'admin';

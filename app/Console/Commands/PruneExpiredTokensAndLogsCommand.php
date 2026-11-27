@@ -4,11 +4,14 @@ namespace App\Console\Commands;
 
 use App\Models\AuditLog;
 use App\Models\BlockedIp;
+use App\Models\ErrorLog;
 use App\Models\OAuthAccessToken;
 use App\Models\OAuthAuthCode;
 use App\Models\OAuthRefreshToken;
 use App\Models\SecurityLog;
+use App\Models\SyncLog;
 use App\Models\WhatsAppLog;
+use App\Services\DatabaseBackupService;
 use Illuminate\Console\Command;
 
 class PruneExpiredTokensAndLogsCommand extends Command
@@ -70,6 +73,17 @@ class PruneExpiredTokensAndLogsCommand extends Command
         $deletedAuditLogs = AuditLog::where('created_at', '<', $auditThreshold)->delete();
         $deletedSecurityLogs = SecurityLog::where('created_at', '<', $auditThreshold)->delete();
         $this->line("- Dihapus {$deletedAuditLogs} Audit Log dan {$deletedSecurityLogs} Security Log lama.");
+
+        // 6. Prune Old Resolved Error Logs & Sync Logs (> $days)
+        $deletedErrorLogs = ErrorLog::where('status', 'resolved')
+            ->where('updated_at', '<', $logThreshold)
+            ->delete();
+        $deletedSyncLogs = SyncLog::where('created_at', '<', $logThreshold)->delete();
+        $this->line("- Dihapus {$deletedErrorLogs} Error Log (resolved) dan {$deletedSyncLogs} Sync Log lama.");
+
+        // 7. Bersihkan file backup database yang melewati batas retensi 1 minggu (7 hari)
+        $deletedBackups = app(DatabaseBackupService::class)->cleanOldBackups(7);
+        $this->line("- Dihapus {$deletedBackups} file backup database lama (> 7 hari / 1 minggu).");
 
         $this->info('Pembersihan database berhasil diselesaikan!');
 

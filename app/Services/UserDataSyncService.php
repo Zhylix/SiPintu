@@ -18,9 +18,10 @@ class UserDataSyncService
     /**
      * Generate standard user sync payload for downstream applications.
      */
-    public function getUserPayload(User $user, array $changes = [], array $previous = []): array
+    public function getUserPayload(User $user, array $changes = [], array $previous = [], ?Application $targetApp = null): array
     {
         $isAdmin = $user->isAdmin();
+        $allowPasswordSync = $targetApp ? (bool) $targetApp->allow_password_sync : true;
 
         $userData = [
             'id' => (string) $user->id,
@@ -52,11 +53,11 @@ class UserDataSyncService
             'updated_at' => $user->updated_at?->toIso8601String() ?? now()->toIso8601String(),
         ];
 
-        // Password hash synchronization policy (Admins are exempt from transmitting password hashes)
-        if ($isAdmin) {
+        // Password hash synchronization policy (Admins and apps without allow_password_sync are exempt from transmitting password hashes)
+        if ($isAdmin || ! $allowPasswordSync) {
             $userData['password_sync_required'] = false;
-            $userData['password_change_policy'] = 'ADMIN_EXEMPT';
-            $userData['can_change_password_externally'] = true;
+            $userData['password_change_policy'] = $isAdmin ? 'ADMIN_EXEMPT' : 'EXTERNAL_PASSWORD_SYNC_DISABLED';
+            $userData['can_change_password_externally'] = false;
         } else {
             $userData['password'] = $user->password;
             $userData['password_hash'] = $user->password;
@@ -100,9 +101,6 @@ class UserDataSyncService
             return $response;
         }
 
-        $payload = $this->getUserPayload($user, $changes, $previous);
-        $payloadJson = json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-
         $currentSchemeAndHost = request()->getSchemeAndHttpHost();
         $currentHost = parse_url($currentSchemeAndHost, PHP_URL_HOST);
         $currentPort = parse_url($currentSchemeAndHost, PHP_URL_PORT) ?? (request()->isSecure() ? 443 : 80);
@@ -115,6 +113,9 @@ class UserDataSyncService
         ]));
 
         foreach ($activeApps as $app) {
+            $payload = $this->getUserPayload($user, $changes, $previous, $app);
+            $payloadJson = (string) json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+
             $baseUrl = trim((string) ($app->base_url ?? ''));
             if (empty($baseUrl) || ! filter_var($baseUrl, FILTER_VALIDATE_URL)) {
                 $results[$app->id] = [
@@ -147,6 +148,26 @@ class UserDataSyncService
                     'target_url' => $targetUrl,
                     'status' => 'skipped',
                     'message' => 'Skipped self-synchronization to prevent server deadlock.',
+                ];
+
+                continue;
+            }
+
+            // SIJUNA is strictly an upstream data provider, not a downstream webhook consumer.
+            $sijunaUrl = config('services.sijuna.url', '');
+            $sijunaHost = parse_url($sijunaUrl, PHP_URL_HOST);
+
+            $isSijunaApp = ($sijunaHost && $appHost && strcasecmp($sijunaHost, $appHost) === 0)
+                || str_contains(strtolower($app->slug ?? ''), 'sijuna')
+                || str_contains(strtolower($app->name ?? ''), 'sijuna');
+
+            if ($isSijunaApp) {
+                $results[$app->id] = [
+                    'app_name' => $app->name,
+                    'client_id' => $app->client_id,
+                    'target_url' => $baseUrl,
+                    'status' => 'skipped',
+                    'message' => 'Skipped downstream synchronization: SIJUNA is an upstream data source only.',
                 ];
 
                 continue;
@@ -187,9 +208,9 @@ class UserDataSyncService
 
                 $latency = round((microtime(true) - $startTime) * 1000, 2);
 
-                // 3. If still 404 and user is not admin, try password-specific sync endpoints
+                // 3. If still 404, user is not admin, and app allows password sync, try password-specific sync endpoints
                 $isPasswordSync = empty($changes) || in_array('password', $changes) || isset($payload['user']['password']);
-                if ($response->status() === 404 && $isPasswordSync && ! $user->isAdmin()) {
+                if ($response->status() === 404 && $isPasswordSync && ! $user->isAdmin() && (bool) $app->allow_password_sync) {
                     $passwordPayload = [
                         'event' => 'user.password_updated',
                         'user_id' => (string) $user->id,
@@ -348,6 +369,26 @@ class UserDataSyncService
                     'target_url' => $targetUrl,
                     'status' => 'skipped',
                     'message' => 'Skipped self-synchronization to prevent server deadlock.',
+                ];
+
+                continue;
+            }
+
+            // SIJUNA is strictly an upstream data provider, not a downstream webhook consumer.
+            $sijunaUrl = config('services.sijuna.url', '');
+            $sijunaHost = parse_url($sijunaUrl, PHP_URL_HOST);
+
+            $isSijunaApp = ($sijunaHost && $appHost && strcasecmp($sijunaHost, $appHost) === 0)
+                || str_contains(strtolower($app->slug ?? ''), 'sijuna')
+                || str_contains(strtolower($app->name ?? ''), 'sijuna');
+
+            if ($isSijunaApp) {
+                $results[$app->id] = [
+                    'app_name' => $app->name,
+                    'client_id' => $app->client_id,
+                    'target_url' => $baseUrl,
+                    'status' => 'skipped',
+                    'message' => 'Skipped downstream synchronization: SIJUNA is an upstream data source only.',
                 ];
 
                 continue;

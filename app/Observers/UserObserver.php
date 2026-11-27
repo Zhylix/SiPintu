@@ -2,6 +2,7 @@
 
 namespace App\Observers;
 
+use App\Jobs\SendDownstreamUserSyncWebhookJob;
 use App\Models\User;
 use App\Services\UserDataSyncService;
 use Illuminate\Support\Facades\Log;
@@ -46,18 +47,10 @@ class UserObserver
             $intersect = ['name', 'email', 'role'];
         }
 
-        $syncAction = function () use ($user, $intersect) {
-            try {
-                app(UserDataSyncService::class)->broadcastUserUpdate($user, $intersect, [], force: true);
-            } catch (\Throwable $e) {
-                Log::error("[UserObserver] Downstream sync error for new user ID {$user->id}: ".$e->getMessage());
-            }
-        };
-
         if (app()->runningInConsole()) {
-            $syncAction();
+            SendDownstreamUserSyncWebhookJob::dispatchSync($user, $intersect, [], true);
         } else {
-            dispatch($syncAction)->afterResponse();
+            SendDownstreamUserSyncWebhookJob::dispatch($user, $intersect, [], true)->afterResponse();
         }
     }
 
@@ -82,18 +75,10 @@ class UserObserver
             $previous[$field] = $user->getOriginal($field);
         }
 
-        $syncAction = function () use ($user, $intersect, $previous) {
-            try {
-                app(UserDataSyncService::class)->broadcastUserUpdate($user, $intersect, $previous);
-            } catch (\Throwable $e) {
-                Log::error("[UserObserver] Downstream sync error for user ID {$user->id}: ".$e->getMessage());
-            }
-        };
-
         if (app()->runningInConsole()) {
-            $syncAction();
+            SendDownstreamUserSyncWebhookJob::dispatchSync($user, $intersect, $previous);
         } else {
-            dispatch($syncAction)->afterResponse();
+            SendDownstreamUserSyncWebhookJob::dispatch($user, $intersect, $previous)->afterResponse();
         }
     }
 

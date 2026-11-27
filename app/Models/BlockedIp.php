@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 class BlockedIp extends Model
 {
@@ -35,7 +36,7 @@ class BlockedIp extends Model
             if (! empty($data['date']) && is_string($data['date'])) {
                 $tz = ! empty($data['timezone']) && is_string($data['timezone']) ? $data['timezone'] : null;
                 try {
-                    $value = \Illuminate\Support\Carbon::parse($data['date'], $tz);
+                    $value = Carbon::parse($data['date'], $tz);
                 } catch (\Throwable) {
                     $value = null;
                 }

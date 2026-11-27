@@ -51,8 +51,14 @@ Route::prefix('v1')->middleware('oauth.bearer')->group(function () {
     // Gateway Proxy API for SIJUNA Data Access
     Route::get('/sijuna/students', [ApiIdentityController::class, 'students'])->name('api.v1.sijuna.students');
     Route::get('/sijuna/students/{externalId}', [ApiIdentityController::class, 'studentDetail'])->name('api.v1.sijuna.student_detail');
+    Route::get('/sijuna/teachers', [ApiIdentityController::class, 'teachers'])->name('api.v1.sijuna.teachers');
+    Route::get('/sijuna/teachers/{externalId}', [ApiIdentityController::class, 'teacherDetail'])->name('api.v1.sijuna.teacher_detail');
     Route::get('/sijuna/alumni', [ApiIdentityController::class, 'alumniProxy'])->name('api.v1.sijuna.alumni');
     Route::get('/sijuna/alumni/{externalId}', [ApiIdentityController::class, 'alumniDetailProxy'])->name('api.v1.sijuna.alumni_detail');
+    Route::get('/sijuna/dudi', [ApiIdentityController::class, 'dudis'])->name('api.v1.sijuna.dudi');
+    Route::get('/sijuna/dudi/{identifier}', [ApiIdentityController::class, 'dudiDetail'])->name('api.v1.sijuna.dudi_detail');
+    Route::get('/dudi', [ApiIdentityController::class, 'dudis'])->name('api.v1.dudi');
+    Route::get('/dudi/{identifier}', [ApiIdentityController::class, 'dudiDetail'])->name('api.v1.dudi_detail');
     // Multi-Session WhatsApp Gateway for Downstream Applications
     Route::post('/whatsapp/send', [WhatsAppGatewayController::class, 'send'])->middleware('throttle:120,1')->name('api.v1.whatsapp.send');
     Route::get('/whatsapp/status', [WhatsAppGatewayController::class, 'status'])->name('api.v1.whatsapp.status');

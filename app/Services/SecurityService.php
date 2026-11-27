@@ -6,6 +6,8 @@ use App\Models\BlockedIp;
 use App\Models\SecurityLog;
 use App\Models\Setting;
 use App\Models\User;
+use Carbon\CarbonInterface;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 
 class SecurityService
@@ -35,8 +37,8 @@ class SecurityService
             return true;
         }
 
-        // Configured whitelist from .env (comma-separated, supports wildcards e.g. 192.168.*, 10.0.*)
-        $configuredWhitelist = array_filter(array_map('trim', explode(',', (string) config('auth.security.ip_whitelist', env('SECURITY_IP_WHITELIST', '')))));
+        // Configured whitelist from config (comma-separated, supports wildcards e.g. 192.168.*, 10.0.*)
+        $configuredWhitelist = array_filter(array_map('trim', explode(',', (string) config('auth.security.ip_whitelist', ''))));
         foreach ($configuredWhitelist as $allowed) {
             if ($ip === $allowed || (str_contains($allowed, '*') && fnmatch($allowed, $ip))) {
                 return true;
@@ -82,6 +84,7 @@ class SecurityService
             $timeoutExpiry = $this->parseCachedExpiry(Cache::get("security:ip_timeout:{$ip}"));
             if ($timeoutExpiry && $timeoutExpiry->isPast()) {
                 Cache::forget("security:ip_timeout:{$ip}");
+
                 return false;
             }
 
@@ -118,6 +121,7 @@ class SecurityService
         if ($timeoutExpiry) {
             if ($timeoutExpiry->isPast()) {
                 Cache::forget("security:ip_timeout:{$ip}");
+
                 return null;
             }
 
@@ -172,8 +176,10 @@ class SecurityService
             $lockExpiry = $this->parseCachedExpiry(Cache::get($cacheKey));
             if ($lockExpiry && $lockExpiry->isPast()) {
                 Cache::forget($cacheKey);
+
                 return false;
             }
+
             return true;
         }
 
@@ -320,27 +326,27 @@ class SecurityService
      * Supports ISO strings, Carbon/DateTime instances, Unix timestamps,
      * and gracefully recovers from __PHP_Incomplete_Class (serialized Carbon objects with restricted classes).
      */
-    public function parseCachedExpiry(mixed $value): ?\Carbon\CarbonInterface
+    public function parseCachedExpiry(mixed $value): ?CarbonInterface
     {
         if (empty($value)) {
             return null;
         }
 
-        if ($value instanceof \Carbon\CarbonInterface) {
+        if ($value instanceof CarbonInterface) {
             return $value;
         }
 
         if ($value instanceof \DateTimeInterface) {
-            return \Illuminate\Support\Carbon::instance($value);
+            return Carbon::instance($value);
         }
 
         if (is_numeric($value)) {
-            return \Illuminate\Support\Carbon::createFromTimestamp((int) $value);
+            return Carbon::createFromTimestamp((int) $value);
         }
 
         if (is_string($value)) {
             try {
-                return \Illuminate\Support\Carbon::parse($value);
+                return Carbon::parse($value);
             } catch (\Throwable) {
                 return null;
             }
@@ -352,7 +358,7 @@ class SecurityService
                 try {
                     $tz = ! empty($data['timezone']) && is_string($data['timezone']) ? $data['timezone'] : null;
 
-                    return \Illuminate\Support\Carbon::parse($data['date'], $tz);
+                    return Carbon::parse($data['date'], $tz);
                 } catch (\Throwable) {
                     return null;
                 }

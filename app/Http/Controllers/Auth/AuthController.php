@@ -13,8 +13,6 @@ use App\Models\User;
 use App\Services\AuditLogger;
 use App\Services\PasswordSyncService;
 use App\Services\SecurityService;
-use App\Services\SijunaApiService;
-use App\Services\UserDataSyncService;
 use App\Services\WhatsAppService;
 use Exception;
 use Illuminate\Http\RedirectResponse;
@@ -141,12 +139,7 @@ class AuthController extends Controller
 
             // Auto-provision default admin from .env configuration if database was refreshed or empty
             if (! $user) {
-                $adminConfig = config('auth.admin', [
-                    'name' => env('ADMIN_NAME', 'Administrator SiPintu'),
-                    'username' => env('ADMIN_USERNAME', 'admin'),
-                    'email' => env('ADMIN_EMAIL', 'admin@smkn1bangsri.sch.id'),
-                    'password' => env('ADMIN_PASSWORD', 'password'),
-                ]);
+                $adminConfig = config('auth.admin', []);
 
                 $adminRole = Role::firstOrCreate(
                     ['name' => 'admin', 'guard_name' => 'web'],
@@ -317,134 +310,8 @@ class AuthController extends Controller
             return redirect()->intended(route('dashboard'))->with('success', 'Berhasil login sebagai '.$user->name);
         }
 
-        // 4. Try SIJUNA API lookup if teacher user does not exist locally yet (Only for Guru tab)
-        if ($accountType === 'guru') {
-            try {
-                $sijunaService = app(SijunaApiService::class);
-                $teacherData = $sijunaService->getTeacherByExternalId($identity);
-                if ($teacherData) {
-                    if ($password !== 'password') {
-                        AuditLogger::log('login_notice_sijuna_default_password_required', [
-                            'identity' => $identity,
-                            'role' => 'teacher',
-                        ]);
-
-                        return back()->withErrors([
-                            'password' => 'Kata sandi yang Anda masukkan salah. Jika ini login perdana Anda, silakan gunakan kata sandi awal yang telah dibagikan oleh pihak sekolah.',
-                        ])->onlyInput('account_type', 'nis', 'nip', 'kode_dudi', 'identity');
-                    }
-
-                    $nip = (string) ($teacherData['nip'] ?? $teacherData['external_id'] ?? $teacherData['id'] ?? '');
-                    $email = $teacherData['email'] ?? $teacherData['user']['email'] ?? ($nip ? $nip.'@guru.sekolah.id' : $identity);
-                    $name = $teacherData['nama'] ?? $teacherData['name'] ?? 'Guru SIJUNA';
-                    $phone = $teacherData['hp'] ?? $teacherData['phone'] ?? null;
-                    $username = $nip ?? ($teacherData['username'] ?? explode('@', $email)[0]);
-
-                    // Provision teacher user locally with default password
-                    $teacherUser = User::create([
-                        'external_id' => $nip ?: $email,
-                        'username' => $username,
-                        'name' => $name,
-                        'email' => $email,
-                        'role' => 'teacher',
-                        'phone' => $phone,
-                        'status' => 'active',
-                        'password' => Hash::make('password'),
-                        'must_change_password' => true,
-                    ]);
-
-                    $teacherRole = Role::firstOrCreate(['name' => 'teacher', 'guard_name' => 'web']);
-                    $teacherUser->assignRole($teacherRole);
-
-                    Auth::login($teacherUser, $request->boolean('remember'));
-                    $request->session()->regenerate();
-
-                    $securityService->recordSuccessfulLogin($request->ip(), $teacherUser);
-                    session()->flash('security_onboarding_notice', true);
-
-                    AuditLogger::log('login_success_teacher_provisioned', [
-                        'external_id' => $teacherUser->external_id,
-                        'user_id' => $teacherUser->id,
-                        'via_sso' => $isSso,
-                    ], $teacherUser->id);
-
-                    if (session()->has('oauth_return_to')) {
-                        $returnTo = session()->pull('oauth_return_to');
-
-                        return redirect()->to($returnTo);
-                    }
-
-                    return redirect()->intended(route('dashboard'))->with('success', 'Selamat datang, '.$teacherUser->name.'. Silakan ganti kata sandi awal Anda.');
-                }
-            } catch (Exception $e) {
-                // Silently continue to login failed error below
-            }
-        }
-
-        // 5. Try SIJUNA API lookup if student user does not exist locally yet (Only for Siswa tab)
-        if ($accountType === 'siswa') {
-            try {
-                $sijunaService = app(SijunaApiService::class);
-                $nisSearch = str_contains($identity, '@') ? explode('@', $identity)[0] : $identity;
-                $studentData = $sijunaService->getStudentByExternalId($identity)
-                    ?: ($nisSearch !== $identity ? $sijunaService->getStudentByExternalId($nisSearch) : null);
-                if ($studentData) {
-                    if ($password !== 'password') {
-                        AuditLogger::log('login_notice_sijuna_default_password_required', [
-                            'identity' => $identity,
-                            'role' => 'student',
-                        ]);
-
-                        return back()->withErrors([
-                            'password' => 'Kata sandi yang Anda masukkan salah. Jika ini login perdana Anda, silakan gunakan kata sandi awal yang telah dibagikan oleh pihak sekolah.',
-                        ])->onlyInput('account_type', 'nis', 'nip', 'kode_dudi', 'identity');
-                    }
-
-                    $nis = (string) ($studentData['nis'] ?? $studentData['external_id'] ?? $studentData['id'] ?? $nisSearch);
-                    $email = $studentData['user']['email'] ?? $studentData['email'] ?? ($nis.'@smkn1bangsri.sch.id');
-                    $name = $studentData['nama'] ?? $studentData['name'] ?? 'Siswa SIJUNA';
-                    $phone = $studentData['hp'] ?? $studentData['phone'] ?? null;
-
-                    // Provision student locally with default password
-                    $studentUser = User::create([
-                        'external_id' => $nis,
-                        'username' => $nis,
-                        'name' => $name,
-                        'email' => $email,
-                        'role' => 'student',
-                        'phone' => $phone,
-                        'status' => 'active',
-                        'password' => Hash::make('password'),
-                        'must_change_password' => true,
-                    ]);
-
-                    $studentRole = Role::firstOrCreate(['name' => 'student', 'guard_name' => 'web']);
-                    $studentUser->assignRole($studentRole);
-
-                    Auth::login($studentUser, $request->boolean('remember'));
-                    $request->session()->regenerate();
-
-                    $securityService->recordSuccessfulLogin($request->ip(), $studentUser);
-                    session()->flash('security_onboarding_notice', true);
-
-                    AuditLogger::log('login_success_student_provisioned', [
-                        'external_id' => $studentUser->external_id,
-                        'user_id' => $studentUser->id,
-                        'via_sso' => $isSso,
-                    ], $studentUser->id);
-
-                    if (session()->has('oauth_return_to')) {
-                        $returnTo = session()->pull('oauth_return_to');
-
-                        return redirect()->to($returnTo);
-                    }
-
-                    return redirect()->intended(route('dashboard'))->with('success', 'Selamat datang, '.$studentUser->name.'. Silakan ganti kata sandi awal Anda.');
-                }
-            } catch (Exception $e) {
-                // Silently continue to login failed error below
-            }
-        }
+        // 4. SIJUNA API lookup during login is disabled.
+        // SIJUNA is only accessed during administrative/scheduled synchronization to prevent heavy load on SIJUNA server.
 
         $securityService->recordFailedLogin($request->ip(), $identity);
 
@@ -776,61 +643,9 @@ class AuthController extends Controller
 
     public function syncSijunaProfile(Request $request): RedirectResponse
     {
-        $user = Auth::user();
-
-        if (! $user->external_id && ! in_array($user->role, ['student', 'teacher', 'siswa', 'guru'])) {
-            return back()
-                ->with('error', 'Akun Anda tidak terhubung ke SIJUNA API.')
-                ->with('active_section', 'sijuna');
-        }
-
-        try {
-            $sijunaService = app(SijunaApiService::class);
-            $identifier = $user->external_id ?: ($user->username ?: $user->email);
-            $externalData = null;
-
-            if ($user->isTeacher()) {
-                $externalData = $sijunaService->getTeacherByExternalId($identifier);
-            } else {
-                $externalData = $sijunaService->getStudentByExternalId($identifier);
-            }
-
-            if ($externalData) {
-                $updatedFields = [];
-                $newName = $externalData['nama'] ?? $externalData['name'] ?? null;
-                $newEmail = $externalData['email'] ?? $externalData['user']['email'] ?? null;
-                $newPhone = $externalData['hp'] ?? $externalData['phone'] ?? null;
-
-                if ($newName && $newName !== $user->name) {
-                    $user->name = $newName;
-                    $updatedFields[] = 'nama';
-                }
-                if ($newEmail && $newEmail !== $user->email && ! User::where('email', $newEmail)->where('id', '!=', $user->id)->exists()) {
-                    $user->email = $newEmail;
-                    $updatedFields[] = 'email';
-                }
-                if ($newPhone && $newPhone !== $user->phone) {
-                    $user->phone = $newPhone;
-                    $updatedFields[] = 'no. hp';
-                }
-
-                $user->save();
-
-                AuditLogger::log('sync_sijuna_profile_success', ['updated' => $updatedFields], $user->id);
-
-                return back()
-                    ->with('success', 'Profil berhasil disinkronkan secara realtime dengan SIJUNA API.')
-                    ->with('active_section', 'sijuna');
-            }
-
-            return back()
-                ->with('info', 'Data profil Anda di SIJUNA API sudah dalam kondisi yang paling baru.')
-                ->with('active_section', 'sijuna');
-        } catch (Exception $e) {
-            return back()
-                ->with('error', 'Gagal terhubung ke SIJUNA API: '.$e->getMessage())
-                ->with('active_section', 'sijuna');
-        }
+        return back()
+            ->with('info', 'Data profil Anda sudah sinkron dengan SIJUNA dan dikelola secara terpusat oleh Administrator SiPintu.')
+            ->with('active_section', 'sijuna');
     }
 
     public function updateNotificationSettings(Request $request): RedirectResponse

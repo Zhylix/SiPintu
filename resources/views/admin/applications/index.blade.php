@@ -352,6 +352,13 @@
 
                                         <span class="text-slate-300">•</span>
                                         <span class="text-[10px] font-mono text-slate-500 truncate" title="Slug: {{ $app->slug }}">{{ $app->slug }}</span>
+
+                                        @if($app->allow_password_sync)
+                                            <span class="text-slate-300">•</span>
+                                            <span class="inline-flex items-center text-[10px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200 whitespace-nowrap" title="Aplikasi ini menerima sinkronisasi hash password pengguna">
+                                                🔑 Hybrid Sync
+                                            </span>
+                                        @endif
                                     </div>
                                 </div>
                             </div>

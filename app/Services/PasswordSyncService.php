@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Jobs\SendDownstreamUserSyncWebhookJob;
 use App\Models\User;
 
 class PasswordSyncService
@@ -32,7 +33,7 @@ class PasswordSyncService
     /**
      * Broadcast updated user password to all active downstream SSO client applications.
      */
-    public function broadcastPasswordChange(User $user): array
+    public function broadcastPasswordChange(User $user, bool $sync = false): array
     {
         // Admin users are exempt from automatic downstream password sync (KEC ADMIN)
         if ($user->isAdmin()) {
@@ -42,6 +43,15 @@ class PasswordSyncService
             ];
         }
 
-        return app(UserDataSyncService::class)->broadcastUserUpdate($user, ['password']);
+        if ($sync || app()->runningInConsole()) {
+            return app(UserDataSyncService::class)->broadcastUserUpdate($user, ['password']);
+        }
+
+        SendDownstreamUserSyncWebhookJob::dispatch($user, ['password'])->afterResponse();
+
+        return [
+            'status' => 'queued',
+            'message' => 'Downstream password synchronization dispatched to background queue.',
+        ];
     }
 }

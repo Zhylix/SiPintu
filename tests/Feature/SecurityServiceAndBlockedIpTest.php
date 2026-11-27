@@ -167,4 +167,3 @@ class SecurityServiceAndBlockedIpTest extends TestCase
         $admin->delete();
     }
 }
-
