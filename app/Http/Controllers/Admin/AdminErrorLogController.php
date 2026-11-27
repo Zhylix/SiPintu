@@ -49,7 +49,7 @@ class AdminErrorLogController extends Controller
 
         // Search Query
         if ($request->filled('search')) {
-            $query->scopeSearch($query, trim($request->search));
+            $query->search(trim((string) $request->search));
         }
 
         $errorLogs = $query->latest('last_seen_at')

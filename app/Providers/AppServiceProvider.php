@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Observers\UserObserver;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
+use Illuminate\Http\Middleware\TrustProxies;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\URL;
@@ -31,6 +32,11 @@ class AppServiceProvider extends ServiceProvider
 
         if (app()->isProduction() || str_starts_with((string) config('app.url'), 'https://')) {
             URL::forceScheme('https');
+        }
+
+        $trustedProxies = config('app.trusted_proxies');
+        if (is_string($trustedProxies) && $trustedProxies !== '') {
+            TrustProxies::at($trustedProxies === '*' ? '*' : array_map('trim', explode(',', $trustedProxies)));
         }
 
         User::observe(UserObserver::class);

@@ -23,6 +23,7 @@ use App\Http\Controllers\Teacher\TeacherDashboardController;
 use App\Http\Controllers\UserApplicationFavoriteController;
 use App\Models\Setting;
 use App\Services\PwaIconService;
+use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -378,7 +379,6 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
 |--------------------------------------------------------------------------
 */
 use App\Http\Controllers\Demo\ExternalAppDemoController;
-use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 
 Route::prefix('demo')->name('demo.')->group(function () {
     Route::get('/{appSlug?}', [ExternalAppDemoController::class, 'index'])->name('index');

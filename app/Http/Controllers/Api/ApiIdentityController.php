@@ -180,8 +180,8 @@ class ApiIdentityController extends Controller
 
             $targetUser = User::where('email', $identifier)
                 ->orWhere('external_id', $identifier)
-                ->orWhere('id', $identifier)
                 ->orWhere('username', $identifier)
+                ->when(ctype_digit((string) $identifier), fn ($q) => $q->orWhere('id', (int) $identifier))
                 ->first();
 
             if ($targetUser) {
@@ -211,7 +211,7 @@ class ApiIdentityController extends Controller
         return [
             'id' => (string) $user->id,
             'external_id' => $user->external_id,
-            'nis' => $user->username ?: $user->external_id,
+            'nis' => $user->external_id ?: $user->username,
             'nama' => $user->name,
             'name' => $user->name,
             'email' => $user->email,
@@ -233,7 +233,7 @@ class ApiIdentityController extends Controller
         return [
             'id' => (string) $user->id,
             'external_id' => $user->external_id,
-            'nip' => $user->username ?: $user->external_id,
+            'nip' => $user->external_id ?: $user->username,
             'nama' => $user->name,
             'name' => $user->name,
             'email' => $user->email,
@@ -250,8 +250,8 @@ class ApiIdentityController extends Controller
         return [
             'id' => (string) $user->id,
             'external_id' => $user->external_id,
-            'dudi_code' => $user->dudi_code ?? ($user->username ?: $user->external_id),
-            'kode_dudi' => $user->dudi_code ?? ($user->username ?: $user->external_id),
+            'dudi_code' => $user->dudi_code ?? ($user->external_id ?: $user->username),
+            'kode_dudi' => $user->dudi_code ?? ($user->external_id ?: $user->username),
             'username' => $user->username,
             'nama_perusahaan' => $user->name,
             'name' => $user->name,
@@ -271,7 +271,7 @@ class ApiIdentityController extends Controller
         return [
             'id' => (string) $user->id,
             'external_id' => $user->external_id,
-            'nis' => $user->username ?: $user->external_id,
+            'nis' => $user->external_id ?: $user->username,
             'nama' => $user->name,
             'name' => $user->name,
             'email' => $user->email,
@@ -296,7 +296,7 @@ class ApiIdentityController extends Controller
         $nis = $request->query('nis');
 
         if ($nis) {
-            $localUser = User::where('role', 'student')
+            $localUser = User::whereIn('role', ['student', 'siswa'])
                 ->where(function ($q) use ($nis) {
                     $q->where('username', $nis)
                         ->orWhere('external_id', $nis);
@@ -317,7 +317,7 @@ class ApiIdentityController extends Controller
             ]);
         }
 
-        $query = User::where('role', 'student')->orderBy('id', 'desc');
+        $query = User::whereIn('role', ['student', 'siswa'])->orderBy('id', 'desc');
 
         $search = trim((string) $request->query('search', ''));
         if (! empty($search)) {
@@ -369,7 +369,7 @@ class ApiIdentityController extends Controller
      */
     public function studentDetail(Request $request, string $externalId): JsonResponse
     {
-        $localUser = User::where('role', 'student')
+        $localUser = User::whereIn('role', ['student', 'siswa'])
             ->where(function ($q) use ($externalId) {
                 $q->where('username', $externalId)
                     ->orWhere('external_id', $externalId);
@@ -419,9 +419,26 @@ class ApiIdentityController extends Controller
             ]);
         }
 
-        $alumniList = User::where('role', 'alumni')
-            ->orderBy('id', 'desc')
-            ->get()
+        $query = User::where('role', 'alumni')->orderBy('id', 'desc');
+
+        if ($request->has('page') || $request->has('per_page') || $request->has('limit')) {
+            $perPage = min(max((int) ($request->query('per_page') ?: $request->query('limit', 20)), 1), 500);
+            $paginated = $query->paginate($perPage);
+
+            return response()->json([
+                'status' => 'success',
+                'source' => 'SiPintu Database (Synced from SIJUNA)',
+                'meta' => [
+                    'current_page' => $paginated->currentPage(),
+                    'last_page' => $paginated->lastPage(),
+                    'per_page' => $paginated->perPage(),
+                    'total' => $paginated->total(),
+                ],
+                'data' => $paginated->map(fn ($a) => $this->formatAlumniOutput($a))->values(),
+            ]);
+        }
+
+        $alumniList = $query->get()
             ->map(fn ($a) => $this->formatAlumniOutput($a))
             ->values();
 
@@ -467,7 +484,7 @@ class ApiIdentityController extends Controller
         $nip = $request->query('nip') ?: $request->query('email');
 
         if ($nip) {
-            $localUser = User::where('role', 'teacher')
+            $localUser = User::whereIn('role', ['teacher', 'guru'])
                 ->where(function ($q) use ($nip) {
                     $q->where('email', $nip)
                         ->orWhere('username', $nip)
@@ -489,7 +506,7 @@ class ApiIdentityController extends Controller
             ]);
         }
 
-        $query = User::where('role', 'teacher')->orderBy('id', 'desc');
+        $query = User::whereIn('role', ['teacher', 'guru'])->orderBy('id', 'desc');
 
         $search = trim((string) $request->query('search', ''));
         if (! empty($search)) {
@@ -535,7 +552,7 @@ class ApiIdentityController extends Controller
      */
     public function teacherDetail(Request $request, string $externalId): JsonResponse
     {
-        $localUser = User::where('role', 'teacher')
+        $localUser = User::whereIn('role', ['teacher', 'guru'])
             ->where(function ($q) use ($externalId) {
                 $q->where('email', $externalId)
                     ->orWhere('username', $externalId)
@@ -636,7 +653,7 @@ class ApiIdentityController extends Controller
                 $q->where('email', $identifier)
                     ->orWhere('username', $identifier)
                     ->orWhere('external_id', $identifier)
-                    ->orWhere('id', $identifier);
+                    ->when(ctype_digit($identifier), fn ($sub) => $sub->orWhere('id', (int) $identifier));
             })
             ->first();
 
@@ -966,31 +983,62 @@ class ApiIdentityController extends Controller
     }
 
     /**
+     * Verify downstream credentials on public alumni endpoints and record connection only when valid.
+     */
+    protected function resolveAuthenticatedAlumniApp(Request $request): bool
+    {
+        $tokenString = $request->bearerToken();
+        if ($tokenString) {
+            $token = OAuthAccessToken::where('token', $tokenString)
+                ->where('revoked', false)
+                ->where('expires_at', '>', now())
+                ->first();
+            if ($token) {
+                $token->application?->recordApiConnection($request->ip());
+
+                return true;
+            }
+
+            return false;
+        }
+
+        $clientId = $request->header('X-Client-ID') ?: $request->input('client_id');
+        $clientSecret = $request->header('X-Client-Secret') ?: $request->input('client_secret');
+
+        if (! $clientId || ! $clientSecret) {
+            return false;
+        }
+
+        $app = Application::where('client_id', $clientId)->where('status', 'active')->first();
+        if (! $app || ! is_string($app->client_secret)) {
+            return false;
+        }
+
+        $secretValid = hash_equals($app->client_secret, (string) $clientSecret);
+        if (! $secretValid && (str_starts_with($app->client_secret, '$2y$') || str_starts_with($app->client_secret, '$2a$'))) {
+            try {
+                $secretValid = Hash::check((string) $clientSecret, $app->client_secret);
+            } catch (\Throwable $e) {
+                $secretValid = false;
+            }
+        }
+
+        if ($secretValid) {
+            $app->recordApiConnection($request->ip());
+
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
      * Endpoint API untuk aplikasi downstream mengakses data alumni yang telah dikelompokkan sesuai jurusan
      */
     public function alumni(Request $request, ?string $kode = null): JsonResponse
     {
-        // Catat koneksi jika downstream mengirimkan kredensial (Bearer token atau X-Client-ID)
-        $tokenString = $request->bearerToken();
-        $clientId = $request->header('X-Client-ID') ?: $request->input('client_id');
-        $clientSecret = $request->header('X-Client-Secret') ?: $request->input('client_secret');
-        $isAuthenticatedApp = false;
-
-        if ($tokenString) {
-            $token = OAuthAccessToken::where('token', $tokenString)->where('revoked', false)->where('expires_at', '>', now())->first();
-            if ($token) {
-                $isAuthenticatedApp = true;
-                $token->application?->recordApiConnection($request->ip());
-            }
-        } elseif ($clientId) {
-            $app = Application::where('client_id', $clientId)->where('status', 'active')->first();
-            if ($app) {
-                if ($clientSecret && ($clientSecret === $app->client_secret || (is_string($app->client_secret) && Hash::check((string) $clientSecret, $app->client_secret)))) {
-                    $isAuthenticatedApp = true;
-                }
-                $app->recordApiConnection($request->ip());
-            }
-        }
+        // Catat koneksi hanya jika downstream mengirimkan kredensial yang valid
+        $isAuthenticatedApp = $this->resolveAuthenticatedAlumniApp($request);
 
         $query = User::where('role', 'alumni')->with('jurusan');
 
@@ -1072,33 +1120,14 @@ class ApiIdentityController extends Controller
      */
     public function alumniDetail(Request $request, string $identifier): JsonResponse
     {
-        $tokenString = $request->bearerToken();
-        $clientId = $request->header('X-Client-ID') ?: $request->input('client_id');
-        $clientSecret = $request->header('X-Client-Secret') ?: $request->input('client_secret');
-        $isAuthenticatedApp = false;
-
-        if ($tokenString) {
-            $token = OAuthAccessToken::where('token', $tokenString)->where('revoked', false)->where('expires_at', '>', now())->first();
-            if ($token) {
-                $isAuthenticatedApp = true;
-                $token->application?->recordApiConnection($request->ip());
-            }
-        } elseif ($clientId) {
-            $app = Application::where('client_id', $clientId)->where('status', 'active')->first();
-            if ($app) {
-                if ($clientSecret && ($clientSecret === $app->client_secret || (is_string($app->client_secret) && Hash::check((string) $clientSecret, $app->client_secret)))) {
-                    $isAuthenticatedApp = true;
-                }
-                $app->recordApiConnection($request->ip());
-            }
-        }
+        $isAuthenticatedApp = $this->resolveAuthenticatedAlumniApp($request);
 
         $alumni = User::where('role', 'alumni')
             ->where(function ($q) use ($identifier) {
                 $q->where('external_id', $identifier)
                     ->orWhere('username', $identifier)
-                    ->orWhere('id', $identifier)
-                    ->orWhere('email', $identifier);
+                    ->orWhere('email', $identifier)
+                    ->when(ctype_digit($identifier), fn ($sub) => $sub->orWhere('id', (int) $identifier));
             })
             ->with('jurusan')
             ->first();

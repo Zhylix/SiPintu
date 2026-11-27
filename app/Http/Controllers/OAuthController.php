@@ -28,6 +28,7 @@ class OAuthController extends Controller
     {
         $clientId = $request->query('client_id');
         $redirectUri = $request->query('redirect_uri');
+        $redirectUri = is_string($redirectUri) ? $redirectUri : null;
         $responseType = $request->query('response_type', 'code');
         $scope = $request->query('scope', 'openid profile email');
         $state = $request->query('state');

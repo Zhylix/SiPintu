@@ -871,7 +871,9 @@ class AuthController extends Controller
     public function showVerifyOtp(Request $request)
     {
         $userId = $request->query('uid');
-        $user = User::find($userId);
+        $user = is_scalar($userId) && ctype_digit((string) $userId)
+            ? User::find((int) $userId)
+            : null;
 
         if (! $user) {
             return redirect()->route('password.request')->withErrors(['identity' => 'Sesi pemulihan tidak valid.']);
